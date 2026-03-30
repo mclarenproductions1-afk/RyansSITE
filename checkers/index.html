@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chinese Checkers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #fff;
+  --text: #111;
+  --muted: #888;
+  --border: #e5e5e5;
+  --surface: #fafafa;
+}
+
+html { font-size: 16px; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+.screen { display: none; }
+.screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+/* ── Join & Lobby screens ── */
+.center-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+}
+
+.card h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.card p.sub {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 9px 12px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  transition: border-color 0.15s;
+  margin-bottom: 10px;
+  display: block;
+}
+input[type="text"]:focus { border-color: var(--text); }
+
+.btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 9px 18px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.btn:hover { background: #333; }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-outline:hover { border-color: var(--text); background: transparent; }
+
+.btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.divider {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 20px 0 16px;
+  position: relative;
+}
+.divider::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 50%;
+  border-top: 1px solid var(--border);
+}
+.divider span {
+  background: var(--bg);
+  padding: 0 10px;
+  position: relative;
+}
+
+.error-msg {
+  font-size: 0.78rem;
+  color: #c0392b;
+  margin-top: 10px;
+  min-height: 18px;
+}
+
+/* Code display */
+.code-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.code-val {
+  font-size: 1.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.code-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* Lobby player slots */
+.slots {
+  margin: 16px 0 20px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  border-bottom: 1px solid var(--border);
+}
+.slot:last-child { border-bottom: none; }
+.slot-num {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  width: 14px;
+  flex-shrink: 0;
+}
+.slot-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.slot-name { font-weight: 500; flex: 1; }
+.slot-empty { color: var(--muted); font-style: italic; }
+.slot-you {
+  font-size: 0.7rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 6px;
+}
+
+/* ── Game screen ── */
+#screen-game {
+  min-height: 100vh;
+}
+.game-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.back-link {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--text); }
+
+.game-code-lbl {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.game-code-lbl strong {
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.turn-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 99px;
+  border: 1.5px solid transparent;
+}
+.turn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.board-area {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-x: auto;
+}
+
+#board-svg {
+  display: block;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.player-bar {
+  padding: 10px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.pchip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 0.73rem;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.pchip.active {
+  border-color: var(--text);
+  font-weight: 700;
+}
+.pchip.done {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+.pchip .pdot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.hint {
+  padding: 6px 20px 10px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* ── Winner screen ── */
+#screen-winner .center-wrap {
+  text-align: center;
+}
+.winner-dot {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  margin: 0 auto 16px;
+}
+#screen-winner h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 4px;
+}
+.finish-list {
+  margin: 20px 0 24px;
+  text-align: left;
+}
+.finish-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+.finish-row:last-child { border-bottom: none; }
+.finish-rank { color: var(--muted); font-variant-numeric: tabular-nums; width: 20px; }
+
+/* ── Toast ── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: #111;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+  z-index: 999;
+  white-space: nowrap;
+}
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (max-width: 520px) {
+  .card { padding: 28px 20px; }
+  .game-header { padding: 10px 14px; }
+  .board-area { padding: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ JOIN SCREEN ═══ -->
+<div id="screen-join" class="screen active">
+  <div class="center-wrap">
+    <div class="card">
+      <h1>Chinese Checkers</h1>
+      <p class="sub">6-player online — share a code to play together in real time.</p>
+
+      <input id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="off" />
+
+      <button id="btn-create" class="btn" style="width:100%">Create Game</button>
+
+      <div class="divider"><span>or join existing</span></div>
+
+      <input id="inp-code" type="text" placeholder="Enter 6-letter code" maxlength="6"
+             autocomplete="off" style="text-transform:uppercase;letter-spacing:0.1em" />
+      <button id="btn-join" class="btn" style="width:100%">Join Game</button>
+
+      <div id="join-error" class="error-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LOBBY SCREEN ═══ -->
+<div id="screen-lobby" class="screen">
+  <div class="center-wrap">
+    <div class="card">
+      <h2>Waiting for players</h2>
+      <div class="code-label">Share this code:</div>
+      <div class="code-box">
+        <span id="lby-code" class="code-val">------</span>
+        <button id="btn-copy" class="btn btn-outline" style="font-size:0.75rem;padding:6px 12px">Copy</button>
+      </div>
+      <div id="lby-slots" class="slots"></div>
+      <button id="btn-start" class="btn" style="width:100%;display:none">Start Game</button>
+      <p id="lby-status" style="font-size:0.78rem;color:var(--muted);margin-top:10px;text-align:center"></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GAME SCREEN ═══ -->
+<div id="screen-game" class="screen">
+  <div class="game-header">
+    <a href="/checkers" class="back-link">← Chinese Checkers</a>
+    <div id="turn-badge" class="turn-badge">
+      <span class="turn-dot" id="turn-dot"></span>
+      <span id="turn-name"></span>
+    </div>
+    <div class="game-code-lbl">Code: <strong id="hdr-code"></strong></div>
+  </div>
+  <div class="board-area">
+    <svg id="board-svg" viewBox="10 -10 580 600" width="580" height="600"></svg>
+  </div>
+  <div id="player-bar" class="player-bar"></div>
+  <div id="hint" class="hint"></div>
+</div>
+
+<!-- ═══ WINNER SCREEN ═══ -->
+<div id="screen-winner" class="screen">
+  <div class="center-wrap">
+    <div class="card" style="text-align:center">
+      <div id="win-dot" class="winner-dot"></div>
+      <h1 id="win-name"></h1>
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">wins!</p>
+      <div id="finish-list" class="finish-list"></div>
+      <button id="btn-again" class="btn" style="width:100%">Back to Start</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   CONFIG
+   ═══════════════════════════════════════════════════════ */
+const CONFIG = {
+  owner:  "mclarenproductions1-afk",
+  repo:   "RyansSITE",
+  branch: "main",
+  token:  ["github_pat_11CASFLQI0", "mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy"].join("")
+};
+
+const PLAYER_COLORS = ["#e53e3e","#3182ce","#38a169","#dd6b20","#805ad5","#d69e2e"];
+const PLAYER_NAMES_DEFAULT = ["Red","Blue","Green","Orange","Purple","Amber"];
+
+/* ═══════════════════════════════════════════════════════
+   CLIENT STATE
+   ═══════════════════════════════════════════════════════ */
+let myName       = "";
+let mySlot       = -1;
+let gameCode     = "";
+let gameFileSHA  = null;
+let gameEtag     = null;
+let gameState    = null;
+let selectedHole = null;
+let validMoves   = [];
+let pollTimer    = null;
+let isSaving     = false;
+let toastTimer   = null;
+
+/* ═══════════════════════════════════════════════════════
+   BOARD DATA
+   ═══════════════════════════════════════════════════════ */
+const HOLES    = [];
+const HOLE_MAP = {};   // id → hole
+const ADJ      = {};   // id → [id, ...]
+const PLAYER_ZONES  = []; // [Set, ...]  starting zones
+const TARGET_ZONES  = []; // [Set, ...]  winning zones
+
+const ROW_DEFS = [
+  [0,  [300]],
+  [1,  [280,320]],
+  [2,  [260,300,340]],
+  [3,  [240,280,320,360]],
+  [4,  [60,100,140,180,220,260,300,340,380,420,460,500,540]],
+  [5,  [80,120,160,200,240,280,320,360,400,440,480,520]],
+  [6,  [100,140,180,220,260,300,340,380,420,460,500]],
+  [7,  [120,160,200,240,280,320,360,400,440,480]],
+  [8,  [140,180,220,260,300,340,380,420,460]],
+  [9,  [120,160,200,240,280,320,360,400,440,480]],
+  [10, [100,140,180,220,260,300,340,380,420,460,500]],
+  [11, [80,120,160,200,240,280,320,360,400,440,480,520]],
+  [12, [60,100,140,180,220,260,300,340,380,420,460,500,540]],
+  [13, [240,280,320,360]],
+  [14, [260,300,340]],
+  [15, [280,320]],
+  [16, [300]]
+];
+
+function holeId(row, x) { return `${row},${x}`; }
+
+function buildBoard() {
+  for (const [row, xs] of ROW_DEFS) {
+    for (const x of xs) {
+      const id = holeId(row, x);
+      const hole = { id, row, x, cx: x, cy: row * 35 };
+      HOLES.push(hole);
+      HOLE_MAP[id] = hole;
+      ADJ[id] = [];
+    }
+  }
+}
+
+function buildAdjacency() {
+  for (let i = 0; i < HOLES.length; i++) {
+    for (let j = i + 1; j < HOLES.length; j++) {
+      const a = HOLES[i], b = HOLES[j];
+      const dx = a.cx - b.cx, dy = a.cy - b.cy;
+      if (dx * dx + dy * dy <= 42 * 42) {
+        ADJ[a.id].push(b.id);
+        ADJ[b.id].push(a.id);
+      }
+    }
+  }
+}
+
+function buildZones() {
+  function ids(...pairs) {
+    return pairs.map(([r, x]) => holeId(r, x));
+  }
+  function rows(r1, r2) {
+    const out = [];
+    for (const [row, xs] of ROW_DEFS) {
+      if (row >= r1 && row <= r2) out.push(...xs.map(x => holeId(row, x)));
+    }
+    return out;
+  }
+
+  const zones = [
+    rows(0, 3),
+    ids([4,420],[4,460],[4,500],[4,540],[5,440],[5,480],[5,520],[6,460],[6,500],[7,480]),
+    ids([9,480],[10,460],[10,500],[11,440],[11,480],[11,520],[12,420],[12,460],[12,500],[12,540]),
+    rows(13, 16),
+    ids([9,120],[10,100],[10,140],[11,80],[11,120],[11,160],[12,60],[12,100],[12,140],[12,180]),
+    ids([4,60],[4,100],[4,140],[4,180],[5,80],[5,120],[5,160],[6,100],[6,140],[7,120]),
+  ];
+
+  for (let p = 0; p < 6; p++) {
+    PLAYER_ZONES[p] = new Set(zones[p]);
+    TARGET_ZONES[p] = new Set(zones[(p + 3) % 6]);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   GITHUB API
+   ═══════════════════════════════════════════════════════ */
+function gameApiUrl(code) {
+  return `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/checkers/games/${code}.json`;
+}
+
+function ghHeaders(extra) {
+  return Object.assign({
+    "Authorization": `Bearer ${CONFIG.token}`,
+    "Accept":        "application/vnd.github+json",
+    "Content-Type":  "application/json"
+  }, extra || {});
+}
+
+async function fetchGame(code, etag) {
+  const headers = ghHeaders();
+  if (etag) headers["If-None-Match"] = etag;
+  const res = await fetch(gameApiUrl(code), { headers });
+  if (res.status === 304) return null;
+  if (res.status === 404) return "notfound";
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const data = await res.json();
+  const newEtag = res.headers.get("ETag");
+  const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
+  return { state, sha: data.sha, etag: newEtag };
+}
+
+async function saveGame(code, state, sha) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const body = { message: `checkers: turn ${state.turnCount}`, content, branch: CONFIG.branch, sha };
+  const res = await fetch(gameApiUrl(code), {
+    method: "PUT",
+    headers: ghHeaders(),
+    body: JSON.stringify(body)
+  });
+  if (res.status === 409) {
+    const fresh = await fetchGame(code, null);
+    if (fresh && fresh !== "notfound") {
+      gameFileSHA = fresh.sha;
+      gameEtag    = fresh.etag;
+      applyGameState(fresh.state);
+    }
+    throw new Error("conflict");
+  }
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const data = await res.json();
+  return data.content.sha;
+}
+
+async function createGame(code, state) {
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
+  const body = { message: `checkers: create ${code}`, content, branch: CONFIG.branch };
+  const res = await fetch(gameApiUrl(code), {
+    method: "PUT",
+    headers: ghHeaders(),
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`Create failed: ${res.status}`);
+  const data = await res.json();
+  return data.content.sha;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GAME LOGIC
+   ═══════════════════════════════════════════════════════ */
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let s = "";
+  for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return s;
+}
+
+function buildInitialBoard() {
+  const board = {};
+  for (let p = 0; p < 6; p++) {
+    for (const id of PLAYER_ZONES[p]) board[id] = p;
+  }
+  return board;
+}
+
+function getJumpLanding(fromId, overId) {
+  const from = HOLE_MAP[fromId];
+  const over = HOLE_MAP[overId];
+  if (!from || !over) return null;
+  const landX = over.cx * 2 - from.cx;
+  const landY = over.cy * 2 - from.cy;
+  if (landY % 35 !== 0) return null;
+  const landRow = landY / 35;
+  return HOLE_MAP[holeId(landRow, landX)] ? holeId(landRow, landX) : null;
+}
+
+function getLegalMoves(board, fromId) {
+  const moves = new Set();
+
+  // Single steps to empty adjacent holes
+  for (const adjId of ADJ[fromId]) {
+    if (board[adjId] === undefined) moves.add(adjId);
+  }
+
+  // Jump chains (BFS)
+  const queue = [fromId];
+  const visited = new Set([fromId]);
+  while (queue.length) {
+    const cur = queue.shift();
+    for (const adjId of ADJ[cur]) {
+      if (board[adjId] === undefined) continue; // nothing to jump
+      const landId = getJumpLanding(cur, adjId);
+      if (!landId) continue;
+      if (board[landId] !== undefined) continue;
+      if (visited.has(landId)) continue;
+      visited.add(landId);
+      moves.add(landId);
+      queue.push(landId);
+    }
+  }
+
+  return Array.from(moves);
+}
+
+function nextActiveTurn(state, fromTurn) {
+  let next = (fromTurn + 1) % 6;
+  let safety = 0;
+  while (state.finishOrder.includes(next) && safety++ < 6) {
+    next = (next + 1) % 6;
+  }
+  return next;
+}
+
+function applyMove(state, fromId, toId) {
+  const pIdx = state.currentTurn;
+  state.board[toId] = state.board[fromId];
+  delete state.board[fromId];
+  state.turnCount++;
+
+  // Win check
+  const inTarget = Object.entries(state.board)
+    .filter(([id, p]) => p === pIdx && TARGET_ZONES[pIdx].has(id)).length;
+
+  if (inTarget === 10 && !state.finishOrder.includes(pIdx)) {
+    state.finishOrder.push(pIdx);
+    if (state.finishOrder.length === 1) state.winner = pIdx;
+    if (state.finishOrder.length >= 5) state.status = "finished";
+  }
+
+  state.currentTurn = nextActiveTurn(state, pIdx);
+  state.updatedAt = new Date().toISOString();
+  return state;
+}
+
+/* ═══════════════════════════════════════════════════════
+   POLLING
+   ═══════════════════════════════════════════════════════ */
+function startPolling() {
+  stopPolling();
+  pollTimer = setInterval(pollGame, 2000);
+}
+
+function stopPolling() {
+  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+}
+
+async function pollGame() {
+  if (isSaving) return;
+  try {
+    const result = await fetchGame(gameCode, gameEtag);
+    if (!result || result === "notfound") return;
+    gameFileSHA = result.sha;
+    gameEtag    = result.etag;
+    applyGameState(result.state);
+  } catch (e) {
+    // silent poll failure
+  }
+}
+
+function applyGameState(newState) {
+  const prev = gameState;
+  gameState = newState;
+
+  if (prev && prev.turnCount !== newState.turnCount) {
+    selectedHole = null;
+    validMoves   = [];
+  }
+
+  // Transition screens
+  if (newState.status === "active" && document.getElementById("screen-lobby").classList.contains("active")) {
+    showScreen("game");
+  }
+  if (newState.status === "finished") {
+    stopPolling();
+    showScreen("winner");
+    renderWinner();
+    return;
+  }
+
+  if (document.getElementById("screen-lobby").classList.contains("active")) {
+    renderLobby();
+  } else if (document.getElementById("screen-game").classList.contains("active")) {
+    renderGame();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   RENDERING
+   ═══════════════════════════════════════════════════════ */
+function renderBoard() {
+  const svg = document.getElementById("board-svg");
+
+  // Remove dynamic layer
+  const old = svg.querySelector(".dyn");
+  if (old) old.remove();
+
+  const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  g.classList.add("dyn");
+
+  for (const hole of HOLES) {
+    const occupant  = gameState ? gameState.board[hole.id] : undefined;
+    const isSel     = hole.id === selectedHole;
+    const isValid   = validMoves.includes(hole.id);
+
+    // Hit target (always 18px radius for easy tapping)
+    const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    hit.setAttribute("cx", hole.cx);
+    hit.setAttribute("cy", hole.cy);
+    hit.setAttribute("r", "18");
+    hit.setAttribute("fill", "transparent");
+    hit.dataset.id = hole.id;
+    hit.addEventListener("click", onHoleClick);
+
+    // Visual circle
+    const c = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    c.setAttribute("cx", hole.cx);
+    c.setAttribute("cy", hole.cy);
+
+    if (occupant !== undefined) {
+      c.setAttribute("r", "11");
+      c.setAttribute("fill", PLAYER_COLORS[occupant]);
+      c.setAttribute("stroke", isSel ? "#fff" : "rgba(0,0,0,0.2)");
+      c.setAttribute("stroke-width", isSel ? "3" : "1");
+
+      if (isSel) {
+        // Glow ring
+        const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        ring.setAttribute("cx", hole.cx);
+        ring.setAttribute("cy", hole.cy);
+        ring.setAttribute("r", "15");
+        ring.setAttribute("fill", "none");
+        ring.setAttribute("stroke", PLAYER_COLORS[occupant]);
+        ring.setAttribute("stroke-width", "2.5");
+        ring.setAttribute("opacity", "0.45");
+        g.appendChild(ring);
+      }
+    } else if (isValid) {
+      c.setAttribute("r", "8");
+      c.setAttribute("fill", "none");
+      c.setAttribute("stroke", "#111");
+      c.setAttribute("stroke-width", "2");
+      c.setAttribute("stroke-dasharray", "4 3");
+    } else {
+      c.setAttribute("r", "6");
+      c.setAttribute("fill", "#e5e5e5");
+    }
+
+    g.appendChild(c);
+    g.appendChild(hit);
+  }
+
+  svg.appendChild(g);
+}
+
+function renderTurnBadge() {
+  if (!gameState) return;
+  const ct = gameState.currentTurn;
+  const player = gameState.players[ct];
+  const name = player ? player.name : PLAYER_NAMES_DEFAULT[ct];
+  const isMe = ct === mySlot;
+  document.getElementById("turn-dot").style.background = PLAYER_COLORS[ct];
+  document.getElementById("turn-name").textContent = isMe ? "YOUR TURN" : `${name}'s turn`;
+  const badge = document.getElementById("turn-badge");
+  badge.style.borderColor = isMe ? PLAYER_COLORS[ct] : "transparent";
+  badge.style.background  = isMe ? PLAYER_COLORS[ct] + "18" : "transparent";
+}
+
+function renderPlayerBar() {
+  if (!gameState) return;
+  const bar = document.getElementById("player-bar");
+  bar.innerHTML = "";
+  for (let p = 0; p < 6; p++) {
+    const pl = gameState.players[p];
+    if (!pl) continue;
+    const chip = document.createElement("span");
+    chip.className = "pchip";
+    if (p === gameState.currentTurn) chip.classList.add("active");
+    if (gameState.finishOrder.includes(p)) chip.classList.add("done");
+    const dot = document.createElement("span");
+    dot.className = "pdot";
+    dot.style.background = PLAYER_COLORS[p];
+    chip.appendChild(dot);
+    chip.appendChild(document.createTextNode(pl.name + (p === mySlot ? " (you)" : "")));
+    bar.appendChild(chip);
+  }
+}
+
+function renderHint() {
+  const el = document.getElementById("hint");
+  if (!gameState) { el.textContent = ""; return; }
+  if (gameState.status !== "active") { el.textContent = ""; return; }
+  if (gameState.currentTurn !== mySlot) {
+    const pl = gameState.players[gameState.currentTurn];
+    el.textContent = `Waiting for ${pl ? pl.name : "player"}…`;
+  } else if (selectedHole) {
+    el.textContent = "Click a highlighted hole to move, or click the piece again to deselect.";
+  } else {
+    el.textContent = "Click one of your pieces to see valid moves.";
+  }
+}
+
+function renderGame() {
+  renderBoard();
+  renderTurnBadge();
+  renderPlayerBar();
+  renderHint();
+  document.getElementById("hdr-code").textContent = gameCode;
+}
+
+function renderLobby() {
+  if (!gameState) return;
+  document.getElementById("lby-code").textContent = gameCode;
+  const slotsEl = document.getElementById("lby-slots");
+  slotsEl.innerHTML = "";
+  for (let i = 0; i < 6; i++) {
+    const pl = gameState.players[i];
+    const row = document.createElement("div");
+    row.className = "slot";
+    const num = document.createElement("span");
+    num.className = "slot-num";
+    num.textContent = i + 1;
+    const dot = document.createElement("span");
+    dot.className = "slot-dot";
+    dot.style.background = pl ? PLAYER_COLORS[i] : "#e5e5e5";
+    const name = document.createElement("span");
+    name.className = pl ? "slot-name" : "slot-empty";
+    name.textContent = pl ? pl.name : "Waiting…";
+    row.appendChild(num);
+    row.appendChild(dot);
+    row.appendChild(name);
+    if (pl && i === mySlot) {
+      const you = document.createElement("span");
+      you.className = "slot-you";
+      you.textContent = "you";
+      row.appendChild(you);
+    }
+    slotsEl.appendChild(row);
+  }
+
+  const filled = gameState.players.filter(Boolean).length;
+  const startBtn = document.getElementById("btn-start");
+  const statusEl = document.getElementById("lby-status");
+
+  if (mySlot === 0) {
+    if (filled === 6) {
+      startBtn.style.display = "block";
+      startBtn.disabled = false;
+      statusEl.textContent = "All players ready. You can start the game.";
+    } else {
+      startBtn.style.display = "block";
+      startBtn.disabled = true;
+      statusEl.textContent = `${filled}/6 players joined. Waiting for more…`;
+    }
+  } else {
+    startBtn.style.display = "none";
+    statusEl.textContent = filled === 6
+      ? "All players joined. Waiting for host to start…"
+      : `${filled}/6 players joined. Waiting for more…`;
+  }
+}
+
+function renderWinner() {
+  if (!gameState) return;
+  const w = gameState.winner;
+  const wp = gameState.players[w];
+  document.getElementById("win-dot").style.background = PLAYER_COLORS[w];
+  document.getElementById("win-name").textContent = wp ? wp.name : PLAYER_NAMES_DEFAULT[w];
+
+  const list = document.getElementById("finish-list");
+  list.innerHTML = "<div style='font-size:0.78rem;color:var(--muted);margin-bottom:8px'>Finish order</div>";
+  gameState.finishOrder.forEach((pIdx, i) => {
+    const pl = gameState.players[pIdx];
+    const row = document.createElement("div");
+    row.className = "finish-row";
+    const rank = document.createElement("span");
+    rank.className = "finish-rank";
+    rank.textContent = `#${i + 1}`;
+    const dot = document.createElement("span");
+    dot.style.cssText = `width:8px;height:8px;border-radius:50%;background:${PLAYER_COLORS[pIdx]};display:inline-block`;
+    const nm = document.createElement("span");
+    nm.textContent = (pl ? pl.name : PLAYER_NAMES_DEFAULT[pIdx]) + (pIdx === mySlot ? " (you)" : "");
+    row.appendChild(rank);
+    row.appendChild(dot);
+    row.appendChild(nm);
+    list.appendChild(row);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════
+   CLICK HANDLER
+   ═══════════════════════════════════════════════════════ */
+function onHoleClick(e) {
+  const id = e.currentTarget.dataset.id;
+  if (!gameState || gameState.status !== "active") return;
+  if (gameState.currentTurn !== mySlot) return;
+
+  const occupant = gameState.board[id];
+
+  if (selectedHole === null) {
+    if (occupant !== mySlot) return;
+    selectedHole = id;
+    validMoves   = getLegalMoves(gameState.board, id);
+    renderBoard();
+    renderHint();
+  } else if (id === selectedHole) {
+    selectedHole = null;
+    validMoves   = [];
+    renderBoard();
+    renderHint();
+  } else if (validMoves.includes(id)) {
+    executeMove(selectedHole, id);
+  } else if (occupant === mySlot) {
+    selectedHole = id;
+    validMoves   = getLegalMoves(gameState.board, id);
+    renderBoard();
+    renderHint();
+  } else {
+    selectedHole = null;
+    validMoves   = [];
+    renderBoard();
+    renderHint();
+  }
+}
+
+async function executeMove(fromId, toId) {
+  isSaving     = true;
+  selectedHole = null;
+  validMoves   = [];
+
+  const newState = JSON.parse(JSON.stringify(gameState));
+  applyMove(newState, fromId, toId);
+
+  // Optimistic update
+  gameState = newState;
+  renderGame();
+
+  try {
+    const newSha  = await saveGame(gameCode, newState, gameFileSHA);
+    gameFileSHA   = newSha;
+    gameEtag      = null; // force fresh fetch next poll
+
+    if (newState.status === "finished") {
+      stopPolling();
+      showScreen("winner");
+      renderWinner();
+    }
+  } catch (err) {
+    if (err.message === "conflict") {
+      showToast("Move conflict — board refreshed");
+    } else {
+      showToast("Save failed — please retry");
+      // Revert
+      const recovery = await fetchGame(gameCode, null).catch(() => null);
+      if (recovery && recovery !== "notfound") {
+        gameFileSHA = recovery.sha;
+        gameEtag    = recovery.etag;
+        gameState   = recovery.state;
+        renderGame();
+      }
+    }
+  } finally {
+    isSaving = false;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   UI HELPERS
+   ═══════════════════════════════════════════════════════ */
+function showScreen(name) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(`screen-${name}`).classList.add("active");
+}
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
+}
+
+function setJoinBusy(busy) {
+  document.getElementById("btn-create").disabled = busy;
+  document.getElementById("btn-join").disabled   = busy;
+}
+
+function showJoinError(msg) {
+  document.getElementById("join-error").textContent = msg;
+}
+
+/* ═══════════════════════════════════════════════════════
+   JOIN / LOBBY HANDLERS
+   ═══════════════════════════════════════════════════════ */
+async function onCreateGame() {
+  const name = document.getElementById("inp-name").value.trim();
+  if (!name) { showJoinError("Enter your name first."); return; }
+
+  showJoinError("");
+  setJoinBusy(true);
+  try {
+    const code = generateCode();
+    const state = {
+      status: "waiting",
+      players: [{ name, joinedAt: new Date().toISOString() }, null, null, null, null, null],
+      board: buildInitialBoard(),
+      currentTurn: 0,
+      turnCount: 0,
+      finishOrder: [],
+      winner: null,
+      updatedAt: new Date().toISOString()
+    };
+    const sha = await createGame(code, state);
+
+    myName      = name;
+    mySlot      = 0;
+    gameCode    = code;
+    gameFileSHA = sha;
+    gameEtag    = null;
+    gameState   = state;
+
+    showScreen("lobby");
+    renderLobby();
+    startPolling();
+  } catch (e) {
+    showJoinError("Failed to create game — check your connection.");
+    console.error(e);
+  } finally {
+    setJoinBusy(false);
+  }
+}
+
+async function onJoinGame() {
+  const name = document.getElementById("inp-name").value.trim();
+  const code = document.getElementById("inp-code").value.trim().toUpperCase();
+  if (!name) { showJoinError("Enter your name first."); return; }
+  if (code.length !== 6) { showJoinError("Enter a 6-character code."); return; }
+
+  showJoinError("");
+  setJoinBusy(true);
+  try {
+    const result = await fetchGame(code, null);
+    if (result === "notfound") { showJoinError("Game not found — check the code."); return; }
+    let { state, sha } = result;
+
+    if (state.status === "active")   { showJoinError("Game already started."); return; }
+    if (state.status === "finished") { showJoinError("Game has ended."); return; }
+
+    let slot = state.players.findIndex(p => p === null);
+    if (slot === -1) { showJoinError("Game is full (6/6 players)."); return; }
+
+    state.players[slot] = { name, joinedAt: new Date().toISOString() };
+    state.updatedAt = new Date().toISOString();
+
+    try {
+      sha = await saveGame(code, state, sha);
+    } catch (err) {
+      if (err.message === "conflict") {
+        // Retry: re-fetch and try next open slot
+        const retry = await fetchGame(code, null);
+        if (!retry || retry === "notfound") throw new Error("Game disappeared");
+        state = retry.state;
+        sha   = retry.sha;
+        slot = state.players.findIndex(p => p === null);
+        if (slot === -1) { showJoinError("Game filled up — try another."); return; }
+        state.players[slot] = { name, joinedAt: new Date().toISOString() };
+        state.updatedAt = new Date().toISOString();
+        sha = await saveGame(code, state, sha);
+      } else throw err;
+    }
+
+    myName      = name;
+    mySlot      = slot;
+    gameCode    = code;
+    gameFileSHA = sha;
+    gameEtag    = null;
+    gameState   = state;
+
+    showScreen("lobby");
+    renderLobby();
+    startPolling();
+  } catch (e) {
+    showJoinError("Failed to join: " + e.message);
+    console.error(e);
+  } finally {
+    setJoinBusy(false);
+  }
+}
+
+async function onStartGame() {
+  if (mySlot !== 0) return;
+  const filled = gameState.players.filter(Boolean).length;
+  if (filled < 6) { showToast("Need all 6 players first."); return; }
+
+  document.getElementById("btn-start").disabled = true;
+  try {
+    const state = JSON.parse(JSON.stringify(gameState));
+    state.status = "active";
+    state.updatedAt = new Date().toISOString();
+    const newSha = await saveGame(gameCode, state, gameFileSHA);
+    gameFileSHA = newSha;
+    gameEtag    = null;
+    gameState   = state;
+    showScreen("game");
+    renderGame();
+  } catch (e) {
+    document.getElementById("btn-start").disabled = false;
+    showToast("Failed to start — try again.");
+    console.error(e);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════════ */
+function init() {
+  buildBoard();
+  buildAdjacency();
+  buildZones();
+
+  document.getElementById("btn-create").addEventListener("click", onCreateGame);
+  document.getElementById("btn-join").addEventListener("click", onJoinGame);
+  document.getElementById("btn-start").addEventListener("click", onStartGame);
+  document.getElementById("btn-copy").addEventListener("click", () => {
+    navigator.clipboard.writeText(gameCode)
+      .then(() => showToast("Code copied!"))
+      .catch(() => showToast(gameCode));
+  });
+  document.getElementById("btn-again").addEventListener("click", () => {
+    stopPolling();
+    location.href = "/checkers";
+  });
+
+  const codeInput = document.getElementById("inp-code");
+  codeInput.addEventListener("input", e => {
+    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, "");
+  });
+  codeInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") onJoinGame();
+  });
+  document.getElementById("inp-name").addEventListener("keydown", e => {
+    if (e.key === "Enter") onCreateGame();
+  });
+
+  // Auto-join from URL param e.g. /checkers?join=ABC123
+  const autoCode = new URLSearchParams(location.search).get("join");
+  if (autoCode) codeInput.value = autoCode.toUpperCase().slice(0, 6);
+
+  window.addEventListener("beforeunload", e => {
+    if (gameState?.status === "active" && gameState?.currentTurn === mySlot) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
+</body>
+</html>
