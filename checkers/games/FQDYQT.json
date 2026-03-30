@@ -5,7 +5,10 @@
       "name": "Ryan",
       "joinedAt": "2026-03-30T23:53:15.454Z"
     },
-    null,
+    {
+      "name": "Johnsam Joyson",
+      "joinedAt": "2026-03-30T23:53:27.716Z"
+    },
     null,
     null,
     null,
@@ -77,5 +80,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-03-30T23:53:15.454Z"
+  "updatedAt": "2026-03-30T23:53:27.716Z"
 }
