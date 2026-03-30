@@ -5,7 +5,10 @@
       "name": "Ryan",
       "joinedAt": "2026-03-30T02:42:10.706Z"
     },
-    null,
+    {
+      "name": "player 3",
+      "joinedAt": "2026-03-30T02:43:27.084Z"
+    },
     null,
     null,
     null,
@@ -77,5 +80,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-03-30T02:42:10.707Z"
+  "updatedAt": "2026-03-30T02:43:27.085Z"
 }
