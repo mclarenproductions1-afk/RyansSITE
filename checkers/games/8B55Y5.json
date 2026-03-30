@@ -17,7 +17,10 @@
       "name": "ting tig",
       "joinedAt": "2026-03-30T02:43:56.367Z"
     },
-    null,
+    {
+      "name": "player 4",
+      "joinedAt": "2026-03-30T02:44:01.160Z"
+    },
     null
   ],
   "board": {
@@ -86,5 +89,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-03-30T02:43:56.367Z"
+  "updatedAt": "2026-03-30T02:44:01.160Z"
 }
