@@ -21,7 +21,10 @@
       "name": "player 4",
       "joinedAt": "2026-03-30T02:44:01.160Z"
     },
-    null
+    {
+      "name": "fgfdsfds",
+      "joinedAt": "2026-03-30T02:44:03.847Z"
+    }
   ],
   "board": {
     "0,300": 0,
@@ -89,5 +92,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-03-30T02:44:01.160Z"
+  "updatedAt": "2026-03-30T02:44:03.847Z"
 }
