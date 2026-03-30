@@ -1,12 +1,1 @@
-[
-  {
-    "id": "4a3a2bdf-8da4-44e2-b0d7-9fd24563f0b8",
-    "title": "Python Text-Based Maze Game (AT1)",
-    "subject": "Software Engineering",
-    "type": "assignment",
-    "dueDate": "2026-04-24",
-    "notes": "Design, build & test a text-based maze game in Python using imperative programming. Requires: 8+ rooms, 5+ items, inventory (list), scoring, save/load (sequential files), 2+ extension features, full documentation (requirements, game map, pseudocode, structure chart, data dictionary), and a 2-3 min video. Submit zipped folder to Canvas (your_name_AT1). WEEKLY PLAN: Week 1 (Apr 3) - Plan theme, design room map & data dictionary. Week 2 (Apr 10) - Build rooms, items, inventory, scoring, save/load. Week 3 (Apr 17) - Add extensions, polish input handling, write documentation. Week 4 (Apr 24) - Test, record video, zip & submit to Canvas.",
-    "completed": true,
-    "createdAt": "2026-03-29"
-  }
-]
+[]
