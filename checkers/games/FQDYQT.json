@@ -1,5 +1,5 @@
 {
-  "status": "waiting",
+  "status": "active",
   "players": [
     {
       "name": "Ryan",
@@ -92,5 +92,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-03-30T23:56:01.306Z"
+  "updatedAt": "2026-03-30T23:56:06.826Z"
 }
