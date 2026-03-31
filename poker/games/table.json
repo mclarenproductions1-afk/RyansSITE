@@ -45,7 +45,17 @@
       "lastAction": "",
       "joinedAt": "2026-03-31T01:51:25.741Z"
     },
-    null,
+    {
+      "name": "Liam",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-03-31T01:51:31.087Z"
+    },
     null
   ],
   "queue": [],
@@ -63,5 +73,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-03-31T01:51:25.741Z"
+  "updatedAt": "2026-03-31T01:51:31.087Z"
 }
