@@ -2,20 +2,7 @@
   "status": "showdown",
   "players": [
     null,
-    {
-      "name": "Johnsam Joyson",
-      "chips": 1020,
-      "bet": 0,
-      "hand": [
-        "10c",
-        "10d"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Wins!",
-      "joinedAt": "2026-03-31T01:35:46.223Z"
-    },
+    null,
     {
       "name": "roy",
       "chips": 2980,
@@ -108,7 +95,7 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-03-31T01:39:37.568Z",
+  "updatedAt": "2026-03-31T01:39:46.872Z",
   "lastWinners": [
     {
       "slot": 1,
