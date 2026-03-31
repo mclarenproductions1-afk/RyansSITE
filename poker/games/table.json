@@ -56,7 +56,17 @@
       "lastAction": "",
       "joinedAt": "2026-03-31T01:51:31.087Z"
     },
-    null
+    {
+      "name": "arligga",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-03-31T01:51:40.395Z"
+    }
   ],
   "queue": [],
   "handNum": 0,
@@ -73,5 +83,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-03-31T01:51:35.091Z"
+  "updatedAt": "2026-03-31T01:51:40.395Z"
 }
