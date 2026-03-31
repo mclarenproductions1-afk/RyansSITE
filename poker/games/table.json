@@ -2,20 +2,7 @@
   "status": "active",
   "players": [
     null,
-    {
-      "name": "cameron",
-      "chips": 900,
-      "bet": 0,
-      "hand": [
-        "Jh",
-        "4d"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T23:48:56.208Z"
-    },
+    null,
     {
       "name": "Dih Lord",
       "chips": 890,
@@ -120,5 +107,5 @@
   "lastAggressor": 0,
   "roundStartPlayer": 1,
   "actions": [],
-  "updatedAt": "2026-03-31T23:50:05.294Z"
+  "updatedAt": "2026-03-31T23:50:06.999Z"
 }
