@@ -23,10 +23,10 @@
         "3c",
         "9h"
       ],
-      "folded": false,
+      "folded": true,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Fold",
       "joinedAt": "2026-03-31T01:35:46.223Z"
     },
     {
@@ -114,7 +114,7 @@
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 1,
+  "currentTurn": 2,
   "lastAggressor": 3,
   "roundStartPlayer": 3,
   "actions": [
@@ -122,7 +122,12 @@
       "slot": 0,
       "action": "call",
       "amount": 20
+    },
+    {
+      "slot": 1,
+      "action": "fold",
+      "amount": 0
     }
   ],
-  "updatedAt": "2026-03-31T01:36:31.564Z"
+  "updatedAt": "2026-03-31T01:36:50.150Z"
 }
