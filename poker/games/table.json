@@ -1,6 +1,23 @@
 {
   "status": "waiting",
-  "players": [null, null, null, null, null, null],
+  "players": [
+    {
+      "name": "dalmdalm",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-03-31T01:51:13.502Z"
+    },
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
   "queue": [],
   "handNum": 0,
   "dealer": 0,
@@ -16,5 +33,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-03-31T00:00:00.000Z"
+  "updatedAt": "2026-03-31T01:51:13.503Z"
 }
