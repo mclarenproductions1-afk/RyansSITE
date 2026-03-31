@@ -41,6 +41,17 @@
       "inHand": false,
       "lastAction": "",
       "joinedAt": "2026-03-31T23:50:11.565Z"
+    },
+    {
+      "name": "Dih Lord",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-03-31T23:50:24.355Z"
     }
   ],
   "handNum": 2,
@@ -105,5 +116,5 @@
   "lastAggressor": 0,
   "roundStartPlayer": 1,
   "actions": [],
-  "updatedAt": "2026-03-31T23:50:21.770Z"
+  "updatedAt": "2026-03-31T23:50:24.355Z"
 }
