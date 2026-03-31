@@ -4,8 +4,8 @@
     null,
     {
       "name": "Johnsam Joyson",
-      "chips": 990,
-      "bet": 10,
+      "chips": 980,
+      "bet": 0,
       "hand": [
         "10c",
         "10d"
@@ -13,14 +13,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "SB",
-      "joinedAt": "2026-03-31T01:35:46.223Z",
-      "isSB": true
+      "lastAction": "",
+      "joinedAt": "2026-03-31T01:35:46.223Z"
     },
     {
       "name": "roy",
       "chips": 2980,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "Jh",
         "8s"
@@ -28,10 +27,8 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
-      "joinedAt": "2026-03-31T01:36:01.776Z",
-      "isDealer": true,
-      "isBB": true
+      "lastAction": "",
+      "joinedAt": "2026-03-31T01:36:01.776Z"
     },
     null,
     null,
@@ -39,7 +36,7 @@
   ],
   "handNum": 2,
   "dealer": 2,
-  "phase": "preflop",
+  "phase": "flop",
   "deck": [
     "7s",
     "8h",
@@ -85,21 +82,22 @@
     "6h",
     "Jc",
     "3s",
-    "Js",
-    "2h",
-    "Kh",
-    "5s"
+    "Js"
   ],
-  "communityCards": [],
-  "pot": 30,
+  "communityCards": [
+    "5s",
+    "Kh",
+    "2h"
+  ],
+  "pot": 40,
   "sidePots": [],
-  "currentBet": 20,
+  "currentBet": 0,
   "minRaise": 20,
   "currentTurn": 1,
-  "lastAggressor": 2,
+  "lastAggressor": 1,
   "roundStartPlayer": 2,
   "actions": [],
-  "updatedAt": "2026-03-31T01:39:11.973Z",
+  "updatedAt": "2026-03-31T01:39:17.843Z",
   "lastWinners": [
     {
       "slot": 2,
