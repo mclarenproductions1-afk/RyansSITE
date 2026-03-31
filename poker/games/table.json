@@ -3,8 +3,8 @@
   "players": [
     {
       "name": "Ryan",
-      "chips": 980,
-      "bet": 20,
+      "chips": 870,
+      "bet": 130,
       "hand": [
         "Qc",
         "6d"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Call",
+      "lastAction": "Raise 130",
       "joinedAt": "2026-03-31T01:35:27.396Z"
     },
     {
@@ -110,12 +110,12 @@
     "8s"
   ],
   "communityCards": [],
-  "pot": 140,
+  "pot": 250,
   "sidePots": [],
-  "currentBet": 60,
-  "minRaise": 40,
-  "currentTurn": 0,
-  "lastAggressor": 2,
+  "currentBet": 130,
+  "minRaise": 70,
+  "currentTurn": 2,
+  "lastAggressor": 0,
   "roundStartPlayer": 3,
   "actions": [
     {
@@ -137,7 +137,12 @@
       "slot": 3,
       "action": "call",
       "amount": 60
+    },
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 130
     }
   ],
-  "updatedAt": "2026-03-31T01:37:04.736Z"
+  "updatedAt": "2026-03-31T01:37:18.166Z"
 }
