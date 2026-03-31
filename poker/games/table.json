@@ -29,20 +29,7 @@
       "lastAction": "BB",
       "joinedAt": "2026-03-31T23:50:48.528Z"
     },
-    {
-      "name": "Ryan",
-      "chips": 2120,
-      "bet": 20,
-      "hand": [
-        "2d",
-        "2c"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Call",
-      "joinedAt": "2026-03-31T23:50:42.538Z"
-    },
+    null,
     null,
     null,
     null
@@ -120,7 +107,7 @@
       "amount": 67
     }
   ],
-  "updatedAt": "2026-03-31T23:53:35.106Z",
+  "updatedAt": "2026-03-31T23:53:38.036Z",
   "lastWinners": [
     {
       "slot": 2,
