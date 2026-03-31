@@ -1,10 +1,10 @@
 {
-  "status": "active",
+  "status": "showdown",
   "players": [
     {
       "name": "67",
       "chips": 398,
-      "bet": 300,
+      "bet": 0,
       "hand": [
         "3d",
         "8s"
@@ -12,13 +12,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 300",
+      "lastAction": "",
       "joinedAt": "2026-03-31T23:50:39.289Z"
     },
     {
       "name": "42",
-      "chips": 745,
-      "bet": 100,
+      "chips": 1375,
+      "bet": 0,
       "hand": [
         "Qh",
         "9s"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 100",
+      "lastAction": "Wins!",
       "joinedAt": "2026-03-31T23:50:48.528Z"
     },
     null,
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 3,
   "dealer": 0,
-  "phase": "river",
+  "phase": "showdown",
   "deck": [
     "8d",
     "2c",
@@ -90,32 +90,21 @@
     "Jh",
     "Qs"
   ],
-  "pot": 630,
+  "pot": 0,
   "sidePots": [],
-  "currentBet": 300,
-  "minRaise": 200,
-  "currentTurn": 1,
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": -1,
   "turnStartedAt": "2026-03-31T23:55:04.507Z",
   "lastAggressor": 0,
   "roundStartPlayer": 0,
-  "actions": [
-    {
-      "slot": 1,
-      "action": "raise",
-      "amount": 100
-    },
-    {
-      "slot": 0,
-      "action": "raise",
-      "amount": 300
-    }
-  ],
-  "updatedAt": "2026-03-31T23:55:04.507Z",
+  "actions": [],
+  "updatedAt": "2026-03-31T23:55:11.219Z",
   "lastWinners": [
     {
-      "slot": 2,
-      "hand": "Flush",
-      "amount": 2140
+      "slot": 1,
+      "hand": "Pair",
+      "amount": 830
     }
   ]
 }
