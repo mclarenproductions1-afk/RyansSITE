@@ -4,7 +4,7 @@
     {
       "name": "67",
       "chips": 311,
-      "bet": 67,
+      "bet": 0,
       "hand": [
         "7d",
         "6d"
@@ -12,12 +12,12 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 67",
+      "lastAction": "",
       "joinedAt": "2026-03-31T23:50:39.289Z"
     },
     {
       "name": "42",
-      "chips": 1355,
+      "chips": 1288,
       "bet": 0,
       "hand": [
         "6h",
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 4,
   "dealer": 1,
-  "phase": "flop",
+  "phase": "turn",
   "deck": [
     "3h",
     "4d",
@@ -82,30 +82,24 @@
     "2d",
     "Kd",
     "Ac",
-    "Jh",
-    "Jc"
+    "Jh"
   ],
   "communityCards": [
     "5d",
     "8s",
-    "Js"
+    "Js",
+    "Jc"
   ],
-  "pot": 107,
+  "pot": 174,
   "sidePots": [],
-  "currentBet": 67,
-  "minRaise": 67,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-03-31T23:55:38.822Z",
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-03-31T23:55:51.330Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [
-    {
-      "slot": 0,
-      "action": "raise",
-      "amount": 67
-    }
-  ],
-  "updatedAt": "2026-03-31T23:55:38.822Z",
+  "actions": [],
+  "updatedAt": "2026-03-31T23:55:51.330Z",
   "lastWinners": [
     {
       "slot": 1,
