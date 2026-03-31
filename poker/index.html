@@ -402,9 +402,8 @@ input[type="text"]:focus { border-color: var(--text); }
       <div id="lby-slots" class="slots"></div>
       <button id="btn-start" class="btn" style="width:100%;display:none">Start Game</button>
       <p id="lby-status" style="font-size:0.78rem;color:var(--muted);margin-top:10px;text-align:center"></p>
-      <div style="margin-top:16px;display:flex;flex-direction:column;gap:8px">
+      <div style="margin-top:16px">
         <button id="btn-leave" class="btn btn-outline" style="width:100%;font-size:0.78rem">Leave Table</button>
-        <button id="btn-reset-lobby" class="btn btn-outline" style="width:100%;font-size:0.78rem;color:#c0392b;border-color:#e5c4c0;">Reset Table</button>
       </div>
     </div>
   </div>
@@ -415,10 +414,7 @@ input[type="text"]:focus { border-color: var(--text); }
   <div class="game-header">
     <a href="/poker" id="btn-exit-game" class="back-link">← Leave</a>
     <span class="game-title">Poker</span>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span id="phase-badge" class="phase-badge">Pre-flop</span>
-      <button id="btn-reset-game" style="cursor:pointer;border:1px solid #c0392b;color:#c0392b;background:transparent;font-family:inherit;font-size:0.72rem;font-weight:600;letter-spacing:0.05em;padding:3px 10px;border-radius:99px;">Reset</button>
-    </div>
+    <span id="phase-badge" class="phase-badge">Pre-flop</span>
   </div>
 
   <!-- Players row -->
@@ -508,7 +504,6 @@ const MAX_PLAYERS = 6;
 let myName       = "";
 let mySlot       = -1;
 let gameFileSHA  = null;
-let gameEtag     = null;
 let gameState    = null;
 let pollTimer    = null;
 let isSaving     = false;
@@ -633,17 +628,15 @@ function ghHeaders(extra) {
   }, extra || {});
 }
 
-async function fetchGame(etag) {
-  const headers = ghHeaders();
-  if (etag) headers["If-None-Match"] = etag;
-  const res = await fetch(gameApiUrl(), { headers });
-  if (res.status === 304) return null;
+async function fetchGame() {
+  // Always cache-bust — GitHub CDN serves stale data without a unique URL param
+  const url = gameApiUrl() + `?_=${Date.now()}`;
+  const res = await fetch(url, { headers: ghHeaders(), cache: 'no-store' });
   if (res.status === 404) return "notfound";
   if (!res.ok) throw new Error(`GitHub ${res.status}`);
   const data = await res.json();
-  const newEtag = res.headers.get("ETag");
   const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
-  return { state, sha: data.sha, etag: newEtag };
+  return { state, sha: data.sha };
 }
 
 async function saveGame(state, sha) {
@@ -660,10 +653,9 @@ async function saveGame(state, sha) {
     body: JSON.stringify(body)
   });
   if (res.status === 409) {
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     if (fresh && fresh !== "notfound") {
       gameFileSHA = fresh.sha;
-      gameEtag    = fresh.etag;
       applyGameState(fresh.state);
     }
     throw new Error("conflict");
@@ -1075,10 +1067,10 @@ async function pollGame() {
   }
 
   try {
-    const result = await fetchGame(gameEtag);
+    const result = await fetchGame();
     if (!result || result === "notfound") return;
     gameFileSHA = result.sha;
-    gameEtag    = result.etag;
+    
     applyGameState(result.state);
   } catch (e) { /* silent */ }
 }
@@ -1087,10 +1079,10 @@ async function kickAfkPlayer(afkSlot) {
   if (isSaving) return;
   isSaving = true;
   try {
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     if (!fresh || fresh === 'notfound') return;
     gameFileSHA = fresh.sha;
-    gameEtag = fresh.etag;
+    
     const state = JSON.parse(JSON.stringify(fresh.state));
 
     // Re-check: still that player's turn and still over the limit?
@@ -1109,7 +1101,7 @@ async function kickAfkPlayer(afkSlot) {
     updated.players[afkSlot] = null;
 
     const newSha = await saveGame(updated, gameFileSHA);
-    gameFileSHA = newSha; gameEtag = null; gameState = updated;
+    gameFileSHA = newSha; gameState = updated;
     applyGameState(updated);
   } catch (e) {
     if (e.message !== 'conflict') console.error('AFK kick failed:', e);
@@ -1471,19 +1463,16 @@ function renderLobby() {
   const startBtn = document.getElementById('btn-start');
   const statusEl = document.getElementById('lby-status');
 
-  if (mySlot === 0) {
-    if (filled >= 2) {
-      startBtn.style.display = 'block';
-      startBtn.disabled = false;
-      statusEl.textContent = `${filled} player${filled > 1 ? 's' : ''} ready. You can start!`;
-    } else {
-      startBtn.style.display = 'block';
-      startBtn.disabled = true;
-      statusEl.textContent = 'Need at least 2 players to start.';
-    }
+  // Anyone seated can start — show button to all seated players
+  if (mySlot >= 0) {
+    startBtn.style.display = 'block';
+    startBtn.disabled = filled < 2;
+    statusEl.textContent = filled >= 2
+      ? `${filled} player${filled > 1 ? 's' : ''} at table. Click Start when ready.`
+      : 'Waiting for at least 1 more player…';
   } else {
     startBtn.style.display = 'none';
-    statusEl.textContent = filled >= 2 ? `${filled} players joined. Waiting for host to start…` : `${filled}/2+ players joined.`;
+    statusEl.textContent = `${filled} player${filled !== 1 ? 's' : ''} at table.`;
   }
 }
 
@@ -1525,10 +1514,10 @@ async function doAction(action, amount) {
 
   try {
     // Optimistic: fetch fresh state, apply, save
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     if (!fresh || fresh === 'notfound') { showToast('Could not load game state'); return; }
     gameFileSHA = fresh.sha;
-    gameEtag = fresh.etag;
+    
 
     let state = JSON.parse(JSON.stringify(fresh.state));
     if (state.currentTurn !== mySlot) { showToast('Not your turn!'); applyGameState(fresh.state); return; }
@@ -1536,8 +1525,7 @@ async function doAction(action, amount) {
     state = applyAction(state, mySlot, action, amount);
     const newSha = await saveGame(state, gameFileSHA);
     gameFileSHA = newSha;
-    gameEtag = null;
-    gameState = state;
+       gameState = state;
     applyGameState(state);
   } catch (err) {
     if (err.message === 'conflict') showToast('Conflict — refreshing…');
@@ -1554,7 +1542,7 @@ async function doNextHand() {
   isSaving = true;
 
   try {
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     if (!fresh || fresh === 'notfound') { showToast('Could not load state'); return; }
     gameFileSHA = fresh.sha;
 
@@ -1563,8 +1551,7 @@ async function doNextHand() {
     state = startNewHand(state);
     const newSha = await saveGame(state, gameFileSHA);
     gameFileSHA = newSha;
-    gameEtag = null;
-    gameState = state;
+       gameState = state;
     applyGameState(state);
   } catch (err) {
     showToast('Failed to start next hand');
@@ -1585,7 +1572,7 @@ async function onJoin() {
   document.getElementById('btn-join').disabled = true;
 
   try {
-    let result = await fetchGame(null);
+    let result = await fetchGame();
 
     if (result === 'notfound') {
       // Create fresh table
@@ -1593,7 +1580,7 @@ async function onJoin() {
       state.players[0] = { name, chips: STARTING_CHIPS, bet: 0, hand: [], folded: false, allIn: false, inHand: false, lastAction: '', joinedAt: new Date().toISOString() };
       const sha = await createGameFile(state);
       myName = name; mySlot = 0;
-      gameFileSHA = sha; gameEtag = null; gameState = state;
+      gameFileSHA = sha; gameState = state;
       showScreen('lobby'); renderLobby(); startPolling();
       return;
     }
@@ -1607,7 +1594,7 @@ async function onJoin() {
     const existing = state.players.findIndex(p => p && p.name === name);
     if (existing >= 0) {
       myName = name; mySlot = existing;
-      gameEtag = null; gameState = state;
+      gameState = state;
       if (state.status === 'waiting') { showScreen('lobby'); renderLobby(); }
       else { showScreen('game'); renderGame(); }
       startPolling();
@@ -1618,7 +1605,7 @@ async function onJoin() {
     const inQueue = state.queue.findIndex(q => q.name === name);
     if (inQueue >= 0) {
       myName = name; mySlot = -1;
-      gameEtag = null; gameState = state;
+      gameState = state;
       showScreen('game'); renderGame();
       startPolling();
       return;
@@ -1636,7 +1623,7 @@ async function onJoin() {
         sha = await saveGame(state, sha);
       } catch (err) {
         if (err.message === 'conflict') {
-          const retry = await fetchGame(null);
+          const retry = await fetchGame();
           if (!retry || retry === 'notfound') throw new Error('Table disappeared');
           state = retry.state; sha = retry.sha;
           if (!state.queue) state.queue = [];
@@ -1650,7 +1637,7 @@ async function onJoin() {
       }
       if (mySlot < 0) mySlot = state.players.indexOf(newPlayer);
       myName = name;
-      gameFileSHA = sha; gameEtag = null; gameState = state;
+      gameFileSHA = sha; gameState = state;
       showScreen('lobby'); renderLobby(); startPolling();
     } else {
       // Game in progress — add to queue for next hand
@@ -1663,7 +1650,7 @@ async function onJoin() {
         sha = await saveGame(state, sha);
       } catch (err) {
         if (err.message === 'conflict') {
-          const retry = await fetchGame(null);
+          const retry = await fetchGame();
           if (!retry || retry === 'notfound') throw new Error('Table disappeared');
           state = retry.state; sha = retry.sha;
           if (!state.queue) state.queue = [];
@@ -1675,7 +1662,7 @@ async function onJoin() {
         } else throw err;
       }
       myName = name; mySlot = -1;
-      gameFileSHA = sha; gameEtag = null; gameState = state;
+      gameFileSHA = sha; gameState = state;
       showToast('Joined queue — you\'ll be seated next hand');
       showScreen('game'); renderGame(); startPolling();
     }
@@ -1688,18 +1675,24 @@ async function onJoin() {
 }
 
 async function onStartGame() {
-  if (mySlot !== 0) return;
   document.getElementById('btn-start').disabled = true;
   try {
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     if (!fresh || fresh === 'notfound') throw new Error('not found');
     gameFileSHA = fresh.sha;
     let state = JSON.parse(JSON.stringify(fresh.state));
     const filled = state.players.filter(Boolean).length;
-    if (filled < 2) { showToast('Need at least 2 players.'); document.getElementById('btn-start').disabled = false; return; }
+    if (filled < 2) {
+      showToast(`Only ${filled} player${filled === 1 ? '' : 's'} in state — try refreshing.`);
+      document.getElementById('btn-start').disabled = false;
+      // Sync local display with actual state
+      gameState = state;
+      renderLobby();
+      return;
+    }
     state = startNewHand(state);
     const sha = await saveGame(state, gameFileSHA);
-    gameFileSHA = sha; gameEtag = null; gameState = state;
+    gameFileSHA = sha; gameState = state;
     showScreen('game'); renderGame();
   } catch (e) {
     document.getElementById('btn-start').disabled = false;
@@ -1709,30 +1702,43 @@ async function onStartGame() {
 }
 
 async function onLeave() {
-  if (mySlot < 0) { showScreen('join'); return; }
+  const slot = mySlot;
+  const name = myName;
+  // Reset local state immediately so UI is responsive
+  mySlot = -1; myName = '';
+  gameState = null; gameFileSHA = null;
+  showingRaise = false;
   stopPolling();
-  try {
-    const fresh = await fetchGame(null);
-    if (fresh && fresh !== 'notfound') {
+  showScreen('join');
+
+  if (slot < 0) return;
+  // Try up to 3 times to remove ourselves from the state (retry on SHA conflict)
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const fresh = await fetchGame();
+      if (!fresh || fresh === 'notfound') break;
       let state = JSON.parse(JSON.stringify(fresh.state));
-      if (state.status === 'waiting' && state.players[mySlot]) {
-        state.players[mySlot] = null;
-        // Shift host if needed
-        if (mySlot === 0) {
+      // Remove from players or queue regardless of game phase
+      if (state.players[slot] && state.players[slot].name === name) {
+        state.players[slot] = null;
+        // If we were host (slot 0), promote next player
+        if (slot === 0) {
           const nextHost = state.players.findIndex((p, i) => i > 0 && p);
           if (nextHost >= 0) {
             state.players[0] = state.players[nextHost];
             state.players[nextHost] = null;
           }
         }
-        state.updatedAt = new Date().toISOString();
-        await saveGame(state, fresh.sha).catch(() => {});
       }
+      // Also remove from queue
+      if (state.queue) state.queue = state.queue.filter(q => q.name !== name);
+      state.updatedAt = new Date().toISOString();
+      await saveGame(state, fresh.sha);
+      break; // success
+    } catch (e) {
+      if (e.message !== 'conflict') break; // don't retry non-conflict errors
     }
-  } catch (e) { /* silent */ }
-  mySlot = -1; myName = '';
-  gameState = null; gameFileSHA = null; gameEtag = null;
-  showScreen('join');
+  }
 }
 
 async function onCashOut() {
@@ -1741,7 +1747,7 @@ async function onCashOut() {
   // Remove player from state
   if (mySlot >= 0) {
     try {
-      const fresh = await fetchGame(null);
+      const fresh = await fetchGame();
       if (fresh && fresh !== 'notfound') {
         let state = JSON.parse(JSON.stringify(fresh.state));
         if (state.players[mySlot]) {
@@ -1753,8 +1759,7 @@ async function onCashOut() {
     } catch (e) { /* silent */ }
   }
   mySlot = -1; myName = '';
-  gameState = null; gameFileSHA = null; gameEtag = null;
-  showScreen('join');
+  gameState = null; gameFileSHA = null;  showScreen('join');
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1787,7 +1792,7 @@ async function onReset() {
   stopPolling();
   try {
     // Fetch current SHA so we can overwrite
-    const fresh = await fetchGame(null);
+    const fresh = await fetchGame();
     const sha = fresh && fresh !== 'notfound' ? fresh.sha : null;
     const state = freshTableState();
     if (sha) {
@@ -1797,8 +1802,7 @@ async function onReset() {
     }
     // Reset local state
     mySlot = -1; myName = '';
-    gameState = null; gameFileSHA = null; gameEtag = null;
-    showingRaise = false;
+    gameState = null; gameFileSHA = null;    showingRaise = false;
     document.getElementById('result-overlay').classList.remove('show');
     showScreen('join');
     showToast('Table has been reset');
@@ -1825,9 +1829,6 @@ function init() {
     e.preventDefault();
     await onCashOut();
   });
-  document.getElementById('btn-reset-game').addEventListener('click', onReset);
-  document.getElementById('btn-reset-lobby').addEventListener('click', onReset);
-
   document.getElementById('inp-name').addEventListener('keydown', e => {
     if (e.key === 'Enter') onJoin();
   });
