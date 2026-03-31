@@ -3,8 +3,8 @@
   "players": [
     {
       "name": "67",
-      "chips": 870,
-      "bet": 10,
+      "chips": 813,
+      "bet": 67,
       "hand": [
         "Jc",
         "9h"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "SB",
+      "lastAction": "Raise 67",
       "joinedAt": "2026-03-31T23:50:39.289Z"
     },
     {
@@ -100,22 +100,27 @@
     "4h"
   ],
   "communityCards": [],
-  "pot": 50,
+  "pot": 107,
   "sidePots": [],
-  "currentBet": 20,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-03-31T23:53:23.896Z",
-  "lastAggressor": 1,
+  "currentBet": 67,
+  "minRaise": 47,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-03-31T23:53:35.106Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 1,
   "actions": [
     {
       "slot": 2,
       "action": "call",
       "amount": 20
+    },
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 67
     }
   ],
-  "updatedAt": "2026-03-31T23:53:23.896Z",
+  "updatedAt": "2026-03-31T23:53:35.106Z",
   "lastWinners": [
     {
       "slot": 2,
