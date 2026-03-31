@@ -1,16 +1,16 @@
 {
-  "status": "active",
+  "status": "showdown",
   "players": [
     {
       "name": "Ryan",
-      "chips": 470,
+      "chips": 0,
       "bet": 0,
       "hand": [
         "Qc",
         "6d"
       ],
       "folded": false,
-      "allIn": false,
+      "allIn": true,
       "inHand": true,
       "lastAction": "",
       "joinedAt": "2026-03-31T01:35:27.396Z"
@@ -31,8 +31,8 @@
     },
     {
       "name": "roy",
-      "chips": 0,
-      "bet": 470,
+      "chips": 3000,
+      "bet": 0,
       "hand": [
         "As",
         "Js"
@@ -40,13 +40,13 @@
       "folded": false,
       "allIn": true,
       "inHand": true,
-      "lastAction": "All-in",
+      "lastAction": "Wins!",
       "joinedAt": "2026-03-31T01:36:01.776Z"
     },
     {
       "name": "nig",
       "chips": 0,
-      "bet": 470,
+      "bet": 0,
       "hand": [
         "9s",
         "Jc"
@@ -54,7 +54,7 @@
       "folded": false,
       "allIn": true,
       "inHand": true,
-      "lastAction": "All-in",
+      "lastAction": "",
       "joinedAt": "2026-03-31T01:36:10.438Z"
     },
     null,
@@ -62,7 +62,7 @@
   ],
   "handNum": 1,
   "dealer": 1,
-  "phase": "river",
+  "phase": "showdown",
   "deck": [
     "6s",
     "9d",
@@ -111,24 +111,20 @@
     "10c",
     "2h"
   ],
-  "pot": 2530,
+  "pot": 0,
   "sidePots": [],
-  "currentBet": 470,
-  "minRaise": 0,
-  "currentTurn": 0,
-  "lastAggressor": 3,
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": -1,
+  "lastAggressor": 0,
   "roundStartPlayer": 3,
-  "actions": [
+  "actions": [],
+  "updatedAt": "2026-03-31T01:39:04.638Z",
+  "lastWinners": [
     {
       "slot": 2,
-      "action": "raise",
-      "amount": 470
-    },
-    {
-      "slot": 3,
-      "action": "raise",
-      "amount": 470
+      "hand": "Straight",
+      "amount": 3000
     }
-  ],
-  "updatedAt": "2026-03-31T01:38:58.548Z"
+  ]
 }
