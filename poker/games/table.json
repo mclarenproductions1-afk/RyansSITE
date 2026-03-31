@@ -1,72 +1,7 @@
 {
   "status": "waiting",
   "players": [
-    {
-      "name": "dalmdalm",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:13.502Z"
-    },
-    {
-      "name": "Ryan",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:17.997Z"
-    },
-    {
-      "name": "dich and balls roy",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:35.091Z"
-    },
-    {
-      "name": "Cameron",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:25.741Z"
-    },
-    {
-      "name": "Liam",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:31.087Z"
-    },
-    {
-      "name": "arligga",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T01:51:40.395Z"
-    }
+  
   ],
   "queue": [],
   "handNum": 0,
