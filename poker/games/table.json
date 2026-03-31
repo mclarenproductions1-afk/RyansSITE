@@ -13,8 +13,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "SB",
-      "joinedAt": "2026-03-31T23:50:39.289Z",
-      "isSB": true
+      "joinedAt": "2026-03-31T23:50:39.289Z"
     },
     {
       "name": "42",
@@ -28,13 +27,12 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "BB",
-      "joinedAt": "2026-03-31T23:50:48.528Z",
-      "isBB": true
+      "joinedAt": "2026-03-31T23:50:48.528Z"
     },
     {
       "name": "Ryan",
-      "chips": 2140,
-      "bet": 0,
+      "chips": 2120,
+      "bet": 20,
       "hand": [
         "2d",
         "2c"
@@ -42,9 +40,8 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
-      "joinedAt": "2026-03-31T23:50:42.538Z",
-      "isDealer": true
+      "lastAction": "Call",
+      "joinedAt": "2026-03-31T23:50:42.538Z"
     },
     null,
     null,
@@ -103,16 +100,22 @@
     "4h"
   ],
   "communityCards": [],
-  "pot": 30,
+  "pot": 50,
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 2,
-  "turnStartedAt": "2026-03-31T23:53:14.465Z",
+  "currentTurn": 0,
+  "turnStartedAt": "2026-03-31T23:53:23.896Z",
   "lastAggressor": 1,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-03-31T23:53:14.465Z",
+  "actions": [
+    {
+      "slot": 2,
+      "action": "call",
+      "amount": 20
+    }
+  ],
+  "updatedAt": "2026-03-31T23:53:23.896Z",
   "lastWinners": [
     {
       "slot": 2,
