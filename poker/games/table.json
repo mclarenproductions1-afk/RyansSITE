@@ -45,16 +45,16 @@
     },
     {
       "name": "Dih Lord",
-      "chips": 880,
-      "bet": 0,
+      "chips": 0,
+      "bet": 880,
       "hand": [
         "Qs",
         "Jd"
       ],
       "folded": false,
-      "allIn": false,
+      "allIn": true,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "All-in",
       "joinedAt": "2026-03-31T23:50:43.322Z"
     },
     null,
@@ -112,20 +112,25 @@
     "7h",
     "As"
   ],
-  "pot": 1260,
+  "pot": 2140,
   "sidePots": [],
   "currentBet": 880,
-  "minRaise": 880,
-  "currentTurn": 3,
-  "turnStartedAt": "2026-03-31T23:52:52.819Z",
-  "lastAggressor": 2,
+  "minRaise": 0,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-03-31T23:52:56.404Z",
+  "lastAggressor": 3,
   "roundStartPlayer": 3,
   "actions": [
     {
       "slot": 2,
       "action": "raise",
       "amount": 880
+    },
+    {
+      "slot": 3,
+      "action": "raise",
+      "amount": 880
     }
   ],
-  "updatedAt": "2026-03-31T23:52:52.819Z"
+  "updatedAt": "2026-03-31T23:52:56.404Z"
 }
