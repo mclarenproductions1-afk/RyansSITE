@@ -3,7 +3,7 @@
   "players": [
     {
       "name": "Ryan",
-      "chips": 870,
+      "chips": 670,
       "bet": 0,
       "hand": [
         "Qc",
@@ -32,7 +32,7 @@
     {
       "name": "roy",
       "chips": 670,
-      "bet": 200,
+      "bet": 0,
       "hand": [
         "As",
         "Js"
@@ -40,13 +40,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 200",
+      "lastAction": "",
       "joinedAt": "2026-03-31T01:36:01.776Z"
     },
     {
       "name": "nig",
       "chips": 670,
-      "bet": 200,
+      "bet": 0,
       "hand": [
         "9s",
         "Jc"
@@ -54,7 +54,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Call",
+      "lastAction": "",
       "joinedAt": "2026-03-31T01:36:10.438Z"
     },
     null,
@@ -62,7 +62,7 @@
   ],
   "handNum": 1,
   "dealer": 1,
-  "phase": "flop",
+  "phase": "turn",
   "deck": [
     "6s",
     "9d",
@@ -103,32 +103,21 @@
     "7d",
     "2d",
     "Jd",
-    "2h",
-    "10c"
+    "2h"
   ],
   "communityCards": [
     "8s",
     "Kd",
-    "Qh"
+    "Qh",
+    "10c"
   ],
-  "pot": 790,
+  "pot": 990,
   "sidePots": [],
-  "currentBet": 200,
-  "minRaise": 200,
-  "currentTurn": 0,
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": 2,
   "lastAggressor": 2,
   "roundStartPlayer": 3,
-  "actions": [
-    {
-      "slot": 2,
-      "action": "raise",
-      "amount": 200
-    },
-    {
-      "slot": 3,
-      "action": "call",
-      "amount": 200
-    }
-  ],
-  "updatedAt": "2026-03-31T01:38:00.959Z"
+  "actions": [],
+  "updatedAt": "2026-03-31T01:38:10.856Z"
 }
