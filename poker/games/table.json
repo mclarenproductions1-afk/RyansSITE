@@ -31,8 +31,8 @@
     },
     {
       "name": "roy",
-      "chips": 870,
-      "bet": 0,
+      "chips": 670,
+      "bet": 200,
       "hand": [
         "As",
         "Js"
@@ -40,7 +40,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Raise 200",
       "joinedAt": "2026-03-31T01:36:01.776Z"
     },
     {
@@ -111,13 +111,19 @@
     "Kd",
     "Qh"
   ],
-  "pot": 390,
+  "pot": 590,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 2,
+  "currentBet": 200,
+  "minRaise": 200,
+  "currentTurn": 3,
   "lastAggressor": 2,
   "roundStartPlayer": 3,
-  "actions": [],
-  "updatedAt": "2026-03-31T01:37:43.296Z"
+  "actions": [
+    {
+      "slot": 2,
+      "action": "raise",
+      "amount": 200
+    }
+  ],
+  "updatedAt": "2026-03-31T01:37:58.919Z"
 }
