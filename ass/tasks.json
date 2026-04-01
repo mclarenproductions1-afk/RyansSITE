@@ -38,5 +38,15 @@
     "notes": "",
     "completed": false,
     "createdAt": "2026-04-01"
+  },
+  {
+    "id": "ba76c20c-0fc7-4df4-8521-d5f7f466b874",
+    "title": "Soldier Performance",
+    "subject": "CAPA",
+    "type": "assignment",
+    "dueDate": "2026-04-24",
+    "notes": "",
+    "completed": false,
+    "createdAt": "2026-04-01"
   }
 ]
