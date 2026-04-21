@@ -58,5 +58,15 @@
     "notes": "",
     "completed": false,
     "createdAt": "2026-04-01"
+  },
+  {
+    "id": "2a119922-7965-4103-be29-b80b44611906",
+    "title": "Gravity and vector analysis",
+    "subject": "Physics",
+    "type": "assignment",
+    "dueDate": "2026-05-08",
+    "notes": "Part A take home\nPart B in class",
+    "completed": false,
+    "createdAt": "2026-04-21"
   }
 ]
