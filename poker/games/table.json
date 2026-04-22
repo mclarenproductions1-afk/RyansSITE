@@ -1,17 +1,7 @@
 {
   "status": "waiting",
   "players": [
-    {
-      "name": "John",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-04-22T04:37:49.911Z"
-    },
+    null,
     null,
     null,
     null,
@@ -33,5 +23,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-04-22T04:37:49.911Z"
+  "updatedAt": "2026-04-22T04:38:03.617Z"
 }
