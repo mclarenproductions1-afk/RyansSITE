@@ -265,12 +265,7 @@ main {
 
 <main>
 
-  <!-- Loading -->
-  <div id="loading-screen">
-    <div class="spinner"></div>
-    <div>Loading furry images…</div>
-    <div class="load-progress" id="load-progress">0 / 6 loaded</div>
-  </div>
+  <div id="loading-screen" style="display:none"></div>
 
   <!-- Machine -->
   <div id="machine">
@@ -353,12 +348,12 @@ main {
 // ── Config ─────────────────────────────────────────────────────────────────
 
 const SYMBOLS = [
-  { key: 'fox',    label: 'Fox',    emoji: '🦊', tag: 'fox_anthro',    weight: 30 },
-  { key: 'wolf',   label: 'Wolf',   emoji: '🐺', tag: 'wolf_anthro',   weight: 25 },
-  { key: 'cat',    label: 'Cat',    emoji: '🐱', tag: 'cat_humanoid',  weight: 25 },
-  { key: 'bunny',  label: 'Bunny',  emoji: '🐰', tag: 'rabbit_anthro', weight: 20 },
-  { key: 'deer',   label: 'Deer',   emoji: '🦌', tag: 'cervid_anthro', weight: 12 },
-  { key: 'dragon', label: 'Dragon', emoji: '🐲', tag: 'dragon_anthro', weight: 5  },
+  { key: 'fox',    label: 'Fox',    emoji: '🦊', weight: 30 },
+  { key: 'wolf',   label: 'Wolf',   emoji: '🐺', weight: 25 },
+  { key: 'cat',    label: 'Cat',    emoji: '🐱', weight: 25 },
+  { key: 'bunny',  label: 'Bunny',  emoji: '🐰', weight: 20 },
+  { key: 'deer',   label: 'Deer',   emoji: '🦌', weight: 12 },
+  { key: 'dragon', label: 'Dragon', emoji: '🐲', weight: 5  },
 ];
 
 const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
@@ -368,7 +363,6 @@ const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 let balance     = parseInt(localStorage.getItem('slots-balance') || '100');
 let bet         = 10;
 let spinning    = false;
-let imagePool   = {}; // key → [url, ...]
 let toastTimer  = null;
 
 // ── Utils ──────────────────────────────────────────────────────────────────
@@ -395,72 +389,11 @@ function pickSymbol() {
   return SYMBOLS[0];
 }
 
-function randImg(key) {
-  const imgs = imagePool[key];
-  if (!imgs || !imgs.length) return null;
-  return imgs[Math.floor(Math.random() * imgs.length)];
-}
-
-// ── Image loading ──────────────────────────────────────────────────────────
-
-async function fetchSymbolImages(sym) {
-  const cacheKey = 'slots-imgs-' + sym.key;
-  const cached = localStorage.getItem(cacheKey);
-  if (cached) {
-    try {
-      const urls = JSON.parse(cached);
-      if (Array.isArray(urls) && urls.length) return urls;
-    } catch(e) {}
-  }
-
-  const e621Url = `https://e621.net/posts.json?tags=anthro+${sym.tag}+rating:s+solo&limit=10`;
-  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(e621Url)}`;
-  try {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) return [];
-    const data = await res.json();
-    const urls = (data.posts || [])
-      .filter(p => p.sample && p.sample.url)
-      .map(p => p.sample.url)
-      .slice(0, 5);
-    if (urls.length) localStorage.setItem(cacheKey, JSON.stringify(urls));
-    return urls;
-  } catch(e) {
-    return [];
-  }
-}
-
-async function loadAllImages() {
-  const prog = document.getElementById('load-progress');
-  let loaded = 0;
-  const results = await Promise.all(SYMBOLS.map(async (sym) => {
-    const urls = await fetchSymbolImages(sym);
-    loaded++;
-    prog.textContent = `${loaded} / ${SYMBOLS.length} loaded`;
-    return { key: sym.key, urls };
-  }));
-  results.forEach(r => { imagePool[r.key] = r.urls; });
-}
-
-// Set reel display (image or emoji fallback)
+// Set reel display
 function setReelDisplay(reelEl, symKey) {
   const sym = SYMBOLS.find(s => s.key === symKey);
-  const url = randImg(symKey);
-  let img = reelEl.querySelector('img');
   const emoji = reelEl.querySelector('.reel-emoji');
-  if (url) {
-    if (!img) { img = document.createElement('img'); img.alt = ''; reelEl.appendChild(img); }
-    if (emoji) emoji.style.display = 'none';
-    img.style.display = 'block';
-    img.src = url;
-    img.onerror = () => {
-      img.style.display = 'none';
-      if (emoji) { emoji.style.display = 'flex'; emoji.textContent = sym?.emoji || '?'; }
-    };
-  } else {
-    if (img) img.style.display = 'none';
-    if (emoji) { emoji.style.display = 'flex'; emoji.textContent = sym?.emoji || '?'; }
-  }
+  if (emoji) { emoji.style.display = 'flex'; emoji.textContent = sym?.emoji || '?'; }
 }
 
 // ── Spin logic ─────────────────────────────────────────────────────────────
@@ -669,12 +602,10 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 
 // ── Init ───────────────────────────────────────────────────────────────────
 
-(async () => {
-  saveBalance(); // update display
+(() => {
+  saveBalance();
 
-  await loadAllImages();
-
-  // Show initial images
+  // Show initial symbols
   for (let i = 0; i < 3; i++) {
     const sym = pickSymbol();
     setReelDisplay(document.getElementById('reel-' + i), sym.key);
