@@ -21,7 +21,10 @@
       "name": "didydbli",
       "joinedAt": "2026-05-04T01:31:34.389Z"
     },
-    null
+    {
+      "name": "cameron",
+      "joinedAt": "2026-05-04T01:31:37.682Z"
+    }
   ],
   "board": {
     "0,300": 0,
@@ -89,5 +92,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-05-04T01:31:34.389Z"
+  "updatedAt": "2026-05-04T01:31:37.683Z"
 }
