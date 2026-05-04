@@ -13,13 +13,12 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "BB",
-      "joinedAt": "2026-05-04T01:22:55.212Z",
-      "isBB": true
+      "joinedAt": "2026-05-04T01:22:55.212Z"
     },
     {
       "name": "Tom",
-      "chips": 1000,
-      "bet": 0,
+      "chips": 980,
+      "bet": 20,
       "hand": [
         "Jh",
         "5h"
@@ -27,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Call",
       "joinedAt": "2026-05-04T01:23:01.356Z"
     },
     {
@@ -42,8 +41,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "",
-      "joinedAt": "2026-05-04T01:23:02.643Z",
-      "isDealer": true
+      "joinedAt": "2026-05-04T01:23:02.643Z"
     },
     {
       "name": "quincy",
@@ -57,9 +55,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "",
-      "joinedAt": "2026-05-04T01:23:40.095Z",
-      "isSB": true,
-      "isDealer": true
+      "joinedAt": "2026-05-04T01:23:40.095Z"
     },
     {
       "name": "bhhjb",
@@ -73,9 +69,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "SB",
-      "joinedAt": "2026-05-04T01:23:53.881Z",
-      "isBB": true,
-      "isSB": true
+      "joinedAt": "2026-05-04T01:23:53.881Z"
     },
     null
   ],
@@ -128,16 +122,22 @@
     "4h"
   ],
   "communityCards": [],
-  "pot": 30,
+  "pot": 50,
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-05-04T01:29:16.685Z",
+  "currentTurn": 2,
+  "turnStartedAt": "2026-05-04T01:29:21.858Z",
   "lastAggressor": 0,
   "roundStartPlayer": 0,
-  "actions": [],
-  "updatedAt": "2026-05-04T01:29:16.685Z",
+  "actions": [
+    {
+      "slot": 1,
+      "action": "call",
+      "amount": 20
+    }
+  ],
+  "updatedAt": "2026-05-04T01:29:21.858Z",
   "lastWinners": [
     {
       "slot": 0,
