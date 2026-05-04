@@ -17,7 +17,10 @@
       "name": "quicny",
       "joinedAt": "2026-05-04T01:30:37.790Z"
     },
-    null,
+    {
+      "name": "didydbli",
+      "joinedAt": "2026-05-04T01:31:34.389Z"
+    },
     null
   ],
   "board": {
@@ -86,5 +89,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-05-04T01:30:37.790Z"
+  "updatedAt": "2026-05-04T01:31:34.389Z"
 }
