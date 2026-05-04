@@ -45,8 +45,8 @@
     },
     {
       "name": "quincy",
-      "chips": 1010,
-      "bet": 0,
+      "chips": 990,
+      "bet": 20,
       "hand": [
         "Jd",
         "3s"
@@ -54,7 +54,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Call",
       "joinedAt": "2026-05-04T01:23:40.095Z"
     },
     {
@@ -122,12 +122,12 @@
     "10c"
   ],
   "communityCards": [],
-  "pot": 30,
+  "pot": 50,
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 3,
-  "turnStartedAt": "2026-05-04T01:29:28.999Z",
+  "currentTurn": 4,
+  "turnStartedAt": "2026-05-04T01:29:36.672Z",
   "lastAggressor": 1,
   "roundStartPlayer": 1,
   "actions": [
@@ -135,9 +135,14 @@
       "slot": 2,
       "action": "fold",
       "amount": 0
+    },
+    {
+      "slot": 3,
+      "action": "call",
+      "amount": 20
     }
   ],
-  "updatedAt": "2026-05-04T01:29:28.999Z",
+  "updatedAt": "2026-05-04T01:29:36.672Z",
   "lastWinners": [
     {
       "slot": 0,
