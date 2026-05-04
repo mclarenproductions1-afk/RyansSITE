@@ -693,15 +693,17 @@ function mulberry32(a) {
 async function fetchFurryPhoto(species) {
   const cacheKey = 'furry-photo-' + species;
   const cached = localStorage.getItem(cacheKey);
-  if (cached) return cached;
+  if (cached && cached !== 'null') return cached;
 
   const tag = E621_TAGS[species] || 'fox_anthro';
+  const e621Url = `https://e621.net/posts.json?tags=anthro+${tag}+rating:s+solo&limit=16`;
+  // Route through CORS proxy since browsers can't set the required User-Agent header directly
+  const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(e621Url)}`;
   try {
-    const url = `https://e621.net/posts.json?tags=anthro+${tag}+rating:s+solo&limit=12`;
-    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    const res = await fetch(proxyUrl);
     if (!res.ok) return null;
     const data = await res.json();
-    const posts = (data.posts || []).filter(p => p.sample && p.sample.url);
+    const posts = (data.posts || []).filter(p => p.sample && p.sample.url && !p.sample.url.includes('deleted'));
     if (!posts.length) return null;
     const post = posts[Math.floor(Math.random() * posts.length)];
     const photoUrl = post.sample.url;
@@ -1273,6 +1275,10 @@ document.getElementById('btn-enter-den').addEventListener('click', async () => {
   const btn = document.getElementById('btn-enter-den');
   btn.disabled = true;
   btn.textContent = 'Finding your fursona pic...';
+
+  // Clear any previously failed cache entry so the proxy fetch runs fresh
+  const prevCached = localStorage.getItem('furry-photo-' + draft.species);
+  if (!prevCached || prevCached === 'null') localStorage.removeItem('furry-photo-' + draft.species);
 
   // Fetch photo
   const photo = await fetchFurryPhoto(draft.species);
