@@ -4,7 +4,7 @@
     {
       "name": "Ryan",
       "chips": 980,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "10h",
         "10s"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Call",
+      "lastAction": "",
       "joinedAt": "2026-05-04T01:22:55.212Z"
     },
     {
@@ -26,13 +26,13 @@
       "folded": true,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Fold",
+      "lastAction": "",
       "joinedAt": "2026-05-04T01:23:01.356Z"
     },
     {
       "name": "Fletcher",
-      "chips": 990,
-      "bet": 10,
+      "chips": 980,
+      "bet": 0,
       "hand": [
         "6h",
         "Ac"
@@ -40,13 +40,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "SB",
+      "lastAction": "",
       "joinedAt": "2026-05-04T01:23:02.643Z"
     },
     {
       "name": "quincy",
       "chips": 980,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "7c",
         "Kc"
@@ -54,13 +54,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
+      "lastAction": "",
       "joinedAt": "2026-05-04T01:23:40.095Z"
     },
     {
       "name": "bhhjb",
       "chips": 980,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "4c",
         "Ah"
@@ -68,7 +68,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Call",
+      "lastAction": "",
       "joinedAt": "2026-05-04T01:23:53.881Z"
     },
     null
@@ -76,7 +76,7 @@
   "queue": [],
   "handNum": 1,
   "dealer": 1,
-  "phase": "preflop",
+  "phase": "flop",
   "deck": [
     "2s",
     "5s",
@@ -116,36 +116,21 @@
     "3h",
     "3s",
     "6s",
-    "9d",
-    "Qh",
-    "Kh",
-    "6c"
+    "9d"
   ],
-  "communityCards": [],
-  "pot": 70,
+  "communityCards": [
+    "6c",
+    "Kh",
+    "Qh"
+  ],
+  "pot": 80,
   "sidePots": [],
-  "currentBet": 20,
+  "currentBet": 0,
   "minRaise": 20,
   "currentTurn": 2,
-  "turnStartedAt": "2026-05-04T01:24:40.480Z",
-  "lastAggressor": 3,
+  "turnStartedAt": "2026-05-04T01:24:48.113Z",
+  "lastAggressor": 2,
   "roundStartPlayer": 3,
-  "actions": [
-    {
-      "slot": 4,
-      "action": "call",
-      "amount": 20
-    },
-    {
-      "slot": 0,
-      "action": "call",
-      "amount": 20
-    },
-    {
-      "slot": 1,
-      "action": "fold",
-      "amount": 0
-    }
-  ],
-  "updatedAt": "2026-05-04T01:24:40.480Z"
+  "actions": [],
+  "updatedAt": "2026-05-04T01:24:48.113Z"
 }
