@@ -1,20 +1,7 @@
 {
   "status": "active",
   "players": [
-    {
-      "name": "Ryan",
-      "chips": 990,
-      "bet": 10,
-      "hand": [
-        "10s",
-        "10d"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "SB",
-      "joinedAt": "2026-05-04T01:22:55.212Z"
-    },
+    null,
     {
       "name": "Tom",
       "chips": 960,
@@ -142,7 +129,7 @@
       "amount": 20
     }
   ],
-  "updatedAt": "2026-05-04T01:29:36.672Z",
+  "updatedAt": "2026-05-04T01:30:01.397Z",
   "lastWinners": [
     {
       "slot": 0,
