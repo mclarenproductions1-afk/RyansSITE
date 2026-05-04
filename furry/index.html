@@ -9,582 +9,459 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  :root {
-    --bg: #fff;
-    --text: #111;
-    --muted: #888;
-    --border: #e5e5e5;
-    --surface: #fafafa;
-  }
+:root {
+  --bg: #fff;
+  --text: #111;
+  --muted: #888;
+  --border: #e5e5e5;
+}
 
-  html, body { height: 100%; }
+html, body { height: 100%; overflow: hidden; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    display: flex;
-    flex-direction: column;
-  }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
 
-  /* ── Screens ──────────────────────────────────────────────────────── */
-  .screen { display: none; flex-direction: column; min-height: 100vh; }
-  .screen.active { display: flex; }
-  #screen-hangout { height: 100vh; overflow: hidden; }
+/* ── Screens ─────────────────────────────────────────────────────── */
+.screen { display: none; flex-direction: column; height: 100vh; overflow-y: auto; }
+.screen.active { display: flex; }
+#screen-hangout { overflow: hidden; }
 
-  /* ── Header ──────────────────────────────────────────────────────── */
-  .app-header {
-    padding: 14px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-  .back { font-size: 13px; color: var(--muted); text-decoration: none; }
-  .back:hover { color: var(--text); }
-  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
-  .status-dot {
-    width: 7px; height: 7px; border-radius: 50%;
-    background: #ccc; transition: background 0.4s; flex-shrink: 0;
-  }
-  .status-dot.live { background: #111; }
-  .header-right {
-    margin-left: auto;
-    display: flex; align-items: center; gap: 12px;
-  }
-  .online-count { font-size: 12px; color: var(--muted); }
-  .btn-edit-fursona {
-    font-size: 12px; color: var(--muted); background: none; border: none;
-    cursor: pointer; padding: 0; text-decoration: underline; font-family: inherit;
-  }
-  .btn-edit-fursona:hover { color: var(--text); }
+/* ── Setup banner ─────────────────────────────────────────────────── */
+#setup-banner {
+  background: #fffbe6; border-bottom: 1px solid #f5e642;
+  padding: 10px 20px; font-size: 13px; color: #5a4a00;
+  display: none; flex-shrink: 0;
+}
+#setup-banner.show { display: block; }
+#setup-banner code { background: rgba(0,0,0,0.07); padding: 1px 4px; border-radius: 3px; }
 
-  /* ── Setup banner ─────────────────────────────────────────────────── */
-  #setup-banner {
-    background: #fffbe6;
-    border-bottom: 1px solid #f5e642;
-    padding: 12px 20px;
-    font-size: 13px;
-    color: #5a4a00;
-    display: none;
-  }
-  #setup-banner.show { display: block; }
-  #setup-banner a { color: inherit; }
-  #setup-banner code { background: rgba(0,0,0,0.07); padding: 1px 4px; border-radius: 3px; }
+/* ── Header ──────────────────────────────────────────────────────── */
+.app-header {
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+  background: var(--bg); z-index: 20;
+}
+.back { font-size: 13px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--text); }
+.logo { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #ccc; transition: background 0.4s; flex-shrink: 0; }
+.status-dot.live { background: #111; }
+.header-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.online-count { font-size: 12px; color: var(--muted); }
+.btn-link {
+  font-size: 12px; color: var(--muted); background: none; border: none;
+  cursor: pointer; padding: 0; text-decoration: underline; font-family: inherit;
+}
+.btn-link:hover { color: var(--text); }
 
-  /* ── Join screen ─────────────────────────────────────────────────── */
-  .center-wrap {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    padding: 40px 20px;
-  }
-  .card {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 40px;
-    width: 100%;
-    max-width: 440px;
-  }
-  .card h1 {
-    font-size: 22px; font-weight: 700;
-    letter-spacing: -0.5px; margin-bottom: 6px;
-  }
-  .card .subtitle {
-    font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.5;
-  }
-  .field-label {
-    font-size: 12px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.5px;
-    margin-bottom: 8px; margin-top: 20px;
-  }
-  .field-label:first-of-type { margin-top: 0; }
-  input[type="text"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-    color: var(--text);
-    background: var(--bg);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  input[type="text"]:focus { border-color: var(--text); }
-  .btn {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: #111; color: #fff;
-    border: none; border-radius: 4px;
-    padding: 10px 20px; font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: inherit;
-    transition: background 0.15s; width: 100%; margin-top: 24px;
-  }
-  .btn:hover { background: #333; }
-  .btn:disabled { background: #ccc; cursor: not-allowed; }
-  .btn-ghost {
-    display: inline-flex; align-items: center; justify-content: center;
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border); border-radius: 4px;
-    padding: 9px 20px; font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: inherit;
-    transition: border-color 0.15s; width: 100%; margin-top: 10px;
-  }
-  .btn-ghost:hover { border-color: var(--text); }
+/* ── Join / Customize screens ────────────────────────────────────── */
+.center-wrap { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: 4px; padding: 40px; width: 100%; max-width: 460px; }
+.card h1 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+.card .subtitle { font-size: 13px; color: var(--muted); margin-bottom: 28px; line-height: 1.5; }
+.field-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; margin-top: 20px; }
+.field-label:first-of-type { margin-top: 0; }
 
-  /* ── Species pills ───────────────────────────────────────────────── */
-  .species-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-  }
-  .species-pill {
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 6px 4px;
-    font-size: 12px;
-    cursor: pointer;
-    background: var(--bg);
-    font-family: inherit;
-    text-align: center;
-    transition: border-color 0.12s, background 0.12s;
-    display: flex; align-items: center; justify-content: center; gap: 4px;
-  }
-  .species-pill:hover { border-color: #aaa; }
-  .species-pill.selected {
-    border-color: var(--text);
-    background: #f5f5f5;
-    font-weight: 600;
-  }
+input[type="text"] {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: 4px; font-family: inherit; font-size: 14px; color: var(--text);
+  background: var(--bg); outline: none; transition: border-color 0.15s;
+}
+input[type="text"]:focus { border-color: var(--text); }
 
-  /* ── Customize screen ────────────────────────────────────────────── */
-  #screen-customize .center-wrap { align-items: flex-start; }
-  .customize-layout {
-    display: flex;
-    gap: 32px;
-    width: 100%;
-    max-width: 820px;
-  }
-  .preview-panel {
-    flex-shrink: 0;
-    width: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding-top: 8px;
-  }
-  .preview-label {
-    font-size: 11px; color: var(--muted); margin-bottom: 16px;
-    font-weight: 500; letter-spacing: 0.3px; text-transform: uppercase;
-  }
-  .options-panel { flex: 1; min-width: 0; }
+.btn {
+  display: flex; align-items: center; justify-content: center;
+  background: #111; color: #fff; border: none; border-radius: 4px;
+  padding: 10px 20px; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: background 0.15s;
+  width: 100%; margin-top: 24px;
+}
+.btn:hover { background: #333; }
+.btn:disabled { background: #ccc; cursor: not-allowed; }
+.btn-ghost {
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--text); border: 1px solid var(--border);
+  border-radius: 4px; padding: 9px 20px; font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit; transition: border-color 0.15s;
+  width: 100%; margin-top: 8px;
+}
+.btn-ghost:hover { border-color: var(--text); }
 
-  /* ── Color swatches ──────────────────────────────────────────────── */
-  .swatch-row {
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
-  .swatch {
-    width: 26px; height: 26px; border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    outline: 2px solid transparent;
-    transition: outline-color 0.12s, transform 0.1s;
-  }
-  .swatch:hover { transform: scale(1.12); }
-  .swatch.selected { outline-color: var(--text); outline-offset: 2px; }
+/* Species pills */
+.species-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+.species-pill {
+  border: 1px solid var(--border); border-radius: 99px; padding: 6px 4px;
+  font-size: 12px; cursor: pointer; background: var(--bg); font-family: inherit;
+  text-align: center; transition: border-color 0.12s, background 0.12s;
+}
+.species-pill:hover { border-color: #aaa; }
+.species-pill.selected { border-color: var(--text); background: #f5f5f5; font-weight: 600; }
 
-  /* ── Accessory pills ─────────────────────────────────────────────── */
-  .accessory-grid {
-    display: flex; flex-wrap: wrap; gap: 6px;
-  }
-  .acc-pill {
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 5px 12px;
-    font-size: 12px; cursor: pointer;
-    background: var(--bg); font-family: inherit;
-    transition: border-color 0.12s, background 0.12s;
-  }
-  .acc-pill:hover { border-color: #aaa; }
-  .acc-pill.selected { border-color: var(--text); background: #f5f5f5; font-weight: 600; }
-  .acc-pill.disabled { opacity: 0.4; cursor: not-allowed; }
+/* Customize layout */
+#screen-customize .center-wrap { align-items: flex-start; }
+.customize-layout { display: flex; gap: 32px; width: 100%; max-width: 820px; }
+.preview-panel { flex-shrink: 0; width: 180px; display: flex; flex-direction: column; align-items: center; padding-top: 8px; }
+.preview-label { font-size: 11px; color: var(--muted); margin-bottom: 16px; font-weight: 500; letter-spacing: 0.3px; text-transform: uppercase; }
+.options-panel { flex: 1; min-width: 0; }
 
-  /* ── Avatar card ─────────────────────────────────────────────────── */
-  .avatar-card {
-    position: relative;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 20px 14px 14px;
-    text-align: center;
-    width: 140px;
-    flex-shrink: 0;
-    cursor: default;
-    transition: transform 0.15s, box-shadow 0.15s;
-    background: var(--bg);
-  }
-  .avatar-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.07); }
-  .avatar-card.is-me { border-color: var(--text); }
-  .avatar-card.targetable { cursor: pointer; }
-  .avatar-card.targetable:hover {
-    border-color: var(--text);
-    box-shadow: 0 0 0 2px rgba(17,17,17,0.15);
-  }
+/* Color swatches */
+.swatch-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.swatch { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; outline: 2px solid transparent; transition: outline-color 0.12s, transform 0.1s; }
+.swatch:hover { transform: scale(1.15); }
+.swatch.selected { outline-color: var(--text); outline-offset: 2px; }
 
-  .me-badge {
-    position: absolute; top: 6px; right: 6px;
-    font-size: 9px; color: var(--muted); font-weight: 500;
-    letter-spacing: 0.3px; text-transform: uppercase;
-  }
+/* Accessory pills */
+.accessory-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.acc-pill { border: 1px solid var(--border); border-radius: 99px; padding: 5px 12px; font-size: 12px; cursor: pointer; background: var(--bg); font-family: inherit; transition: border-color 0.12s, background 0.12s; }
+.acc-pill:hover { border-color: #aaa; }
+.acc-pill.selected { border-color: var(--text); background: #f5f5f5; font-weight: 600; }
 
-  .acc-row {
-    font-size: 14px;
-    letter-spacing: -3px;
-    min-height: 20px;
-    margin-bottom: 4px;
-    line-height: 1;
-  }
+/* Preview avatar card (customize screen) */
+.preview-avatar-card {
+  border: 1px solid var(--border); border-radius: 8px; padding: 16px 14px 14px;
+  text-align: center; width: 140px; background: var(--bg);
+}
+.prev-acc-row { font-size: 14px; letter-spacing: -3px; min-height: 20px; margin-bottom: 4px; }
+.prev-body {
+  width: 76px; height: 76px; border-radius: 50%; margin: 0 auto 10px;
+  position: relative; display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; overflow: hidden;
+}
+.prev-body img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; position: absolute; inset: 0; }
+.prev-body::before, .prev-body::after { content: ''; position: absolute; top: -14px; }
 
-  .avatar-body {
-    width: 76px; height: 76px;
-    border-radius: 50%;
-    margin: 0 auto 10px;
-    position: relative;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.2rem;
-  }
+/* Ear shapes - pointy */
+.prev-body.sp-fox::before, .prev-body.sp-fox::after,
+.prev-body.sp-wolf::before, .prev-body.sp-wolf::after,
+.prev-body.sp-skunk::before, .prev-body.sp-skunk::after {
+  width: 18px; height: 22px; clip-path: polygon(50% 0%,0% 100%,100% 100%);
+}
+.prev-body.sp-fox::before, .prev-body.sp-wolf::before, .prev-body.sp-skunk::before { left: 10px; transform: rotate(-10deg); }
+.prev-body.sp-fox::after, .prev-body.sp-wolf::after, .prev-body.sp-skunk::after { right: 10px; transform: rotate(10deg); }
+/* cat */
+.prev-body.sp-cat::before, .prev-body.sp-cat::after { width: 14px; height: 18px; clip-path: polygon(50% 0%,0% 100%,100% 100%); }
+.prev-body.sp-cat::before { left: 12px; transform: rotate(-5deg); }
+.prev-body.sp-cat::after  { right: 12px; transform: rotate(5deg); }
+/* bunny */
+.prev-body.sp-bunny::before, .prev-body.sp-bunny::after { width: 12px; height: 34px; border-radius: 50% 50% 30% 30%; top: -30px; }
+.prev-body.sp-bunny::before { left: 14px; transform: rotate(-6deg); }
+.prev-body.sp-bunny::after  { right: 14px; transform: rotate(6deg); }
+/* dog */
+.prev-body.sp-dog::before, .prev-body.sp-dog::after { width: 16px; height: 22px; border-radius: 50%; top: -8px; }
+.prev-body.sp-dog::before { left: 2px; transform: rotate(-30deg); }
+.prev-body.sp-dog::after  { right: 2px; transform: rotate(30deg); }
+/* dragon */
+.prev-body.sp-dragon::before, .prev-body.sp-dragon::after { width: 10px; height: 20px; clip-path: polygon(50% 0%,0% 100%,100% 100%); top: -16px; }
+.prev-body.sp-dragon::before { left: 16px; }
+.prev-body.sp-dragon::after  { right: 16px; }
+/* deer */
+.prev-body.sp-deer::before, .prev-body.sp-deer::after { width: 22px; height: 18px; border-radius: 50% 50% 30% 30%; top: -10px; }
+.prev-body.sp-deer::before { left: 2px; transform: rotate(-20deg); }
+.prev-body.sp-deer::after  { right: 2px; transform: rotate(20deg); }
+/* round ears */
+.prev-body.sp-raccoon::before, .prev-body.sp-raccoon::after,
+.prev-body.sp-ferret::before, .prev-body.sp-ferret::after,
+.prev-body.sp-otter::before, .prev-body.sp-otter::after,
+.prev-body.sp-hyena::before, .prev-body.sp-hyena::after { width: 16px; height: 16px; border-radius: 50%; top: -8px; }
+.prev-body.sp-raccoon::before, .prev-body.sp-ferret::before, .prev-body.sp-otter::before, .prev-body.sp-hyena::before { left: 10px; }
+.prev-body.sp-raccoon::after, .prev-body.sp-ferret::after, .prev-body.sp-otter::after, .prev-body.sp-hyena::after { right: 10px; }
 
-  /* Ear shapes via pseudo-elements */
-  .avatar-body::before, .avatar-body::after {
-    content: '';
-    position: absolute;
-    top: -14px;
-  }
+.prev-name { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
+.prev-pronouns { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.prev-species { font-size: 10px; color: var(--muted); margin-top: 2px; font-weight: 500; }
 
-  /* Pointy ears (fox, wolf, skunk, dragon) */
-  .species-fox .avatar-body::before,
-  .species-fox .avatar-body::after,
-  .species-wolf .avatar-body::before,
-  .species-wolf .avatar-body::after,
-  .species-skunk .avatar-body::before,
-  .species-skunk .avatar-body::after {
-    width: 18px; height: 22px;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  }
-  .species-fox .avatar-body::before,
-  .species-wolf .avatar-body::before,
-  .species-skunk .avatar-body::before { left: 10px; transform: rotate(-10deg); }
-  .species-fox .avatar-body::after,
-  .species-wolf .avatar-body::after,
-  .species-skunk .avatar-body::after  { right: 10px; transform: rotate(10deg); }
+/* ── Hangout: World ───────────────────────────────────────────────── */
+.hangout-body { flex: 1; position: relative; overflow: hidden; }
 
-  /* Cat ears (smaller, more vertical) */
-  .species-cat .avatar-body::before,
-  .species-cat .avatar-body::after {
-    width: 14px; height: 18px;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-  }
-  .species-cat .avatar-body::before { left: 12px; transform: rotate(-5deg); }
-  .species-cat .avatar-body::after  { right: 12px; transform: rotate(5deg); }
+#world-viewport {
+  width: 100%; height: 100%; overflow: hidden; position: relative;
+  background: #f0f4e8;
+  background-image:
+    radial-gradient(circle, #d8e8c0 1px, transparent 1px);
+  background-size: 40px 40px;
+  cursor: default;
+}
 
-  /* Bunny ears (tall, rounded via border-radius) */
-  .species-bunny .avatar-body::before,
-  .species-bunny .avatar-body::after {
-    width: 12px; height: 34px;
-    border-radius: 50% 50% 30% 30%;
-    top: -30px;
-  }
-  .species-bunny .avatar-body::before { left: 14px; transform: rotate(-6deg); }
-  .species-bunny .avatar-body::after  { right: 14px; transform: rotate(6deg); }
+#world {
+  position: absolute;
+  width: 3000px; height: 2000px;
+  will-change: transform;
+}
 
-  /* Dog ears (floppy — rotated ovals) */
-  .species-dog .avatar-body::before,
-  .species-dog .avatar-body::after {
-    width: 16px; height: 22px;
-    border-radius: 50%;
-    top: -8px;
-  }
-  .species-dog .avatar-body::before { left: 2px; transform: rotate(-30deg); }
-  .species-dog .avatar-body::after  { right: 2px; transform: rotate(30deg); }
+/* World decorations */
+.deco { position: absolute; font-size: 28px; pointer-events: none; user-select: none; line-height: 1; }
 
-  /* Dragon horns (narrow triangles, no rotation) */
-  .species-dragon .avatar-body::before,
-  .species-dragon .avatar-body::after {
-    width: 10px; height: 20px;
-    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
-    top: -16px;
-  }
-  .species-dragon .avatar-body::before { left: 16px; }
-  .species-dragon .avatar-body::after  { right: 16px; }
+/* ── World player sprites ─────────────────────────────────────────── */
+.world-player {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  pointer-events: none;
+  transition: none;
+}
 
-  /* Deer ears (wide, angled) */
-  .species-deer .avatar-body::before,
-  .species-deer .avatar-body::after {
-    width: 22px; height: 18px;
-    border-radius: 50% 50% 30% 30%;
-    top: -10px;
-  }
-  .species-deer .avatar-body::before { left: 2px; transform: rotate(-20deg); }
-  .species-deer .avatar-body::after  { right: 2px; transform: rotate(20deg); }
+.player-sprite-wrap {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+}
 
-  /* Round ears (raccoon, ferret, otter, hyena) */
-  .species-raccoon .avatar-body::before,
-  .species-raccoon .avatar-body::after,
-  .species-ferret .avatar-body::before,
-  .species-ferret .avatar-body::after,
-  .species-otter .avatar-body::before,
-  .species-otter .avatar-body::after,
-  .species-hyena .avatar-body::before,
-  .species-hyena .avatar-body::after {
-    width: 16px; height: 16px;
-    border-radius: 50%;
-    top: -8px;
-  }
-  .species-raccoon .avatar-body::before,
-  .species-ferret .avatar-body::before,
-  .species-otter .avatar-body::before,
-  .species-hyena .avatar-body::before { left: 10px; }
-  .species-raccoon .avatar-body::after,
-  .species-ferret .avatar-body::after,
-  .species-otter .avatar-body::after,
-  .species-hyena .avatar-body::after  { right: 10px; }
+.player-sprite {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.8rem;
+  position: relative;
+  border: 2px solid rgba(255,255,255,0.8);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  overflow: visible;
+  flex-shrink: 0;
+}
 
-  .avatar-name {
-    font-size: 13px; font-weight: 600;
-    letter-spacing: -0.2px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .avatar-pronouns {
-    font-size: 11px; color: var(--muted);
-    margin-top: 2px;
-  }
-  .avatar-species-tag {
-    font-size: 10px; color: var(--muted);
-    margin-top: 2px; font-weight: 500;
-  }
-  .avatar-mood {
-    font-size: 16px; margin-top: 6px;
-  }
+.player-sprite img {
+  width: 100%; height: 100%;
+  object-fit: cover; border-radius: 50%;
+  position: absolute; inset: 0;
+}
 
-  @keyframes act-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(17,17,17,0.4); }
-    70%  { box-shadow: 0 0 0 8px rgba(17,17,17,0); }
-    100% { box-shadow: 0 0 0 0 rgba(17,17,17,0); }
-  }
-  .avatar-card.just-acted { animation: act-pulse 0.7s ease-out; }
+/* Ear overlays on world sprites */
+.player-sprite::before, .player-sprite::after {
+  content: ''; position: absolute; top: -12px;
+  background: var(--ear-color, #d4a373);
+  z-index: 1;
+}
+.world-player.sp-fox .player-sprite::before, .world-player.sp-wolf .player-sprite::before, .world-player.sp-skunk .player-sprite::before { left: 8px; width: 14px; height: 18px; clip-path: polygon(50% 0%,0% 100%,100% 100%); transform: rotate(-10deg); }
+.world-player.sp-fox .player-sprite::after,  .world-player.sp-wolf .player-sprite::after,  .world-player.sp-skunk .player-sprite::after  { right: 8px; width: 14px; height: 18px; clip-path: polygon(50% 0%,0% 100%,100% 100%); transform: rotate(10deg); }
+.world-player.sp-cat .player-sprite::before { left: 10px; width: 11px; height: 14px; clip-path: polygon(50% 0%,0% 100%,100% 100%); transform: rotate(-5deg); }
+.world-player.sp-cat .player-sprite::after  { right: 10px; width: 11px; height: 14px; clip-path: polygon(50% 0%,0% 100%,100% 100%); transform: rotate(5deg); }
+.world-player.sp-bunny .player-sprite::before { left: 12px; width: 9px; height: 26px; border-radius: 50% 50% 30% 30%; top: -24px; transform: rotate(-6deg); }
+.world-player.sp-bunny .player-sprite::after  { right: 12px; width: 9px; height: 26px; border-radius: 50% 50% 30% 30%; top: -24px; transform: rotate(6deg); }
+.world-player.sp-dog .player-sprite::before { left: 1px; width: 13px; height: 18px; border-radius: 50%; top: -6px; transform: rotate(-30deg); }
+.world-player.sp-dog .player-sprite::after  { right: 1px; width: 13px; height: 18px; border-radius: 50%; top: -6px; transform: rotate(30deg); }
+.world-player.sp-dragon .player-sprite::before { left: 13px; width: 8px; height: 16px; clip-path: polygon(50% 0%,0% 100%,100% 100%); top: -14px; }
+.world-player.sp-dragon .player-sprite::after  { right: 13px; width: 8px; height: 16px; clip-path: polygon(50% 0%,0% 100%,100% 100%); top: -14px; }
+.world-player.sp-deer .player-sprite::before { left: 1px; width: 17px; height: 14px; border-radius: 50% 50% 30% 30%; top: -8px; transform: rotate(-20deg); }
+.world-player.sp-deer .player-sprite::after  { right: 1px; width: 17px; height: 14px; border-radius: 50% 50% 30% 30%; top: -8px; transform: rotate(20deg); }
+.world-player.sp-raccoon .player-sprite::before, .world-player.sp-ferret .player-sprite::before,
+.world-player.sp-otter .player-sprite::before,   .world-player.sp-hyena .player-sprite::before { left: 8px; width: 13px; height: 13px; border-radius: 50%; top: -6px; }
+.world-player.sp-raccoon .player-sprite::after,  .world-player.sp-ferret .player-sprite::after,
+.world-player.sp-otter .player-sprite::after,    .world-player.sp-hyena .player-sprite::after  { right: 8px; width: 13px; height: 13px; border-radius: 50%; top: -6px; }
 
-  /* target overlay */
-  .avatar-card.targetable::after {
-    content: 'tap to target';
-    position: absolute; inset: 0;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.7);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600; color: var(--text);
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .avatar-card.targetable:hover::after { opacity: 1; }
+.player-name-tag {
+  margin-top: 6px; font-size: 11px; font-weight: 600;
+  background: rgba(255,255,255,0.9); border-radius: 99px;
+  padding: 2px 8px; white-space: nowrap; letter-spacing: -0.1px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+.player-name-tag .pron { font-weight: 400; color: var(--muted); margin-left: 3px; font-size: 10px; }
 
-  /* ── Hangout layout ───────────────────────────────────────────────── */
-  .hangout-body {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 1fr 300px;
-    overflow: hidden;
-    min-height: 0;
-  }
+/* Me indicator */
+.world-player.is-me .player-sprite {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #111;
+}
 
-  .avatar-grid-wrap {
-    overflow-y: auto;
-    padding: 24px;
-  }
+/* ── Animations ────────────────────────────────────────────────────── */
+@keyframes walk-bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes idle-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(0.97)} }
 
-  .avatar-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    align-content: flex-start;
-  }
+.world-player.moving .player-sprite { animation: walk-bob 0.32s infinite ease-in-out; }
+.world-player:not(.moving) .player-sprite { animation: idle-breathe 2.8s infinite ease-in-out; }
 
-  .empty-den {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: var(--muted);
-    text-align: center;
-    padding: 60px 20px;
-    min-height: 200px;
-    width: 100%;
-  }
-  .empty-den .paw { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
-  .empty-den p { font-size: 14px; line-height: 1.6; }
+/* Direction flip */
+.world-player.dir-left .player-sprite { transform: scaleX(-1); }
+.world-player.dir-left.moving .player-sprite { animation: walk-bob 0.32s infinite ease-in-out; transform: scaleX(-1); }
 
-  .feed-wrap {
-    border-left: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
+@keyframes emote-boop    { 0%,100%{transform:translateX(0)}   40%{transform:translateX(22px)} }
+@keyframes emote-nuzzle  { 0%,100%{transform:translateX(0)}   30%,70%{transform:translateX(8px)} }
+@keyframes emote-headpat { 0%,100%{transform:translateY(0)}   50%{transform:translateY(-10px)} }
+@keyframes emote-pounce  { 0%,100%{transform:translateY(0) scale(1)} 40%{transform:translateY(-28px) scale(1.1)} }
+@keyframes emote-offer   { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-8px) rotate(12deg)} }
+@keyframes emote-tail    { 0%,100%{transform:rotate(0)}     50%{transform:rotate(22deg)} }
+@keyframes emote-howl    { 0%,100%{transform:scale(1)}      50%{transform:scale(1.35)} }
+@keyframes emote-curl    { 0%{transform:scale(1) rotate(0)} 100%{transform:scale(0.65) rotate(25deg)} }
+@keyframes emote-blep    { 0%,100%{transform:scale(1) rotate(0)} 50%{transform:scale(1.12) rotate(-6deg)} }
+@keyframes emote-zoomies { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-12px)} 40%{transform:translateX(12px)} 60%{transform:translateX(-8px)} 80%{transform:translateX(8px)} }
 
-  .feed-header {
-    padding: 12px 16px 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 11px; font-weight: 600; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 0.5px;
-    flex-shrink: 0;
-  }
+.world-player.emoting-boop    .player-sprite { animation: emote-boop    0.6s ease-in-out forwards !important; }
+.world-player.emoting-nuzzle  .player-sprite { animation: emote-nuzzle  0.8s ease-in-out forwards !important; }
+.world-player.emoting-headpat .player-sprite { animation: emote-headpat 0.7s ease-in-out forwards !important; }
+.world-player.emoting-pounce  .player-sprite { animation: emote-pounce  0.6s ease-in-out forwards !important; }
+.world-player.emoting-offer   .player-sprite { animation: emote-offer   0.7s ease-in-out forwards !important; }
+.world-player.emoting-tail    .player-sprite { animation: emote-tail    0.9s ease-in-out infinite !important; }
+.world-player.emoting-howl    .player-sprite { animation: emote-howl    0.6s ease-in-out forwards !important; }
+.world-player.emoting-curl    .player-sprite { animation: emote-curl    0.8s ease-in-out forwards !important; }
+.world-player.emoting-blep    .player-sprite { animation: emote-blep    0.7s ease-in-out forwards !important; }
+.world-player.emoting-zoomies .player-sprite { animation: emote-zoomies 0.6s ease-in-out forwards !important; }
 
-  #action-feed {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px 0;
-  }
+/* Emote bubble */
+.emote-bubble {
+  position: absolute; top: -52px; left: 50%; transform: translateX(-50%);
+  background: #fff; border: 1px solid var(--border); border-radius: 8px;
+  padding: 4px 9px; font-size: 12px; white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  display: none; pointer-events: none;
+}
+.emote-bubble.show { display: block; animation: bubble-in 0.2s ease-out; }
+.emote-bubble::after {
+  content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+  border: 6px solid transparent; border-top-color: #fff; border-bottom: none;
+}
+@keyframes bubble-in { from{opacity:0;transform:translateX(-50%) translateY(6px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
 
-  .feed-entry {
-    padding: 6px 16px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--text);
-  }
-  .feed-entry .feed-time {
-    font-size: 10px; color: var(--muted);
-    margin-right: 6px; font-variant-numeric: tabular-nums;
-  }
-  .feed-entry .feed-actor { font-weight: 600; }
+/* Floating hearts */
+@keyframes heart-float {
+  0%   { opacity: 1; transform: translateY(0) scale(0.8); }
+  50%  { opacity: 0.9; transform: translateY(-30px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-65px) scale(1.3); }
+}
+.floating-heart {
+  position: absolute; font-size: 18px; pointer-events: none; z-index: 10;
+  animation: heart-float 2s ease-out forwards;
+  transform: translate(-50%, -50%);
+}
 
-  @keyframes feed-in {
-    from { opacity: 0; transform: translateY(4px); }
-    to   { opacity: 1; transform: none; }
-  }
-  .feed-entry.new { animation: feed-in 0.25s ease-out; }
+/* Nuzzle burst hearts */
+@keyframes burst-heart {
+  0%   { opacity: 1; transform: translate(var(--bx), var(--by)) scale(0.5); }
+  60%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(var(--bx)*2.2), calc(var(--by)*2.2 - 30px)) scale(1.4); }
+}
+.burst-heart {
+  position: absolute; font-size: 20px; pointer-events: none; z-index: 10;
+  animation: burst-heart 1.2s ease-out forwards;
+  transform-origin: center;
+}
 
-  .feed-join {
-    padding: 4px 16px;
-    font-size: 11px;
-    color: var(--muted);
-    font-style: italic;
-  }
-  .feed-join.new { animation: feed-in 0.25s ease-out; }
+/* ── Emote bar ─────────────────────────────────────────────────────── */
+.emote-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: rgba(255,255,255,0.95);
+  border-top: 1px solid var(--border);
+  padding: 8px 12px 10px;
+  z-index: 15;
+  backdrop-filter: blur(6px);
+}
+.emote-row { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
+.emote-row::-webkit-scrollbar { display: none; }
+.emote-btn {
+  border: 1px solid var(--border); border-radius: 99px;
+  padding: 5px 11px; font-size: 11px; font-weight: 500;
+  cursor: pointer; background: var(--bg); font-family: inherit;
+  display: flex; align-items: center; gap: 4px; white-space: nowrap;
+  transition: border-color 0.12s, background 0.12s; color: var(--text);
+  flex-shrink: 0;
+}
+.emote-btn:hover { border-color: var(--text); background: #f5f5f5; }
+.emote-btn.targeting { border-color: var(--text); background: #111; color: #fff; }
 
-  /* ── Emote bar ────────────────────────────────────────────────────── */
-  .emote-bar {
-    border-top: 1px solid var(--border);
-    padding: 10px 12px;
-    flex-shrink: 0;
-    background: var(--bg);
-  }
-  .emote-row {
-    display: flex;
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-  .emote-btn {
-    border: 1px solid var(--border);
-    border-radius: 99px;
-    padding: 5px 10px;
-    font-size: 11px; font-weight: 500;
-    cursor: pointer;
-    background: var(--bg);
-    font-family: inherit;
-    display: flex; align-items: center; gap: 4px;
-    white-space: nowrap;
-    transition: border-color 0.12s, background 0.12s;
-    color: var(--text);
-  }
-  .emote-btn:hover { border-color: var(--text); background: #f5f5f5; }
-  .emote-btn.active { border-color: var(--text); background: #111; color: #fff; }
-  .emote-btn.cooldown { opacity: 0.5; cursor: not-allowed; }
+.target-prompt {
+  font-size: 11px; color: var(--muted); margin-top: 5px; display: none;
+}
+.target-prompt.show { display: block; }
+.cancel-btn {
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  font-size: 11px; color: var(--text); text-decoration: underline; padding: 0;
+}
 
-  @keyframes btn-shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-4px); }
-    75% { transform: translateX(4px); }
-  }
-  .emote-btn.shaking { animation: btn-shake 0.3s ease-out; }
+@keyframes btn-shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+.emote-btn.shaking { animation: btn-shake 0.3s ease-out; }
 
-  .target-prompt {
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--muted);
-    display: none;
-  }
-  .target-prompt.show { display: block; }
-  .cancel-target {
-    background: none; border: none; cursor: pointer;
-    font-family: inherit; font-size: 12px;
-    color: var(--text); text-decoration: underline; padding: 0;
-  }
-  .cancel-target:hover { color: var(--muted); }
+/* ── Feed overlay ──────────────────────────────────────────────────── */
+#feed-toggle {
+  position: absolute; top: 10px; right: 10px; z-index: 16;
+  background: rgba(255,255,255,0.9); border: 1px solid var(--border);
+  border-radius: 99px; padding: 5px 12px; font-size: 11px; font-weight: 500;
+  cursor: pointer; font-family: inherit; backdrop-filter: blur(4px);
+}
+#feed-toggle:hover { border-color: var(--text); }
 
-  /* ── Toast ────────────────────────────────────────────────────────── */
-  #toast {
-    position: fixed;
-    bottom: 24px; left: 50%; transform: translateX(-50%) translateY(10px);
-    background: #111; color: #fff;
-    padding: 9px 18px;
-    border-radius: 99px;
-    font-size: 13px; font-weight: 500;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-    white-space: nowrap; z-index: 999;
-  }
-  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#feed-panel {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 260px; background: rgba(255,255,255,0.96);
+  border-left: 1px solid var(--border); backdrop-filter: blur(8px);
+  display: flex; flex-direction: column; z-index: 15;
+  transform: translateX(100%); transition: transform 0.2s ease;
+}
+#feed-panel.open { transform: translateX(0); }
+.feed-header { padding: 12px 16px 10px; border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+.feed-close { background: none; border: none; cursor: pointer; font-size: 16px; color: var(--muted); padding: 0; line-height: 1; }
+#action-feed { flex: 1; overflow-y: auto; padding: 8px 0; }
+.feed-entry { padding: 5px 16px; font-size: 12px; line-height: 1.5; }
+@keyframes feed-in { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+.feed-entry.new { animation: feed-in 0.25s ease-out; }
+.feed-join { padding: 4px 16px; font-size: 11px; color: var(--muted); font-style: italic; }
+.feed-join.new { animation: feed-in 0.25s ease-out; }
 
-  /* ── Responsive ───────────────────────────────────────────────────── */
-  @media (max-width: 700px) {
-    .hangout-body {
-      grid-template-columns: 1fr;
-      grid-template-rows: 1fr auto;
-    }
-    .feed-wrap {
-      border-left: none;
-      border-top: 1px solid var(--border);
-      max-height: 220px;
-    }
-    .emote-btn .emote-label { display: none; }
-    .emote-row { flex-wrap: nowrap; overflow-x: auto; }
-    .customize-layout { flex-direction: column; gap: 16px; }
-    .preview-panel { width: 100%; flex-direction: row; gap: 24px; align-items: flex-start; }
-    .preview-label { display: none; }
-    .card { padding: 28px 20px; }
-    .species-grid { grid-template-columns: repeat(3, 1fr); }
-  }
+/* ── Toast ─────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(10px);
+  background: #111; color: #fff; padding: 8px 18px; border-radius: 99px;
+  font-size: 13px; font-weight: 500; opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s; white-space: nowrap; z-index: 999;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── Target overlay on player sprites ─────────────────────────────── */
+.world-player.targetable { pointer-events: all; cursor: pointer; }
+.world-player.targetable .player-sprite::after {
+  content: ''; position: absolute; inset: -4px;
+  border: 2px dashed #111; border-radius: 50%;
+  animation: target-spin 1.2s linear infinite;
+}
+@keyframes target-spin { to { transform: rotate(360deg); } }
+
+/* ── Controls hint ─────────────────────────────────────────────────── */
+#controls-hint {
+  position: absolute; bottom: 52px; left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.85); border: 1px solid var(--border);
+  border-radius: 99px; padding: 4px 14px; font-size: 11px; color: var(--muted);
+  pointer-events: none; backdrop-filter: blur(4px); z-index: 14;
+  animation: hint-fade 3s ease forwards 2s;
+}
+@keyframes hint-fade { to { opacity: 0; } }
+
+/* ── Responsive ─────────────────────────────────────────────────────── */
+@media (max-width: 680px) {
+  .customize-layout { flex-direction: column; gap: 16px; }
+  .preview-panel { width: 100%; flex-direction: row; gap: 20px; }
+  .preview-label { display: none; }
+  .card { padding: 28px 20px; }
+  .species-grid { grid-template-columns: repeat(3,1fr); }
+  #feed-panel { width: 220px; }
+}
 </style>
 </head>
 <body>
 
 <!-- ─── PASTE YOUR ABLY API KEY BELOW ─────────────────────────────────────── -->
-<!-- 1. Go to https://ably.com and sign up free (no credit card)               -->
-<!-- 2. Dashboard → API Keys → copy the Root key (looks like xVLy.KgX:FPl...)  -->
-<!-- 3. Replace the empty string below with your key, then save & push         -->
-<script>
-  const ABLY_API_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';  // ← paste your Ably API key here
-</script>
+<script>const ABLY_API_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';</script>
 <!-- ─────────────────────────────────────────────────────────────────────────── -->
 
-<!-- Setup banner (hidden when key present) -->
 <div id="setup-banner">
   <strong>Setup needed:</strong> Open <code>furry/index.html</code>, find
   <code>const ABLY_API_KEY = ''</code> and paste your
-  <a href="https://ably.com" target="_blank" rel="noopener">free Ably API key</a>. Takes ~2 min, no credit card.
+  <a href="https://ably.com" target="_blank" rel="noopener">free Ably API key</a>.
+  Takes ~2 min, no credit card.
 </div>
 
-<!-- ─── Screen: Join ──────────────────────────────────────────────────────── -->
+<!-- ─── Screen: Join ─────────────────────────────────────────────────────── -->
 <div id="screen-join" class="screen active">
   <div class="center-wrap">
     <div class="card">
       <h1>Furry Hangout</h1>
-      <p class="subtitle">A cozy den for friends. Create your fursona and hang out.</p>
-
+      <p class="subtitle">Create your fursona and explore the den with friends.</p>
       <div class="field-label">Your name</div>
       <input type="text" id="inp-name" placeholder="e.g. Kitsuki" maxlength="20" autocomplete="off">
-
       <div class="field-label" style="margin-top:20px">Species</div>
       <div class="species-grid" id="species-quick-pick"></div>
-
       <button class="btn" id="btn-next">Customize fursona →</button>
     </div>
   </div>
@@ -592,39 +469,32 @@
 
 <!-- ─── Screen: Customize ────────────────────────────────────────────────── -->
 <div id="screen-customize" class="screen">
-  <div class="center-wrap" style="align-items:flex-start; padding: 40px 24px;">
+  <div class="center-wrap" style="align-items:flex-start;padding:40px 24px;">
     <div class="customize-layout">
-
       <div class="preview-panel">
         <div class="preview-label">Preview</div>
         <div id="preview-card"></div>
       </div>
-
       <div class="options-panel">
         <div class="field-label">Species</div>
         <div class="species-grid" id="species-full-pick"></div>
-
         <div class="field-label" style="margin-top:20px">Body color</div>
         <div class="swatch-row" id="body-color-picker"></div>
-
         <div class="field-label" style="margin-top:16px">Accent color</div>
         <div class="swatch-row" id="accent-color-picker"></div>
-
-        <div class="field-label" style="margin-top:16px">Accessories <span style="font-weight:400;text-transform:none;font-size:11px">(pick up to 3)</span></div>
+        <div class="field-label" style="margin-top:16px">Accessories <span style="font-weight:400;text-transform:none;font-size:11px">(up to 3)</span></div>
         <div class="accessory-grid" id="accessory-picker"></div>
-
         <div class="field-label" style="margin-top:16px">Pronouns</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px" id="pronoun-pills"></div>
         <input type="text" id="inp-pronouns" placeholder="or type custom…" maxlength="20" autocomplete="off" style="max-width:220px">
-
-        <button class="btn" id="btn-enter-den" style="max-width:300px">Enter the den</button>
-        <button class="btn-ghost" id="btn-back" style="max-width:300px">Back</button>
+        <button class="btn" id="btn-enter-den" style="max-width:300px">Enter the den ✨</button>
+        <button class="btn-ghost" id="btn-back" style="max-width:300px">← Back</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ─── Screen: Hangout ───────────────────────────────────────────────────── -->
+<!-- ─── Screen: Hangout ──────────────────────────────────────────────────── -->
 <div id="screen-hangout" class="screen">
   <header class="app-header">
     <a class="back" href="/">← Study Hub</a>
@@ -632,24 +502,33 @@
     <span class="status-dot" id="status-dot"></span>
     <div class="header-right">
       <span class="online-count" id="online-count">0 online</span>
-      <button class="btn-edit-fursona" id="btn-edit-fursona">edit fursona</button>
+      <button class="btn-link" id="btn-edit-fursona">edit fursona</button>
     </div>
   </header>
 
   <div class="hangout-body">
-    <div class="avatar-grid-wrap">
-      <div class="avatar-grid" id="avatar-grid"></div>
+    <div id="world-viewport">
+      <div id="world"></div>
     </div>
 
-    <div class="feed-wrap">
-      <div class="feed-header">Den activity</div>
+    <div id="controls-hint">WASD or arrow keys to move</div>
+
+    <button id="feed-toggle">activity ↗</button>
+
+    <div id="feed-panel">
+      <div class="feed-header">
+        Den activity
+        <button class="feed-close" id="feed-close">×</button>
+      </div>
       <div id="action-feed"></div>
-      <div class="emote-bar">
-        <div class="emote-row" id="emote-row"></div>
-        <div class="target-prompt" id="target-prompt">
-          Pick who to target — <button class="cancel-target" id="btn-cancel-target">cancel</button>
-          <span style="font-size:10px;margin-left:4px">(or press Esc)</span>
-        </div>
+    </div>
+
+    <div class="emote-bar">
+      <div class="emote-row" id="emote-row"></div>
+      <div class="target-prompt" id="target-prompt">
+        Click a player to target them —
+        <button class="cancel-btn" id="btn-cancel-target">cancel</button>
+        <span style="font-size:10px">(Esc)</span>
       </div>
     </div>
   </div>
@@ -658,597 +537,819 @@
 <div id="toast"></div>
 
 <script>
-(function() {
+(function () {
 
-  // ── Config ───────────────────────────────────────────────────────────────────
+// ── Constants ──────────────────────────────────────────────────────────────
 
-  if (!ABLY_API_KEY) {
-    document.getElementById('setup-banner').classList.add('show');
+const SPECIES = [
+  { key:'fox',     label:'Fox',     emoji:'🦊' },
+  { key:'wolf',    label:'Wolf',    emoji:'🐺' },
+  { key:'cat',     label:'Cat',     emoji:'🐱' },
+  { key:'bunny',   label:'Bunny',   emoji:'🐰' },
+  { key:'dog',     label:'Dog',     emoji:'🐶' },
+  { key:'dragon',  label:'Dragon',  emoji:'🐲' },
+  { key:'deer',    label:'Deer',    emoji:'🦌' },
+  { key:'raccoon', label:'Raccoon', emoji:'🦝' },
+  { key:'ferret',  label:'Ferret',  emoji:'🐾' },
+  { key:'otter',   label:'Otter',   emoji:'🦦' },
+  { key:'skunk',   label:'Skunk',   emoji:'🦨' },
+  { key:'hyena',   label:'Hyena',   emoji:'🐆' },
+];
+
+const E621_TAGS = {
+  fox:'fox_anthro', wolf:'wolf_anthro', cat:'cat_humanoid',
+  bunny:'rabbit_anthro', dog:'canine_anthro', dragon:'dragon_anthro',
+  deer:'cervid_anthro', raccoon:'raccoon_anthro', ferret:'mustelid_anthro',
+  otter:'otter_anthro', skunk:'skunk_anthro', hyena:'hyena_anthro',
+};
+
+const COLORS = [
+  '#d4a373','#e9c46a','#f4a261','#e76f51',
+  '#b5838d','#c77dff','#6b9da4','#a8dadc',
+  '#81b29a','#3d405b','#c9cba3','#ffe1a8',
+  '#eddcd2','#cbf3f0','#cccccc','#222222',
+];
+
+const ACCESSORIES = [
+  { key:'bow',        label:'Bow',        emoji:'🎀' },
+  { key:'glasses',    label:'Glasses',    emoji:'👓' },
+  { key:'scarf',      label:'Scarf',      emoji:'🧣' },
+  { key:'crown',      label:'Crown',      emoji:'👑' },
+  { key:'headphones', label:'Headphones', emoji:'🎧' },
+  { key:'flower',     label:'Flower',     emoji:'🌸' },
+  { key:'collar',     label:'Collar',     emoji:'✨' },
+  { key:'hoodie',     label:'Hoodie',     emoji:'🧥' },
+];
+
+const PRONOUN_OPTS = ['she/her','he/him','they/them','any/all'];
+
+const EMOTES = {
+  boop:    { label:'Boop',     emoji:'👉', needsTarget:true,  mood:'playful',
+             tmpl:(a,t)=>`${a} boops ${t}'s snoot OwO`, bubble:'👉 boop!' },
+  nuzzle:  { label:'Nuzzle',   emoji:'🤍', needsTarget:true,  mood:'happy',
+             tmpl:(a,t)=>`${a} nuzzles ${t} uwu`, bubble:'🤍 nuzzle~' },
+  headpat: { label:'Headpat',  emoji:'🤚', needsTarget:true,  mood:'content',
+             tmpl:(a,t)=>`${a} gives ${t} headpats`, bubble:'🤚 pat pat' },
+  pounce:  { label:'Pounce',   emoji:'⚡', needsTarget:true,  mood:'energetic',
+             tmpl:(a,t)=>`${a} POUNCES on ${t}!! >w<`, bubble:'⚡ POUNCE!!' },
+  offer:   { label:'Offer',    emoji:'🍞', needsTarget:true,  mood:'happy',
+             tmpl:(a,t)=>`${a} offers ${t} some bread 🍞`, bubble:'🍞 here!' },
+  tail:    { label:'Tail Wag', emoji:'🌀', needsTarget:false, mood:'happy',
+             tmpl:(a)=>`${a} wags their tail~`, bubble:'🌀 wag wag!' },
+  howl:    { label:'Howl',     emoji:'🌕', needsTarget:false, mood:'energetic',
+             tmpl:(a)=>`${a} AWOO 🌕`, bubble:'🌕 AWOOOO!' },
+  curl:    { label:'Curl Up',  emoji:'💤', needsTarget:false, mood:'sleepy',
+             tmpl:(a)=>`${a} curls into a cozy ball...`, bubble:'💤 zzz...' },
+  blep:    { label:'Blep',     emoji:'👅', needsTarget:false, mood:'playful',
+             tmpl:(a)=>`${a} bleps :3`, bubble:'👅 blep~' },
+  zoomies: { label:'Zoomies',  emoji:'🏃', needsTarget:false, mood:'energetic',
+             tmpl:(a)=>`${a} gets the zoomies!! 🌀🌀`, bubble:'🏃 ZOOM!!' },
+};
+
+const MOODS = { happy:'😊', playful:'😼', energetic:'⚡', content:'🥰', sleepy:'💤', neutral:'🐾' };
+
+const WORLD_W = 3000, WORLD_H = 2000;
+const SPEED = 3;
+const LOVE_DIST = 140;
+const HEARTS = ['❤️','💕','💗','💓','💖','🩷'];
+
+// ── Identity ───────────────────────────────────────────────────────────────
+
+let myUid = localStorage.getItem('furry-uid');
+if (!myUid) { myUid = 'u' + Math.random().toString(36).slice(2,10); localStorage.setItem('furry-uid', myUid); }
+
+const saved = JSON.parse(localStorage.getItem('furry-fursona') || 'null');
+const savedPos = JSON.parse(localStorage.getItem('furry-pos') || 'null');
+
+let draft = {
+  name:        saved?.name        || '',
+  species:     saved?.species     || 'fox',
+  bodyColor:   saved?.bodyColor   || '#d4a373',
+  accentColor: saved?.accentColor || '#e76f51',
+  accessories: saved?.accessories || [],
+  pronouns:    saved?.pronouns    || 'she/her',
+  photoUrl:    saved?.photoUrl    || null,
+  mood:        'neutral',
+  lastAction:  null,
+  x: savedPos?.x || (1200 + Math.random()*600 | 0),
+  y: savedPos?.y || (800  + Math.random()*400 | 0),
+  direction: 'right',
+};
+
+// ── Multiplayer state ──────────────────────────────────────────────────────
+
+let players     = new Map();
+let ably        = null;
+let channel     = null;
+let connected   = false;
+let targetMode  = null;
+let lastEmoteAt = 0;
+let toastTimer  = null;
+let feedRendered = new Set();
+let loveTimers  = new Map();
+
+// ── Game loop state ────────────────────────────────────────────────────────
+
+let myPos      = { x: draft.x, y: draft.y };
+let keys       = {};
+let isMoving   = false;
+let lastPresenceAt = 0;
+let animFrame  = null;
+let inHangout  = false;
+
+// ── Utils ──────────────────────────────────────────────────────────────────
+
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function fmtTime(ts) {
+  const d = new Date(ts || Date.now());
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function speciesOf(key) { return SPECIES.find(s=>s.key===key)||SPECIES[0]; }
+
+// Seeded RNG for consistent world decorations
+function mulberry32(a) {
+  return function() { a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+}
+
+// ── e621 photo fetch ────────────────────────────────────────────────────────
+
+async function fetchFurryPhoto(species) {
+  const cacheKey = 'furry-photo-' + species;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return cached;
+
+  const tag = E621_TAGS[species] || 'fox_anthro';
+  try {
+    const url = `https://e621.net/posts.json?tags=anthro+${tag}+rating:s+solo&limit=12`;
+    const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+    if (!res.ok) return null;
+    const data = await res.json();
+    const posts = (data.posts || []).filter(p => p.sample && p.sample.url);
+    if (!posts.length) return null;
+    const post = posts[Math.floor(Math.random() * posts.length)];
+    const photoUrl = post.sample.url;
+    localStorage.setItem(cacheKey, photoUrl);
+    return photoUrl;
+  } catch (e) {
+    return null;
   }
+}
 
-  const SPECIES = [
-    { key: 'fox',     label: 'Fox',     emoji: '🦊' },
-    { key: 'wolf',    label: 'Wolf',    emoji: '🐺' },
-    { key: 'cat',     label: 'Cat',     emoji: '🐱' },
-    { key: 'bunny',   label: 'Bunny',   emoji: '🐰' },
-    { key: 'dog',     label: 'Dog',     emoji: '🐶' },
-    { key: 'dragon',  label: 'Dragon',  emoji: '🐲' },
-    { key: 'deer',    label: 'Deer',    emoji: '🦌' },
-    { key: 'raccoon', label: 'Raccoon', emoji: '🦝' },
-    { key: 'ferret',  label: 'Ferret',  emoji: '🐾' },
-    { key: 'otter',   label: 'Otter',   emoji: '🦦' },
-    { key: 'skunk',   label: 'Skunk',   emoji: '🦨' },
-    { key: 'hyena',   label: 'Hyena',   emoji: '🐆' },
-  ];
+// ── World generation ────────────────────────────────────────────────────────
 
-  const COLORS = [
-    '#d4a373','#e9c46a','#f4a261','#e76f51',
-    '#b5838d','#c77dff','#6b9da4','#a8dadc',
-    '#81b29a','#3d405b','#c9cba3','#ffe1a8',
-    '#eddcd2','#cbf3f0','#cccccc','#111111',
-  ];
+function buildWorld() {
+  const world = document.getElementById('world');
+  // Clear existing decorations (keep player elements)
+  world.querySelectorAll('.deco').forEach(el => el.remove());
 
-  const ACCESSORIES = [
-    { key: 'bow',        label: 'Bow',        emoji: '🎀' },
-    { key: 'glasses',    label: 'Glasses',    emoji: '👓' },
-    { key: 'scarf',      label: 'Scarf',      emoji: '🧣' },
-    { key: 'crown',      label: 'Crown',      emoji: '👑' },
-    { key: 'headphones', label: 'Headphones', emoji: '🎧' },
-    { key: 'flower',     label: 'Flower',     emoji: '🌸' },
-    { key: 'collar',     label: 'Collar',     emoji: '✨' },
-    { key: 'hoodie',     label: 'Hoodie',     emoji: '🧥' },
-  ];
-
-  const PRONOUN_OPTS = ['she/her','he/him','they/them','any/all'];
-
-  const EMOTES = {
-    boop:    { label:'Boop',     emoji:'👉', needsTarget:true,  mood:'playful',
-               tmpl:(a,t)=>`${a} boops ${t}'s snoot OwO` },
-    nuzzle:  { label:'Nuzzle',   emoji:'🤍', needsTarget:true,  mood:'happy',
-               tmpl:(a,t)=>`${a} nuzzles ${t} softly uwu` },
-    headpat: { label:'Headpat',  emoji:'🤚', needsTarget:true,  mood:'content',
-               tmpl:(a,t)=>`${a} gives ${t} gentle headpats` },
-    pounce:  { label:'Pounce',   emoji:'⚡', needsTarget:true,  mood:'energetic',
-               tmpl:(a,t)=>`${a} POUNCES on ${t}!! >w<` },
-    offer:   { label:'Offer',    emoji:'🍞', needsTarget:true,  mood:'happy',
-               tmpl:(a,t)=>`${a} offers ${t} some bread 🍞` },
-    tail:    { label:'Tail Wag', emoji:'🌀', needsTarget:false, mood:'happy',
-               tmpl:(a)=>`${a} wags their tail excitedly ~` },
-    howl:    { label:'Howl',     emoji:'🌕', needsTarget:false, mood:'energetic',
-               tmpl:(a)=>`${a} lets out a big AWOO 🌕` },
-    curl:    { label:'Curl Up',  emoji:'💤', needsTarget:false, mood:'sleepy',
-               tmpl:(a)=>`${a} curls up into a cozy ball...` },
-    blep:    { label:'Blep',     emoji:'👅', needsTarget:false, mood:'playful',
-               tmpl:(a)=>`${a} bleps at everyone :3` },
-    zoomies: { label:'Zoomies',  emoji:'🏃', needsTarget:false, mood:'energetic',
-               tmpl:(a)=>`${a} gets the zoomies!! 🌀🌀` },
-  };
-
-  const MOODS = {
-    happy:'😊', playful:'😼', energetic:'⚡', content:'🥰', sleepy:'💤', neutral:'🐾',
-  };
-
-  // ── Identity & fursona state ──────────────────────────────────────────────────
-
-  let myUid = localStorage.getItem('furry-uid');
-  if (!myUid) {
-    myUid = 'u' + Math.random().toString(36).slice(2, 10);
-    localStorage.setItem('furry-uid', myUid);
+  const rng = mulberry32(42);
+  const items = ['🌲','🌲','🌲','🌲','🌸','🌸','🌸','🌿','🌿','🍄','🌻','🌾','⭐','🪨','🌼','🌺'];
+  for (let i = 0; i < 140; i++) {
+    const el = document.createElement('div');
+    el.className = 'deco';
+    const item = items[Math.floor(rng() * items.length)];
+    el.textContent = item;
+    el.style.left = Math.floor(rng() * (WORLD_W - 60) + 30) + 'px';
+    el.style.top  = Math.floor(rng() * (WORLD_H - 60) + 30) + 'px';
+    el.style.fontSize = (20 + Math.floor(rng() * 16)) + 'px';
+    el.style.opacity  = (0.5 + rng() * 0.5).toFixed(2);
+    world.appendChild(el);
   }
+}
 
-  const savedFursona = JSON.parse(localStorage.getItem('furry-fursona') || 'null');
+// ── Player DOM management ───────────────────────────────────────────────────
 
-  let draft = {
-    name:        savedFursona?.name        || '',
-    species:     savedFursona?.species     || 'fox',
-    bodyColor:   savedFursona?.bodyColor   || '#d4a373',
-    accentColor: savedFursona?.accentColor || '#e76f51',
-    accessories: savedFursona?.accessories || [],
-    pronouns:    savedFursona?.pronouns    || 'she/her',
-    mood:        'neutral',
-    lastAction:  null,
-  };
+function getPlayerEl(uid) { return document.querySelector(`.world-player[data-uid="${uid}"]`); }
 
-  // ── Multiplayer state ─────────────────────────────────────────────────────────
+function addPlayerEl(uid, fursona) {
+  if (getPlayerEl(uid)) { updatePlayerEl(uid, fursona); return; }
+  const world = document.getElementById('world');
+  const sp = speciesOf(fursona.species);
+  const isMe = uid === myUid;
 
-  let players     = new Map();  // uid → fursona
-  let ably        = null;
-  let channel     = null;
-  let connected   = false;
-  let targetMode  = null;       // null | emoteKey — awaiting target click
-  let lastEmoteAt = 0;
-  let toastTimer  = null;
-  let feedRendered = new Set(); // dedupe feed entries
+  const wrap = document.createElement('div');
+  wrap.className = `world-player sp-${fursona.species}${isMe?' is-me':''}`;
+  wrap.dataset.uid = uid;
+  wrap.style.left = (fursona.x || WORLD_W/2) + 'px';
+  wrap.style.top  = (fursona.y || WORLD_H/2) + 'px';
+  wrap.style.setProperty('--ear-color', fursona.bodyColor || '#d4a373');
 
-  // ── Utilities ─────────────────────────────────────────────────────────────────
+  const accs = (fursona.accessories||[]).slice(0,3).map(k=>(ACCESSORIES.find(a=>a.key===k)||{emoji:''}).emoji).join('');
+  const mood = MOODS[fursona.mood] || MOODS.neutral;
 
-  function showScreen(name) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById('screen-' + name).classList.add('active');
-  }
-
-  function showToast(msg) {
-    const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
-  }
-
-  function esc(str) {
-    return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  function fmtTime(ts) {
-    const d = new Date(ts || Date.now());
-    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-  }
-
-  function speciesOf(key) {
-    return SPECIES.find(s => s.key === key) || SPECIES[0];
-  }
-
-  // ── Avatar card builder ────────────────────────────────────────────────────────
-
-  function buildAvatarCard(uid, fursona, isMe) {
-    const sp = speciesOf(fursona.species);
-    const accs = (fursona.accessories || []).slice(0, 3);
-    const mood = MOODS[fursona.mood] || MOODS.neutral;
-    const pronouns = fursona.pronouns ? `<div class="avatar-pronouns">${esc(fursona.pronouns)}</div>` : '';
-
-    const card = document.createElement('div');
-    card.className = 'avatar-card' + (isMe ? ' is-me' : '') + ' species-' + fursona.species;
-    card.dataset.uid = uid;
-
-    card.innerHTML = `
-      ${isMe ? '<div class="me-badge">you</div>' : ''}
-      <div class="acc-row">${accs.map(k => (ACCESSORIES.find(a=>a.key===k)||{emoji:''}).emoji).join('')}</div>
-      <div class="avatar-body species-${esc(fursona.species)}"
-           style="background:${esc(fursona.bodyColor)};--accent:${esc(fursona.accentColor)}"
-           data-emoji="${sp.emoji}">
-        ${sp.emoji}
+  wrap.innerHTML = `
+    <div class="player-sprite-wrap">
+      <div class="emote-bubble" id="bubble-${uid}"></div>
+      <div class="player-sprite" style="background:${esc(fursona.bodyColor)}">
+        ${fursona.photoUrl ? `<img src="${esc(fursona.photoUrl)}" alt="">` : sp.emoji}
       </div>
-      <div class="avatar-name">${esc(fursona.name || 'Unnamed')}</div>
-      ${pronouns}
-      <div class="avatar-species-tag">${esc(sp.label)}</div>
-      <div class="avatar-mood">${mood}</div>
-    `;
+    </div>
+    <div class="player-name-tag">
+      ${esc(fursona.name||'???')}${fursona.pronouns?`<span class="pron">${esc(fursona.pronouns)}</span>`:''}
+    </div>
+  `;
 
-    // Tint ears with body color
-    const style = document.createElement('style');
-    style.textContent = `
-      [data-uid="${uid}"].avatar-card .avatar-body::before,
-      [data-uid="${uid}"].avatar-card .avatar-body::after {
-        background: ${fursona.bodyColor};
-      }
-    `;
-    card.appendChild(style);
+  world.appendChild(wrap);
+}
 
-    return card;
+function updatePlayerEl(uid, fursona) {
+  const el = getPlayerEl(uid);
+  if (!el) { addPlayerEl(uid, fursona); return; }
+
+  // Update position
+  el.style.left = (fursona.x || 0) + 'px';
+  el.style.top  = (fursona.y || 0) + 'px';
+
+  // Direction
+  el.classList.toggle('dir-left', fursona.direction === 'left');
+
+  // Moving class (other players: infer from rapid position changes)
+  // For others we set moving briefly when position changes
+  el.style.setProperty('--ear-color', fursona.bodyColor || '#d4a373');
+
+  // Update name tag if changed
+  const nameTag = el.querySelector('.player-name-tag');
+  if (nameTag) {
+    nameTag.innerHTML = esc(fursona.name||'???') + (fursona.pronouns?`<span class="pron">${esc(fursona.pronouns)}</span>`:'');
   }
+}
 
-  // ── Avatar grid render ─────────────────────────────────────────────────────────
+function removePlayerEl(uid) {
+  const el = getPlayerEl(uid);
+  if (el) el.remove();
+}
 
-  function renderAvatarGrid() {
-    const grid = document.getElementById('avatar-grid');
-    grid.innerHTML = '';
+function showEmoteBubble(uid, text) {
+  const bubble = document.getElementById('bubble-' + uid);
+  if (!bubble) return;
+  bubble.textContent = text;
+  bubble.classList.add('show');
+  setTimeout(() => bubble.classList.remove('show'), 3000);
+}
 
-    const ordered = [];
-    // Own card first
-    const myFursona = players.get(myUid);
-    if (myFursona) ordered.push([myUid, myFursona, true]);
-    players.forEach((f, uid) => {
-      if (uid !== myUid) ordered.push([uid, f, false]);
-    });
+function triggerEmoteAnim(uid, emoteKey) {
+  const el = getPlayerEl(uid);
+  if (!el) return;
+  Object.keys(EMOTES).forEach(k => el.classList.remove('emoting-' + k));
+  el.classList.add('emoting-' + emoteKey);
+  setTimeout(() => el.classList.remove('emoting-' + emoteKey), 1200);
+}
 
-    if (ordered.length === 0) {
-      grid.innerHTML = `<div class="empty-den">
-        <div class="paw">🐾</div>
-        <p>You're the first one here...<br>the den is quiet uwu</p>
-      </div>`;
-      return;
-    }
+// ── Camera ─────────────────────────────────────────────────────────────────
 
-    ordered.forEach(([uid, fursona, isMe]) => {
-      const card = buildAvatarCard(uid, fursona, isMe);
-      if (!isMe && targetMode) {
-        card.classList.add('targetable');
-        card.addEventListener('click', () => handleTargetSelect(uid));
-      }
-      grid.appendChild(card);
-    });
+function updateCamera() {
+  const vp = document.getElementById('world-viewport');
+  const vw = vp.clientWidth, vh = vp.clientHeight;
+  const tx = Math.round(-myPos.x + vw / 2);
+  const ty = Math.round(-myPos.y + vh / 2);
+  document.getElementById('world').style.transform = `translate(${tx}px,${ty}px)`;
+}
 
-    updateOnlineCount();
-  }
+// ── Movement ───────────────────────────────────────────────────────────────
 
-  function updateOnlineCount() {
-    document.getElementById('online-count').textContent = players.size + ' online';
-  }
+function movePlayer() {
+  let dx = 0, dy = 0;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) dx -= SPEED;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) dx += SPEED;
+  if (keys['ArrowUp']    || keys['w'] || keys['W']) dy -= SPEED;
+  if (keys['ArrowDown']  || keys['s'] || keys['S']) dy += SPEED;
 
-  // ── Action feed ───────────────────────────────────────────────────────────────
+  // Diagonal normalise
+  if (dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
 
-  function appendFeedAction(data, id) {
-    if (feedRendered.has(id)) return;
-    feedRendered.add(id);
+  if (dx !== 0 || dy !== 0) {
+    myPos.x = Math.max(40, Math.min(WORLD_W - 40, myPos.x + dx));
+    myPos.y = Math.max(40, Math.min(WORLD_H - 40, myPos.y + dy));
+    if (!isMoving) { isMoving = true; getPlayerEl(myUid)?.classList.add('moving'); }
+    if (dx > 0) { draft.direction = 'right'; getPlayerEl(myUid)?.classList.remove('dir-left'); }
+    if (dx < 0) { draft.direction = 'left';  getPlayerEl(myUid)?.classList.add('dir-left'); }
 
-    const { actorUid, targetUid, emoteKey } = data;
-    const actor  = players.get(actorUid)  || { name: '???' };
-    const target = players.get(targetUid) || { name: '???' };
-    const emote  = EMOTES[emoteKey];
-    if (!emote) return;
+    // Update own element position
+    const me = getPlayerEl(myUid);
+    if (me) { me.style.left = myPos.x + 'px'; me.style.top = myPos.y + 'px'; }
 
-    const text = emote.needsTarget
-      ? emote.tmpl(actor.name, target.name)
-      : emote.tmpl(actor.name);
-
-    const el = document.createElement('div');
-    el.className = 'feed-entry new';
-    el.innerHTML = `<span class="feed-time">${fmtTime(data.ts)}</span><span class="feed-actor">${esc(actor.name)}</span> — ${esc(text.replace(actor.name, '').trimStart())}`;
-    el.innerHTML = `<span class="feed-time">${fmtTime(data.ts)}</span>${esc(text)}`;
-
-    const feed = document.getElementById('action-feed');
-    feed.appendChild(el);
-    feed.scrollTop = feed.scrollHeight;
-
-    // Pulse the card
-    const card = document.querySelector(`.avatar-card[data-uid="${actorUid}"]`);
-    if (card) {
-      card.classList.remove('just-acted');
-      void card.offsetWidth; // reflow
-      card.classList.add('just-acted');
-      setTimeout(() => card.classList.remove('just-acted'), 800);
-    }
-  }
-
-  function appendFeedJoin(name, joined) {
-    const el = document.createElement('div');
-    el.className = 'feed-join new';
-    el.textContent = `${name} ${joined ? 'entered' : 'left'} the den`;
-    const feed = document.getElementById('action-feed');
-    feed.appendChild(el);
-    feed.scrollTop = feed.scrollHeight;
-  }
-
-  // ── Emote bar ─────────────────────────────────────────────────────────────────
-
-  function renderEmoteBar() {
-    const row = document.getElementById('emote-row');
-    row.innerHTML = '';
-    Object.entries(EMOTES).forEach(([key, emote]) => {
-      const btn = document.createElement('button');
-      btn.className = 'emote-btn';
-      btn.dataset.key = key;
-      btn.innerHTML = `${emote.emoji} <span class="emote-label">${emote.label}</span>`;
-      btn.addEventListener('click', () => handleEmoteClick(key, btn));
-      row.appendChild(btn);
-    });
-  }
-
-  function handleEmoteClick(key, btn) {
-    if (!connected) { showToast('not connected :c'); return; }
-
+    // Throttled presence update
     const now = Date.now();
-    if (now - lastEmoteAt < 2000) {
-      btn.classList.add('shaking');
-      setTimeout(() => btn.classList.remove('shaking'), 350);
-      showToast('slow down :3');
-      return;
+    if (now - lastPresenceAt > 100 && channel && connected) {
+      lastPresenceAt = now;
+      draft.x = myPos.x; draft.y = myPos.y;
+      localStorage.setItem('furry-pos', JSON.stringify({ x: myPos.x, y: myPos.y }));
+      channel.presence.update({ uid: myUid, ...draft });
+      players.set(myUid, { uid: myUid, ...draft });
     }
-
-    const emote = EMOTES[key];
-    if (emote.needsTarget) {
-      if (players.size <= 1) { showToast('no one else to target uwu'); return; }
-      setTargetMode(key);
-    } else {
-      fireEmote(key, null);
-    }
+  } else if (isMoving) {
+    isMoving = false;
+    getPlayerEl(myUid)?.classList.remove('moving');
   }
+}
 
-  function setTargetMode(key) {
-    targetMode = key;
-    document.getElementById('target-prompt').classList.add('show');
-    document.querySelectorAll('.emote-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.key === key);
-    });
-    renderAvatarGrid();
-    showToast('click someone to target them!');
+// ── Proximity / love hearts ────────────────────────────────────────────────
+
+function spawnHeart(wx, wy, isBurst, angle) {
+  const world = document.getElementById('world');
+  const el = document.createElement('div');
+  const heart = HEARTS[Math.floor(Math.random() * HEARTS.length)];
+  if (isBurst) {
+    el.className = 'burst-heart';
+    const bx = Math.round(Math.cos(angle) * 30);
+    const by = Math.round(Math.sin(angle) * 30);
+    el.style.setProperty('--bx', bx + 'px');
+    el.style.setProperty('--by', by + 'px');
+  } else {
+    el.className = 'floating-heart';
+    el.style.left = (wx + (Math.random() - 0.5) * 40) + 'px';
+    el.style.top  = wy + 'px';
   }
+  el.textContent = heart;
+  if (isBurst) { el.style.left = wx + 'px'; el.style.top = wy + 'px'; }
+  world.appendChild(el);
+  setTimeout(() => el.remove(), isBurst ? 1400 : 2200);
+}
 
-  function cancelTargetMode() {
-    targetMode = null;
-    document.getElementById('target-prompt').classList.remove('show');
-    document.querySelectorAll('.emote-btn').forEach(b => b.classList.remove('active'));
-    renderAvatarGrid();
+function spawnNuzzleBurst(wx, wy) {
+  for (let i = 0; i < 7; i++) {
+    const angle = (i / 7) * Math.PI * 2;
+    setTimeout(() => spawnHeart(wx, wy, true, angle), i * 60);
   }
+}
 
-  function handleTargetSelect(targetUid) {
-    if (!targetMode) return;
-    if (targetUid === myUid) { showToast("you can't boop yourself :("); return; }
-    fireEmote(targetMode, targetUid);
-    cancelTargetMode();
-  }
-
-  function fireEmote(key, targetUid) {
-    lastEmoteAt = Date.now();
-    const emote = EMOTES[key];
-    const newMood = emote.mood || 'neutral';
-
-    // Update own fursona mood + lastAction
-    const myFursona = players.get(myUid);
-    if (myFursona) {
-      const updated = { ...myFursona, mood: newMood, lastAction: { type: key, targetUid, ts: Date.now() } };
-      players.set(myUid, updated);
-      channel.presence.update(updated);
-    }
-
-    channel.publish('action', { actorUid: myUid, targetUid, emoteKey: key, ts: Date.now() });
-    renderAvatarGrid();
-  }
-
-  // ── Ably setup ─────────────────────────────────────────────────────────────────
-
-  function connectAbly() {
-    if (!ABLY_API_KEY) return;
-
-    ably = new Ably.Realtime({ key: ABLY_API_KEY, clientId: myUid });
-    channel = ably.channels.get('ryanssite-furry-v1');
-
-    const dot = document.getElementById('status-dot');
-
-    ably.connection.on('connected', () => {
-      connected = true;
-      dot.classList.add('live');
-
-      // Enter presence with fursona
-      const myFursona = { uid: myUid, ...draft };
-      players.set(myUid, myFursona);
-      channel.presence.enter(myFursona);
-
-      // Load existing members
-      channel.presence.get((err, members) => {
-        if (!err && members) {
-          members.forEach(m => {
-            if (m.clientId !== myUid) players.set(m.clientId, m.data);
-          });
-        }
-        renderAvatarGrid();
-        updateOnlineCount();
-      });
-
-      // Load recent action history
-      channel.history({ limit: 50, direction: 'backwards' }, (err, page) => {
-        if (!err && page) {
-          const items = page.items.filter(i => i.name === 'action').reverse();
-          items.forEach(msg => appendFeedAction(msg.data, msg.id));
-        }
-      });
-    });
-
-    ably.connection.on('disconnected', () => {
-      connected = false;
-      dot.classList.remove('live');
-    });
-    ably.connection.on('failed', () => {
-      connected = false;
-      dot.classList.remove('live');
-      showToast('connection failed :(');
-    });
-
-    // Presence changes
-    channel.presence.subscribe(msg => {
-      const uid = msg.clientId;
-      if (msg.action === 'leave' || msg.action === 'absent') {
-        const leaving = players.get(uid);
-        if (leaving) appendFeedJoin(leaving.name, false);
-        players.delete(uid);
-        showToast(`${(players.get(uid) || msg.data || {}).name || 'someone'} left the den`);
-      } else {
-        const isNew = !players.has(uid) && uid !== myUid;
-        players.set(uid, msg.data);
-        if (isNew) {
-          appendFeedJoin(msg.data.name, true);
-          showToast(`${msg.data.name} entered the den`);
-        }
+function checkProximity() {
+  players.forEach((fursona, uid) => {
+    if (uid === myUid || !fursona.x) return;
+    const dx = myPos.x - fursona.x;
+    const dy = myPos.y - fursona.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    if (dist < LOVE_DIST) {
+      const last = loveTimers.get(uid) || 0;
+      if (Date.now() - last > 2000) {
+        loveTimers.set(uid, Date.now());
+        spawnHeart(myPos.x, myPos.y - 30);
+        spawnHeart(fursona.x, fursona.y - 30);
       }
-      renderAvatarGrid();
+    }
+  });
+}
+
+// ── Game loop ──────────────────────────────────────────────────────────────
+
+function gameLoop() {
+  if (!inHangout) return;
+  movePlayer();
+  updateCamera();
+  checkProximity();
+  animFrame = requestAnimationFrame(gameLoop);
+}
+
+// ── Emote system ───────────────────────────────────────────────────────────
+
+function renderEmoteBar() {
+  const row = document.getElementById('emote-row');
+  row.innerHTML = '';
+  Object.entries(EMOTES).forEach(([key, emote]) => {
+    const btn = document.createElement('button');
+    btn.className = 'emote-btn';
+    btn.dataset.key = key;
+    btn.innerHTML = `${emote.emoji} ${emote.label}`;
+    btn.addEventListener('click', () => handleEmoteClick(key, btn));
+    row.appendChild(btn);
+  });
+}
+
+function handleEmoteClick(key, btn) {
+  if (!connected) { showToast('not connected :c'); return; }
+  const now = Date.now();
+  if (now - lastEmoteAt < 2000) {
+    btn.classList.add('shaking');
+    setTimeout(() => btn.classList.remove('shaking'), 350);
+    showToast('slow down :3');
+    return;
+  }
+  const emote = EMOTES[key];
+  if (emote.needsTarget) {
+    if (players.size <= 1) { showToast('no one else is here uwu'); return; }
+    enterTargetMode(key);
+  } else {
+    fireEmote(key, null);
+  }
+}
+
+function enterTargetMode(key) {
+  targetMode = key;
+  document.getElementById('target-prompt').classList.add('show');
+  document.querySelectorAll('.emote-btn').forEach(b => b.classList.toggle('targeting', b.dataset.key === key));
+  // Make other player sprites clickable
+  document.querySelectorAll('.world-player:not(.is-me)').forEach(el => {
+    el.classList.add('targetable');
+    el.addEventListener('click', onTargetClick, { once: true });
+  });
+  showToast('click a player to target them!');
+}
+
+function onTargetClick(e) {
+  const uid = e.currentTarget.dataset.uid;
+  handleTargetSelect(uid);
+}
+
+function cancelTargetMode() {
+  targetMode = null;
+  document.getElementById('target-prompt').classList.remove('show');
+  document.querySelectorAll('.emote-btn').forEach(b => b.classList.remove('targeting'));
+  document.querySelectorAll('.world-player.targetable').forEach(el => {
+    el.classList.remove('targetable');
+    el.removeEventListener('click', onTargetClick);
+  });
+}
+
+function handleTargetSelect(targetUid) {
+  if (!targetMode) return;
+  if (targetUid === myUid) { showToast("can't target yourself :p"); return; }
+  fireEmote(targetMode, targetUid);
+  cancelTargetMode();
+}
+
+function fireEmote(key, targetUid) {
+  lastEmoteAt = Date.now();
+  const emote = EMOTES[key];
+  draft.mood = emote.mood || 'neutral';
+  draft.lastAction = { type: key, targetUid, ts: Date.now() };
+  players.set(myUid, { uid: myUid, ...draft });
+
+  triggerEmoteAnim(myUid, key);
+  showEmoteBubble(myUid, emote.bubble);
+
+  if (emote.needsTarget && targetUid) {
+    triggerEmoteAnim(targetUid, key);
+    const tEl = getPlayerEl(targetUid);
+    if (tEl) {
+      const tx = parseFloat(tEl.style.left) || myPos.x;
+      const ty = parseFloat(tEl.style.top)  || myPos.y;
+      if (key === 'nuzzle' || key === 'pounce') spawnNuzzleBurst(tx, ty - 30);
+      else spawnHeart(tx, ty - 30);
+    }
+  } else if (!emote.needsTarget) {
+    spawnHeart(myPos.x, myPos.y - 40);
+  }
+
+  if (channel && connected) {
+    channel.publish('action', { actorUid: myUid, targetUid, emoteKey: key, ts: Date.now() });
+    channel.presence.update({ uid: myUid, ...draft });
+  }
+}
+
+// ── Action feed ────────────────────────────────────────────────────────────
+
+function appendFeedAction(data, id) {
+  if (feedRendered.has(id)) return;
+  feedRendered.add(id);
+  const { actorUid, targetUid, emoteKey, ts } = data;
+  const actor  = players.get(actorUid)  || { name: '???' };
+  const target = players.get(targetUid) || { name: '???' };
+  const emote  = EMOTES[emoteKey];
+  if (!emote) return;
+  const text = emote.needsTarget ? emote.tmpl(actor.name, target.name) : emote.tmpl(actor.name);
+  const el = document.createElement('div');
+  el.className = 'feed-entry new';
+  el.innerHTML = `<span style="font-size:10px;color:var(--muted);margin-right:5px">${fmtTime(ts)}</span>${esc(text)}`;
+  const feed = document.getElementById('action-feed');
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function appendFeedJoin(name, joined) {
+  const el = document.createElement('div');
+  el.className = 'feed-join new';
+  el.textContent = `${name} ${joined ? 'entered' : 'left'} the den`;
+  const feed = document.getElementById('action-feed');
+  feed.appendChild(el);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+// ── Ably ───────────────────────────────────────────────────────────────────
+
+function connectAbly() {
+  if (!ABLY_API_KEY) return;
+  ably = new Ably.Realtime({ key: ABLY_API_KEY, clientId: myUid });
+  channel = ably.channels.get('ryanssite-furry-v1');
+
+  ably.connection.on('connected', () => {
+    connected = true;
+    document.getElementById('status-dot').classList.add('live');
+    const myFursona = { uid: myUid, ...draft };
+    players.set(myUid, myFursona);
+    addPlayerEl(myUid, myFursona);
+    channel.presence.enter(myFursona);
+
+    channel.presence.get((err, members) => {
+      if (!err && members) {
+        members.forEach(m => {
+          if (m.clientId !== myUid) {
+            players.set(m.clientId, m.data);
+            addPlayerEl(m.clientId, m.data);
+          }
+        });
+      }
       updateOnlineCount();
     });
 
-    // Action messages
-    channel.subscribe('action', msg => {
-      appendFeedAction(msg.data, msg.id);
-    });
-  }
-
-  window.addEventListener('beforeunload', () => {
-    if (channel) channel.presence.leave();
-  });
-
-  // ── Build customizer UI ────────────────────────────────────────────────────────
-
-  function buildSpeciesPicker(containerId, onSelect) {
-    const el = document.getElementById(containerId);
-    el.innerHTML = '';
-    SPECIES.forEach(sp => {
-      const btn = document.createElement('button');
-      btn.className = 'species-pill' + (draft.species === sp.key ? ' selected' : '');
-      btn.innerHTML = `${sp.emoji} ${sp.label}`;
-      btn.dataset.key = sp.key;
-      btn.addEventListener('click', () => {
-        draft.species = sp.key;
-        el.querySelectorAll('.species-pill').forEach(b => b.classList.toggle('selected', b.dataset.key === sp.key));
-        onSelect && onSelect();
-      });
-      el.appendChild(btn);
-    });
-  }
-
-  function buildColorPicker(containerId, prop) {
-    const el = document.getElementById(containerId);
-    el.innerHTML = '';
-    COLORS.forEach(color => {
-      const sw = document.createElement('button');
-      sw.className = 'swatch' + (draft[prop] === color ? ' selected' : '');
-      sw.style.background = color;
-      sw.dataset.color = color;
-      sw.title = color;
-      sw.addEventListener('click', () => {
-        draft[prop] = color;
-        el.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === color));
-        renderPreview();
-      });
-      el.appendChild(sw);
-    });
-  }
-
-  function buildAccessoryPicker() {
-    const el = document.getElementById('accessory-picker');
-    el.innerHTML = '';
-    ACCESSORIES.forEach(acc => {
-      const btn = document.createElement('button');
-      const selected = draft.accessories.includes(acc.key);
-      btn.className = 'acc-pill' + (selected ? ' selected' : '');
-      btn.innerHTML = `${acc.emoji} ${acc.label}`;
-      btn.dataset.key = acc.key;
-      btn.addEventListener('click', () => {
-        const idx = draft.accessories.indexOf(acc.key);
-        if (idx >= 0) {
-          draft.accessories.splice(idx, 1);
-          btn.classList.remove('selected');
-        } else {
-          if (draft.accessories.length >= 3) { showToast('max 3 accessories!'); return; }
-          draft.accessories.push(acc.key);
-          btn.classList.add('selected');
-        }
-        renderPreview();
-      });
-      el.appendChild(btn);
-    });
-  }
-
-  function buildPronounPills() {
-    const el = document.getElementById('pronoun-pills');
-    el.innerHTML = '';
-    PRONOUN_OPTS.forEach(p => {
-      const btn = document.createElement('button');
-      btn.className = 'species-pill' + (draft.pronouns === p ? ' selected' : '');
-      btn.style.borderRadius = '99px';
-      btn.style.padding = '5px 12px';
-      btn.textContent = p;
-      btn.dataset.p = p;
-      btn.addEventListener('click', () => {
-        draft.pronouns = p;
-        document.getElementById('inp-pronouns').value = '';
-        el.querySelectorAll('.species-pill').forEach(b => b.classList.toggle('selected', b.dataset.p === p));
-        renderPreview();
-      });
-      el.appendChild(btn);
-    });
-  }
-
-  function renderPreview() {
-    const container = document.getElementById('preview-card');
-    container.innerHTML = '';
-    const fursona = { uid: myUid, ...draft };
-    container.appendChild(buildAvatarCard(myUid, fursona, true));
-  }
-
-  // ── Join screen setup ─────────────────────────────────────────────────────────
-
-  buildSpeciesPicker('species-quick-pick', null);
-
-  const inpName = document.getElementById('inp-name');
-  if (draft.name) inpName.value = draft.name;
-
-  document.getElementById('btn-next').addEventListener('click', () => {
-    const name = inpName.value.trim();
-    if (!name) { showToast('enter your name first!'); inpName.focus(); return; }
-    draft.name = name;
-    showScreen('customize');
-    initCustomizeScreen();
-  });
-
-  inpName.addEventListener('keydown', e => {
-    if (e.key === 'Enter') document.getElementById('btn-next').click();
-  });
-
-  // Sync species selection from join screen
-  document.getElementById('species-quick-pick').addEventListener('click', e => {
-    const pill = e.target.closest('.species-pill');
-    if (!pill) return;
-    draft.species = pill.dataset.key;
-  });
-
-  // ── Customize screen setup ─────────────────────────────────────────────────────
-
-  let customizeInitialized = false;
-
-  function initCustomizeScreen() {
-    buildSpeciesPicker('species-full-pick', renderPreview);
-    buildColorPicker('body-color-picker', 'bodyColor');
-    buildColorPicker('accent-color-picker', 'accentColor');
-    buildAccessoryPicker();
-    buildPronounPills();
-    renderPreview();
-
-    const inpPronouns = document.getElementById('inp-pronouns');
-    if (!PRONOUN_OPTS.includes(draft.pronouns)) inpPronouns.value = draft.pronouns;
-
-    inpPronouns.addEventListener('input', () => {
-      const val = inpPronouns.value.trim();
-      if (val) {
-        draft.pronouns = val;
-        document.getElementById('pronoun-pills').querySelectorAll('.species-pill').forEach(b => b.classList.remove('selected'));
-        renderPreview();
+    channel.history({ limit: 40, direction: 'backwards' }, (err, page) => {
+      if (!err && page) {
+        page.items.filter(i => i.name === 'action').reverse().forEach(msg => appendFeedAction(msg.data, msg.id));
       }
     });
+  });
+
+  ably.connection.on('disconnected', () => {
+    connected = false;
+    document.getElementById('status-dot').classList.remove('live');
+  });
+  ably.connection.on('failed', () => {
+    connected = false;
+    showToast('connection failed :(');
+  });
+
+  channel.presence.subscribe(msg => {
+    const uid = msg.clientId;
+    if (msg.action === 'leave' || msg.action === 'absent') {
+      const leaving = players.get(uid);
+      if (leaving) { appendFeedJoin(leaving.name, false); showToast(`${leaving.name} left the den`); }
+      players.delete(uid);
+      removePlayerEl(uid);
+    } else {
+      const isNew = !players.has(uid) && uid !== myUid;
+      players.set(uid, msg.data);
+      if (uid !== myUid) {
+        if (isNew) { addPlayerEl(uid, msg.data); appendFeedJoin(msg.data.name, true); showToast(`${msg.data.name} entered the den`); }
+        else {
+          updatePlayerEl(uid, msg.data);
+          // Briefly mark as moving
+          const el = getPlayerEl(uid);
+          if (el) { el.classList.add('moving'); setTimeout(() => el.classList.remove('moving'), 400); }
+          // Show emote if new action
+          if (msg.data.lastAction && Date.now() - msg.data.lastAction.ts < 4000) {
+            const act = msg.data.lastAction;
+            triggerEmoteAnim(uid, act.type);
+            showEmoteBubble(uid, EMOTES[act.type]?.bubble || '');
+          }
+        }
+      }
+    }
+    updateOnlineCount();
+  });
+
+  channel.subscribe('action', msg => {
+    appendFeedAction(msg.data, msg.id);
+  });
+}
+
+function updateOnlineCount() {
+  document.getElementById('online-count').textContent = players.size + ' online';
+}
+
+window.addEventListener('beforeunload', () => { if (channel) channel.presence.leave(); });
+
+// ── Build UI helpers ───────────────────────────────────────────────────────
+
+function buildSpeciesPicker(containerId, onSelect) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  SPECIES.forEach(sp => {
+    const btn = document.createElement('button');
+    btn.className = 'species-pill' + (draft.species === sp.key ? ' selected' : '');
+    btn.innerHTML = `${sp.emoji} ${sp.label}`;
+    btn.dataset.key = sp.key;
+    btn.addEventListener('click', () => {
+      draft.species = sp.key;
+      el.querySelectorAll('.species-pill').forEach(b => b.classList.toggle('selected', b.dataset.key === sp.key));
+      if (onSelect) onSelect();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function buildColorPicker(containerId, prop) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  COLORS.forEach(color => {
+    const sw = document.createElement('button');
+    sw.className = 'swatch' + (draft[prop] === color ? ' selected' : '');
+    sw.style.background = color;
+    sw.dataset.color = color;
+    sw.title = color;
+    sw.addEventListener('click', () => {
+      draft[prop] = color;
+      el.querySelectorAll('.swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === color));
+      renderPreview();
+    });
+    el.appendChild(sw);
+  });
+}
+
+function buildAccessoryPicker() {
+  const el = document.getElementById('accessory-picker');
+  el.innerHTML = '';
+  ACCESSORIES.forEach(acc => {
+    const btn = document.createElement('button');
+    const sel = draft.accessories.includes(acc.key);
+    btn.className = 'acc-pill' + (sel ? ' selected' : '');
+    btn.innerHTML = `${acc.emoji} ${acc.label}`;
+    btn.dataset.key = acc.key;
+    btn.addEventListener('click', () => {
+      const idx = draft.accessories.indexOf(acc.key);
+      if (idx >= 0) { draft.accessories.splice(idx,1); btn.classList.remove('selected'); }
+      else { if (draft.accessories.length >= 3) { showToast('max 3 accessories!'); return; } draft.accessories.push(acc.key); btn.classList.add('selected'); }
+      renderPreview();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function buildPronounPills() {
+  const el = document.getElementById('pronoun-pills');
+  el.innerHTML = '';
+  PRONOUN_OPTS.forEach(p => {
+    const btn = document.createElement('button');
+    btn.className = 'species-pill' + (draft.pronouns === p ? ' selected' : '');
+    btn.style.cssText = 'border-radius:99px;padding:5px 12px;';
+    btn.textContent = p;
+    btn.dataset.p = p;
+    btn.addEventListener('click', () => {
+      draft.pronouns = p;
+      document.getElementById('inp-pronouns').value = '';
+      el.querySelectorAll('.species-pill').forEach(b => b.classList.toggle('selected', b.dataset.p === p));
+      renderPreview();
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderPreview() {
+  const sp = speciesOf(draft.species);
+  const accs = draft.accessories.slice(0,3).map(k=>(ACCESSORIES.find(a=>a.key===k)||{emoji:''}).emoji).join('');
+  const container = document.getElementById('preview-card');
+  container.innerHTML = `
+    <div class="preview-avatar-card">
+      <div class="prev-acc-row">${accs || '&nbsp;'}</div>
+      <div class="prev-body sp-${draft.species}" style="background:${esc(draft.bodyColor)};--ear-color:${esc(draft.bodyColor)}">
+        ${draft.photoUrl ? `<img src="${esc(draft.photoUrl)}" alt="">` : sp.emoji}
+      </div>
+      <div class="prev-name">${esc(draft.name||'Unnamed')}</div>
+      ${draft.pronouns ? `<div class="prev-pronouns">${esc(draft.pronouns)}</div>` : ''}
+      <div class="prev-species">${sp.label}</div>
+    </div>
+  `;
+  // Apply ear color CSS
+  const body = container.querySelector('.prev-body');
+  if (body) {
+    body.style.setProperty('--ear-color', draft.bodyColor);
+    const style = document.createElement('style');
+    style.textContent = `#preview-card .prev-body::before,#preview-card .prev-body::after{background:${draft.bodyColor}}`;
+    container.appendChild(style);
+  }
+}
+
+// ── Join screen ────────────────────────────────────────────────────────────
+
+if (!ABLY_API_KEY) document.getElementById('setup-banner').classList.add('show');
+
+buildSpeciesPicker('species-quick-pick', null);
+const inpName = document.getElementById('inp-name');
+if (draft.name) inpName.value = draft.name;
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  const name = inpName.value.trim();
+  if (!name) { showToast('enter your name first!'); inpName.focus(); return; }
+  draft.name = name;
+  showScreen('customize');
+  initCustomize();
+});
+inpName.addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('btn-next').click(); });
+
+// ── Customize screen ───────────────────────────────────────────────────────
+
+let customizeReady = false;
+
+function initCustomize() {
+  buildSpeciesPicker('species-full-pick', () => { draft.photoUrl = null; renderPreview(); });
+  buildColorPicker('body-color-picker', 'bodyColor');
+  buildColorPicker('accent-color-picker', 'accentColor');
+  buildAccessoryPicker();
+  buildPronounPills();
+  renderPreview();
+
+  const inpPronouns = document.getElementById('inp-pronouns');
+  if (!PRONOUN_OPTS.includes(draft.pronouns)) inpPronouns.value = draft.pronouns;
+  inpPronouns.oninput = () => {
+    const v = inpPronouns.value.trim();
+    if (v) {
+      draft.pronouns = v;
+      document.getElementById('pronoun-pills').querySelectorAll('.species-pill').forEach(b=>b.classList.remove('selected'));
+      renderPreview();
+    }
+  };
+  customizeReady = true;
+}
+
+document.getElementById('btn-back').addEventListener('click', () => { showScreen('join'); document.getElementById('inp-name').value = draft.name; });
+
+document.getElementById('btn-enter-den').addEventListener('click', async () => {
+  if (!ABLY_API_KEY) { showToast('add your Ably key first!'); return; }
+  const btn = document.getElementById('btn-enter-den');
+  btn.disabled = true;
+  btn.textContent = 'Finding your fursona pic...';
+
+  // Fetch photo
+  const photo = await fetchFurryPhoto(draft.species);
+  draft.photoUrl = photo;
+  if (photo) localStorage.setItem('furry-photo-' + draft.species, photo);
+
+  // Save fursona
+  localStorage.setItem('furry-fursona', JSON.stringify({
+    name: draft.name, species: draft.species,
+    bodyColor: draft.bodyColor, accentColor: draft.accentColor,
+    accessories: draft.accessories, pronouns: draft.pronouns,
+    photoUrl: draft.photoUrl,
+  }));
+
+  btn.disabled = false;
+  btn.textContent = 'Enter the den ✨';
+
+  showScreen('hangout');
+  buildWorld();
+  renderEmoteBar();
+  inHangout = true;
+
+  if (!connected) {
+    connectAbly();
+  } else {
+    // In-session fursona edit
+    const updated = { uid: myUid, ...draft };
+    players.set(myUid, updated);
+    channel.presence.update(updated);
+    const me = getPlayerEl(myUid);
+    if (me) {
+      // Rebuild photo
+      const sprite = me.querySelector('.player-sprite');
+      if (sprite) {
+        sprite.style.background = draft.bodyColor;
+        const img = sprite.querySelector('img');
+        if (img && draft.photoUrl) img.src = draft.photoUrl;
+        else if (!img && draft.photoUrl) {
+          const i = document.createElement('img'); i.src = draft.photoUrl; i.alt = '';
+          sprite.innerHTML = ''; sprite.appendChild(i);
+        } else if (!draft.photoUrl) { sprite.innerHTML = speciesOf(draft.species).emoji; }
+      }
+    }
   }
 
-  document.getElementById('btn-back').addEventListener('click', () => {
-    showScreen('join');
-    document.getElementById('inp-name').value = draft.name;
-  });
+  requestAnimationFrame(() => { updateCamera(); cancelAnimationFrame(animFrame); gameLoop(); });
+});
 
-  document.getElementById('btn-enter-den').addEventListener('click', () => {
-    if (!ABLY_API_KEY) {
-      showToast('add your Ably key first!');
-      return;
-    }
-    // Save to localStorage
-    localStorage.setItem('furry-fursona', JSON.stringify({
-      name: draft.name, species: draft.species,
-      bodyColor: draft.bodyColor, accentColor: draft.accentColor,
-      accessories: draft.accessories, pronouns: draft.pronouns,
-    }));
+// ── Edit fursona in-session ────────────────────────────────────────────────
 
-    showScreen('hangout');
-    renderEmoteBar();
+document.getElementById('btn-edit-fursona').addEventListener('click', () => {
+  inHangout = false;
+  cancelAnimationFrame(animFrame);
+  showScreen('customize');
+  initCustomize();
+});
 
-    if (!connected) {
-      connectAbly();
-    } else {
-      // In-session edit: update presence
-      const updated = { uid: myUid, ...draft, mood: 'neutral', lastAction: null };
-      players.set(myUid, updated);
-      channel.presence.update(updated);
-      renderAvatarGrid();
-    }
-  });
+// ── Feed toggle ────────────────────────────────────────────────────────────
 
-  // ── Edit fursona in session ────────────────────────────────────────────────────
+document.getElementById('feed-toggle').addEventListener('click', () => {
+  document.getElementById('feed-panel').classList.toggle('open');
+});
+document.getElementById('feed-close').addEventListener('click', () => {
+  document.getElementById('feed-panel').classList.remove('open');
+});
 
-  document.getElementById('btn-edit-fursona').addEventListener('click', () => {
-    showScreen('customize');
-    initCustomizeScreen();
-  });
+// ── Keyboard ───────────────────────────────────────────────────────────────
 
-  // ── Cancel target mode on Escape ─────────────────────────────────────────────
-
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape' && targetMode) cancelTargetMode();
-  });
-
-  document.getElementById('btn-cancel-target').addEventListener('click', cancelTargetMode);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && targetMode) { cancelTargetMode(); return; }
+  // Don't capture keys when typing in an input
+  if (document.activeElement.tagName === 'INPUT') return;
+  keys[e.key] = true;
+});
+document.addEventListener('keyup', e => { delete keys[e.key]; });
+// On focus loss, clear keys
+window.addEventListener('blur', () => { keys = {}; isMoving = false; });
 
 })();
 </script>
