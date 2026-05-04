@@ -13,8 +13,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "SB",
-      "joinedAt": "2026-05-04T01:22:55.212Z",
-      "isSB": true
+      "joinedAt": "2026-05-04T01:22:55.212Z"
     },
     {
       "name": "Tom",
@@ -28,8 +27,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "BB",
-      "joinedAt": "2026-05-04T01:23:01.356Z",
-      "isBB": true
+      "joinedAt": "2026-05-04T01:23:01.356Z"
     },
     {
       "name": "Fletcher",
@@ -39,10 +37,10 @@
         "9d",
         "2d"
       ],
-      "folded": false,
+      "folded": true,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Fold",
       "joinedAt": "2026-05-04T01:23:02.643Z"
     },
     {
@@ -71,8 +69,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "",
-      "joinedAt": "2026-05-04T01:23:53.881Z",
-      "isDealer": true
+      "joinedAt": "2026-05-04T01:23:53.881Z"
     },
     null
   ],
@@ -129,12 +126,18 @@
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 2,
-  "turnStartedAt": "2026-05-04T01:29:22.887Z",
+  "currentTurn": 3,
+  "turnStartedAt": "2026-05-04T01:29:28.999Z",
   "lastAggressor": 1,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-05-04T01:29:22.888Z",
+  "actions": [
+    {
+      "slot": 2,
+      "action": "fold",
+      "amount": 0
+    }
+  ],
+  "updatedAt": "2026-05-04T01:29:28.999Z",
   "lastWinners": [
     {
       "slot": 0,
