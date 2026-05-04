@@ -3,16 +3,16 @@
   "players": [
     {
       "name": "Ryan",
-      "chips": 940,
-      "bet": 0,
+      "chips": 0,
+      "bet": 940,
       "hand": [
         "10h",
         "10s"
       ],
       "folded": false,
-      "allIn": false,
+      "allIn": true,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "All-in",
       "joinedAt": "2026-05-04T01:22:55.212Z"
     },
     {
@@ -123,20 +123,25 @@
     "9d",
     "6s"
   ],
-  "pot": 160,
+  "pot": 1100,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-05-04T01:27:26.811Z",
-  "lastAggressor": 3,
+  "currentBet": 940,
+  "minRaise": 940,
+  "currentTurn": 3,
+  "turnStartedAt": "2026-05-04T01:27:39.548Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 3,
   "actions": [
     {
       "slot": 3,
       "action": "check",
       "amount": 0
+    },
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 940
     }
   ],
-  "updatedAt": "2026-05-04T01:27:26.811Z"
+  "updatedAt": "2026-05-04T01:27:39.548Z"
 }
