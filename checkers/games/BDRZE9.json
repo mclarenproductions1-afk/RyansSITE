@@ -9,7 +9,10 @@
       "name": "Didy foid",
       "joinedAt": "2026-05-04T01:30:31.052Z"
     },
-    null,
+    {
+      "name": "Tom",
+      "joinedAt": "2026-05-04T01:30:36.477Z"
+    },
     null,
     null,
     null
@@ -80,5 +83,5 @@
   "turnCount": 0,
   "finishOrder": [],
   "winner": null,
-  "updatedAt": "2026-05-04T01:30:31.052Z"
+  "updatedAt": "2026-05-04T01:30:36.477Z"
 }
