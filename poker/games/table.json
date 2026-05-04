@@ -16,20 +16,7 @@
       "lastAction": "BB",
       "joinedAt": "2026-05-04T01:23:01.356Z"
     },
-    {
-      "name": "Fletcher",
-      "chips": 980,
-      "bet": 0,
-      "hand": [
-        "9d",
-        "2d"
-      ],
-      "folded": true,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Fold",
-      "joinedAt": "2026-05-04T01:23:02.643Z"
-    },
+    null,
     {
       "name": "quincy",
       "chips": 990,
@@ -129,7 +116,7 @@
       "amount": 20
     }
   ],
-  "updatedAt": "2026-05-04T01:30:01.397Z",
+  "updatedAt": "2026-05-04T01:30:06.904Z",
   "lastWinners": [
     {
       "slot": 0,
