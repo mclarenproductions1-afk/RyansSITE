@@ -65,10 +65,10 @@
         "4c",
         "Ah"
       ],
-      "folded": false,
+      "folded": true,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Fold",
       "joinedAt": "2026-05-04T01:23:53.881Z"
     },
     null
@@ -127,8 +127,8 @@
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 4,
-  "turnStartedAt": "2026-05-04T01:25:12.461Z",
+  "currentTurn": 0,
+  "turnStartedAt": "2026-05-04T01:25:39.539Z",
   "lastAggressor": 3,
   "roundStartPlayer": 3,
   "actions": [
@@ -141,7 +141,12 @@
       "slot": 3,
       "action": "raise",
       "amount": 20
+    },
+    {
+      "slot": 4,
+      "action": "fold",
+      "amount": 0
     }
   ],
-  "updatedAt": "2026-05-04T01:25:12.461Z"
+  "updatedAt": "2026-05-04T01:25:39.539Z"
 }
