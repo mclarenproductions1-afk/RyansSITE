@@ -31,20 +31,7 @@
       "lastAction": "Call",
       "joinedAt": "2026-05-04T01:23:40.095Z"
     },
-    {
-      "name": "bhhjb",
-      "chips": 950,
-      "bet": 0,
-      "hand": [
-        "Jc",
-        "Ah"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "",
-      "joinedAt": "2026-05-04T01:23:53.881Z"
-    },
+    null,
     null
   ],
   "queue": [],
@@ -116,7 +103,7 @@
       "amount": 20
     }
   ],
-  "updatedAt": "2026-05-04T01:30:06.904Z",
+  "updatedAt": "2026-05-04T01:31:11.365Z",
   "lastWinners": [
     {
       "slot": 0,
