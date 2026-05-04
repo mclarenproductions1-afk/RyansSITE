@@ -36,7 +36,7 @@
     "type": "test",
     "dueDate": "2026-05-04",
     "notes": "",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-04-01"
   },
   {
