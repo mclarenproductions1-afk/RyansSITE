@@ -6,7 +6,7 @@
     "type": "assignment",
     "dueDate": "2026-05-18",
     "notes": "40 page folio",
-    "completed": false,
+    "completed": true,
     "createdAt": "2026-03-30"
   },
   {
@@ -46,7 +46,7 @@
     "type": "test",
     "dueDate": "2026-04-24",
     "notes": "",
-    "completed": true,
+    "completed": false,
     "createdAt": "2026-04-01"
   },
   {
