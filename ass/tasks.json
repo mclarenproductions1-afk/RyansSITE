@@ -68,5 +68,15 @@
     "notes": "Part A take home\nPart B in class",
     "completed": false,
     "createdAt": "2026-04-21"
+  },
+  {
+    "id": "3d0d72f2-0b74-4605-8d76-5ae32ebbe313",
+    "title": "dih",
+    "subject": "furry 101",
+    "type": "assignment",
+    "dueDate": "2026-05-06",
+    "notes": "",
+    "completed": false,
+    "createdAt": "2026-05-06"
   }
 ]
