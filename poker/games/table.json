@@ -1,119 +1,27 @@
 {
-  "status": "active",
+  "status": "waiting",
   "players": [
     null,
-    {
-      "name": "Tom",
-      "chips": 960,
-      "bet": 20,
-      "hand": [
-        "3h",
-        "8s"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "BB",
-      "joinedAt": "2026-05-04T01:23:01.356Z"
-    },
     null,
-    {
-      "name": "quincy",
-      "chips": 990,
-      "bet": 20,
-      "hand": [
-        "Jd",
-        "3s"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Call",
-      "joinedAt": "2026-05-04T01:23:40.095Z"
-    },
+    null,
+    null,
     null,
     null
   ],
   "queue": [],
-  "handNum": 4,
-  "dealer": 4,
-  "phase": "preflop",
-  "deck": [
-    "6c",
-    "Ks",
-    "7s",
-    "5d",
-    "3d",
-    "4c",
-    "2h",
-    "Kd",
-    "Qh",
-    "8h",
-    "2s",
-    "7h",
-    "4h",
-    "3c",
-    "Ac",
-    "8d",
-    "Kc",
-    "6s",
-    "6h",
-    "9c",
-    "4d",
-    "4s",
-    "Kh",
-    "Qs",
-    "9s",
-    "8c",
-    "5h",
-    "As",
-    "Qd",
-    "10h",
-    "Js",
-    "5c",
-    "7c",
-    "Ad",
-    "2c",
-    "5s",
-    "Jh",
-    "Qc",
-    "9h",
-    "6d",
-    "7d",
-    "10c"
-  ],
+  "handNum": 0,
+  "dealer": 0,
+  "phase": "waiting",
+  "deck": [],
   "communityCards": [],
-  "pot": 50,
+  "pot": 0,
   "sidePots": [],
-  "currentBet": 20,
+  "currentBet": 0,
   "minRaise": 20,
-  "currentTurn": 4,
-  "turnStartedAt": "2026-05-04T01:29:36.672Z",
-  "lastAggressor": 1,
-  "roundStartPlayer": 1,
-  "actions": [
-    {
-      "slot": 2,
-      "action": "fold",
-      "amount": 0
-    },
-    {
-      "slot": 3,
-      "action": "call",
-      "amount": 20
-    }
-  ],
-  "updatedAt": "2026-05-04T01:31:11.365Z",
-  "lastWinners": [
-    {
-      "slot": 0,
-      "hand": "Two Pair",
-      "amount": 1020
-    },
-    {
-      "slot": 3,
-      "hand": "Two Pair",
-      "amount": 1020
-    }
-  ]
+  "currentTurn": -1,
+  "turnStartedAt": null,
+  "lastAggressor": -1,
+  "roundStartPlayer": -1,
+  "actions": [],
+  "updatedAt": "2026-05-12T00:39:39.636Z"
 }
