@@ -101,6 +101,19 @@
     color: var(--muted);
   }
 
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 40px 0 12px;
+  }
+
+  .section-label:first-child {
+    margin-top: 0;
+  }
+
   @media (max-width: 680px) {
     header { padding: 20px; }
     main { padding: 32px 20px 60px; }
@@ -116,6 +129,25 @@
 </header>
 
 <main>
+
+  <div class="section-label">Maths</div>
+  <div class="grid">
+
+    <a class="app-card" href="/maths">
+      <div class="card-title">Maths Advanced</div>
+      <div class="card-desc">Year 11 advanced maths practice test with worked solutions and instant feedback.</div>
+      <span class="card-link">Open →</span>
+    </a>
+
+    <a class="app-card" href="/quadratics">
+      <div class="card-title">Quadratics Crash Course</div>
+      <div class="card-desc">Interactive crash course on quadratics — factoring, the quadratic formula, graphing, and more.</div>
+      <span class="card-link">Open →</span>
+    </a>
+
+  </div>
+
+  <div class="section-label">Study</div>
   <div class="grid">
 
     <a class="app-card" href="/ass">
@@ -130,11 +162,10 @@
       <span class="card-link">Open →</span>
     </a>
 
-    <a class="app-card" href="/maths">
-      <div class="card-title">Maths Advanced</div>
-      <div class="card-desc">Year 11 advanced maths practice test with worked solutions and instant feedback.</div>
-      <span class="card-link">Open →</span>
-    </a>
+  </div>
+
+  <div class="section-label">Games & Social</div>
+  <div class="grid">
 
     <a class="app-card" href="/checkers">
       <div class="card-title">Chinese Checkers</div>
@@ -171,6 +202,7 @@
     </div>
 
   </div>
+
 </main>
 
 <footer>bigballzlord.online</footer>
