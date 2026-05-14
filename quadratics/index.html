@@ -1,0 +1,2606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quadratics & Cubics — The Crash Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root {
+  --paper: #f5efe1;
+  --paper-shade: #ebe3d0;
+  --ink: #1a2238;
+  --ink-soft: #45506b;
+  --rule: #c9bea5;
+  --coral: #c8553d;
+  --coral-soft: #f1a892;
+  --sage: #4a6b5c;
+  --sage-soft: #c4d4cb;
+  --mustard: #d4a017;
+  --mustard-soft: #f5e6b3;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.7;
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(200,85,61,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(74,107,92,0.05) 0%, transparent 50%);
+}
+
+/* ====== Header ====== */
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 40px 40px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kicker::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+}
+
+h1.title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(48px, 7vw, 88px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+h1.title .amp {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--coral);
+  font-feature-settings: "ss01";
+}
+
+h1.title .accent {
+  font-style: italic;
+  font-weight: 400;
+}
+
+.subtitle {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-soft);
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+
+.meta-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+
+.meta-row span strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ====== TOC ====== */
+.toc {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 40px;
+  background: var(--paper-shade);
+  border-radius: 4px;
+  position: relative;
+}
+
+.toc::before {
+  content: 'CONTENTS';
+  position: absolute;
+  top: -10px;
+  left: 32px;
+  background: var(--paper);
+  padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+
+.toc ol {
+  list-style: none;
+  counter-reset: toc;
+  columns: 2;
+  column-gap: 40px;
+}
+
+.toc li {
+  counter-increment: toc;
+  padding: 10px 0;
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  break-inside: avoid;
+}
+
+.toc li::before {
+  content: counter(toc, decimal-leading-zero);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--coral);
+  margin-right: 14px;
+  vertical-align: 2px;
+}
+
+.toc a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.toc a:hover { border-bottom-color: var(--coral); }
+
+@media (max-width: 600px) {
+  .toc ol { columns: 1; }
+}
+
+/* ====== Sections ====== */
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 40px 40px 120px;
+}
+
+section {
+  margin-top: 100px;
+  scroll-margin-top: 40px;
+}
+
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--coral);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.section-num::before {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--coral);
+}
+
+h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(36px, 5vw, 52px);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+
+h2 em { color: var(--coral); font-weight: 300; }
+
+.section-intro {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 20px;
+  color: var(--ink-soft);
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
+}
+
+h3 {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 26px;
+  margin: 48px 0 16px;
+  letter-spacing: -0.01em;
+}
+
+h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 32px 0 12px;
+}
+
+p { margin-bottom: 18px; }
+
+p strong { color: var(--ink); font-weight: 600; }
+
+ul, ol { margin: 16px 0 24px 24px; }
+
+li { margin-bottom: 8px; }
+
+/* ====== Formula Card ====== */
+.formula {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 28px 32px;
+  margin: 28px 0;
+  border-radius: 2px;
+  position: relative;
+  font-size: 22px;
+  text-align: center;
+}
+
+.formula::before {
+  content: 'KEY FORMULA';
+  position: absolute;
+  top: -9px;
+  left: 24px;
+  background: var(--coral);
+  color: var(--paper);
+  padding: 2px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  border-radius: 2px;
+}
+
+.formula .label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--coral-soft);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+/* ====== Concept Box ====== */
+.concept {
+  background: var(--sage-soft);
+  border-left: 4px solid var(--sage);
+  padding: 24px 28px;
+  margin: 28px 0;
+  font-family: 'Newsreader', serif;
+}
+
+.concept .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 8px;
+  display: block;
+  font-weight: 600;
+}
+
+/* ====== Warning Box ====== */
+.warning {
+  background: var(--mustard-soft);
+  border-left: 4px solid var(--mustard);
+  padding: 20px 24px;
+  margin: 24px 0;
+  font-size: 16px;
+}
+
+.warning .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8a6d0f;
+  margin-bottom: 6px;
+  display: block;
+  font-weight: 600;
+}
+
+/* ====== Worked Example ====== */
+.example {
+  border: 1px solid var(--rule);
+  background: rgba(255,255,255,0.4);
+  padding: 28px 32px;
+  margin: 32px 0;
+  border-radius: 2px;
+  position: relative;
+}
+
+.example::before {
+  content: 'WORKED EXAMPLE';
+  position: absolute;
+  top: -9px;
+  left: 24px;
+  background: var(--paper);
+  padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--coral);
+  font-weight: 600;
+}
+
+.example .question {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.example .solution {
+  font-size: 16px;
+}
+
+.step {
+  display: flex;
+  gap: 16px;
+  margin: 14px 0;
+  align-items: flex-start;
+}
+
+.step-num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  background: var(--coral);
+  color: var(--paper);
+  border-radius: 50%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.step-body { flex: 1; }
+
+/* ====== Three-up Grid ====== */
+.three-up {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.case-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--rule);
+  padding: 20px 16px;
+  text-align: center;
+  border-radius: 2px;
+}
+
+.case-card .delta {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--coral);
+  margin-bottom: 8px;
+}
+
+.case-card .case-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.case-card svg {
+  width: 100%;
+  height: auto;
+  max-width: 180px;
+  margin: 0 auto;
+}
+
+.case-card .desc {
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-top: 12px;
+  line-height: 1.4;
+}
+
+@media (max-width: 700px) {
+  .three-up { grid-template-columns: 1fr; }
+}
+
+/* ====== Two-up Grid ====== */
+.two-up {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 28px 0;
+}
+
+@media (max-width: 700px) {
+  .two-up { grid-template-columns: 1fr; }
+}
+
+.method-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--rule);
+  padding: 24px;
+  border-radius: 2px;
+}
+
+.method-card h5 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: var(--coral);
+}
+
+.method-card .when {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--sage);
+  margin-bottom: 16px;
+}
+
+/* ====== Anatomy Diagram ====== */
+.anatomy {
+  background: rgba(255,255,255,0.5);
+  border: 1px solid var(--rule);
+  padding: 32px;
+  margin: 32px 0;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.anatomy svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ====== Cheat Sheet ====== */
+.cheat-sheet {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 60px 50px;
+  margin: 100px 0 0;
+  border-radius: 4px;
+}
+
+.cheat-sheet h2 {
+  color: var(--paper);
+  margin-bottom: 32px;
+}
+
+.cheat-sheet h2 em { color: var(--coral-soft); }
+
+.cheat-sheet h3 {
+  color: var(--coral-soft);
+  font-size: 20px;
+  margin: 32px 0 12px;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.cheat-sheet .formula-line {
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(245,239,225,0.15);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.cheat-sheet .formula-line .desc {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--coral-soft);
+  flex: 1;
+}
+
+.cheat-sheet .formula-line .eq {
+  font-size: 17px;
+  text-align: right;
+}
+
+/* ====== Footer ====== */
+footer {
+  max-width: 760px;
+  margin: 80px auto 60px;
+  padding: 40px;
+  text-align: center;
+  border-top: 1px solid var(--rule);
+}
+
+footer p {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+footer .signature {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  color: var(--coral);
+  margin-top: 12px;
+  font-style: italic;
+}
+
+/* ====== Inline math styling ====== */
+mjx-container { color: inherit; }
+
+/* Pull-quote */
+.pull-quote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 24px;
+  line-height: 1.4;
+  color: var(--coral);
+  padding: 24px 0 24px 32px;
+  margin: 32px 0;
+  border-left: 3px solid var(--coral);
+}
+
+.pull-quote::before {
+  content: '"';
+  font-size: 48px;
+  line-height: 0;
+  vertical-align: -20px;
+  margin-right: 4px;
+  color: var(--coral-soft);
+}
+
+/* Number list with styled markers */
+ol.styled {
+  list-style: none;
+  counter-reset: step;
+  margin-left: 0;
+}
+
+ol.styled li {
+  counter-increment: step;
+  padding-left: 44px;
+  position: relative;
+  margin-bottom: 14px;
+}
+
+ol.styled li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 28px;
+  height: 28px;
+  background: var(--coral);
+  color: var(--paper);
+  border-radius: 50%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Highlight */
+.hl {
+  background: linear-gradient(180deg, transparent 60%, var(--mustard-soft) 60%);
+  padding: 0 2px;
+}
+
+/* ====== Live Demo Component ====== */
+.demo {
+  background: var(--paper-shade);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 32px 28px 24px;
+  margin: 36px 0;
+  position: relative;
+}
+
+.demo::before {
+  content: 'LIVE DEMO';
+  position: absolute;
+  top: -9px;
+  left: 24px;
+  background: var(--coral);
+  color: var(--paper);
+  padding: 2px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.demo-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 500;
+  font-size: 20px;
+  margin-bottom: 4px;
+  color: var(--ink);
+}
+
+.demo-subtitle {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.demo-stage {
+  background: rgba(255, 255, 255, 0.55);
+  border-radius: 3px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 1fr 170px;
+  gap: 18px;
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .demo-stage { grid-template-columns: 1fr; }
+}
+
+.demo-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.demo-readouts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.readout {
+  background: var(--paper);
+  padding: 10px 14px;
+  border-radius: 2px;
+  border: 1px solid var(--rule);
+}
+
+.readout-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.readout-value {
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  color: var(--ink);
+  font-weight: 500;
+  transition: color 0.35s;
+  display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+.readout-value.positive { color: var(--sage); }
+.readout-value.negative { color: var(--coral); }
+.readout-value.zero { color: #b58400; }
+
+/* ====== Interactive Controls ====== */
+.demo-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 16px 18px;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+}
+
+.control-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 80px;
+  gap: 14px;
+  align-items: center;
+}
+
+.control-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 16px;
+  color: var(--ink);
+  text-align: right;
+}
+
+.control-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="range"].demo-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+input[type="range"].demo-slider:focus { outline: none; }
+
+input[type="range"].demo-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+}
+input[type="range"].demo-slider::-moz-range-track {
+  height: 4px;
+  background: var(--rule);
+  border-radius: 2px;
+  border: none;
+}
+
+input[type="range"].demo-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--coral);
+  border-radius: 50%;
+  margin-top: -8px;
+  border: 2px solid var(--paper);
+  box-shadow: 0 1px 3px rgba(26, 34, 56, 0.25);
+  transition: background 0.15s, transform 0.15s;
+}
+input[type="range"].demo-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--coral);
+  border-radius: 50%;
+  border: 2px solid var(--paper);
+  box-shadow: 0 1px 3px rgba(26, 34, 56, 0.25);
+  transition: background 0.15s, transform 0.15s;
+}
+
+input[type="range"].demo-slider:hover::-webkit-slider-thumb,
+input[type="range"].demo-slider:active::-webkit-slider-thumb { background: var(--ink); transform: scale(1.1); }
+input[type="range"].demo-slider:hover::-moz-range-thumb,
+input[type="range"].demo-slider:active::-moz-range-thumb { background: var(--ink); transform: scale(1.1); }
+
+.toggle-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.toggle-btn {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 10px 6px;
+  border-radius: 2px;
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.toggle-btn:hover:not(.active) {
+  background: var(--paper-shade);
+  border-color: var(--coral);
+}
+
+.toggle-btn.active {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+
+.demo-hint {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-top: 10px;
+  padding-left: 14px;
+  border-left: 2px solid var(--mustard);
+}
+
+/* ====== Quiz ====== */
+.quiz {
+  background: linear-gradient(135deg, rgba(245,239,225,0.6) 0%, rgba(235,227,208,0.4) 100%);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 40px 32px 32px;
+  margin: 60px 0 20px;
+  position: relative;
+}
+
+.quiz::before {
+  content: 'REVISION QUIZ';
+  position: absolute;
+  top: -10px;
+  left: 28px;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 3px 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  border-radius: 2px;
+  font-weight: 600;
+}
+
+.quiz-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--rule);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.quiz-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.quiz-title em {
+  color: var(--coral);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.quiz-progress {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  background: var(--ink);
+  color: var(--paper);
+  padding: 4px 12px;
+  border-radius: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.quiz-question {
+  padding: 18px 0;
+  border-bottom: 1px dashed var(--rule);
+}
+
+.quiz-question:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.q-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--coral);
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.q-text {
+  font-family: 'Newsreader', serif;
+  font-size: 17px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  color: var(--ink);
+}
+
+.q-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 600px) {
+  .q-options { grid-template-columns: 1fr; }
+}
+
+.option {
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  padding: 12px 38px 12px 14px;
+  border-radius: 2px;
+  font-family: 'Newsreader', serif;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--ink);
+  position: relative;
+  line-height: 1.4;
+}
+
+.option:hover:not(:disabled) {
+  background: var(--paper-shade);
+  border-color: var(--coral);
+  transform: translateX(2px);
+}
+
+.option:disabled { cursor: default; }
+
+.option .letter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink-soft);
+  margin-right: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+}
+
+.option.correct {
+  background: var(--sage-soft);
+  border-color: var(--sage);
+}
+
+.option.correct .letter { color: var(--sage); }
+
+.option.correct::after {
+  content: '✓';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--sage);
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.option.wrong {
+  background: rgba(200, 85, 61, 0.13);
+  border-color: var(--coral);
+}
+
+.option.wrong .letter { color: var(--coral); }
+
+.option.wrong::after {
+  content: '✗';
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--coral);
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.q-feedback {
+  background: var(--paper);
+  border-left: 3px solid var(--coral);
+  padding: 12px 16px;
+  font-size: 14px;
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  color: var(--ink-soft);
+  margin-top: 12px;
+  display: none;
+  border-radius: 0 2px 2px 0;
+  line-height: 1.6;
+}
+
+.q-feedback.show {
+  display: block;
+  animation: feedbackIn 0.3s ease-out;
+}
+
+@keyframes feedbackIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.q-feedback strong {
+  font-style: normal;
+  color: var(--ink);
+  font-weight: 600;
+}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Year 11 · Mathematics Advanced · Part C</div>
+  <h1 class="title">Quadratics<br><span class="amp">&</span> <span class="accent">Cubics</span><br>— a crash course</h1>
+  <p class="subtitle">Everything you need from <em>parabolas to points of inflection</em> — distilled, with worked examples and the formulas that actually matter on the exam.</p>
+  <div class="meta-row">
+    <span>Topic <strong>Working with Functions, Part C</strong></span>
+    <span>Sections <strong>9</strong></span>
+    <span>Read time <strong>~25 min</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">The Three Forms</a></li>
+    <li><a href="#s2">The Discriminant</a></li>
+    <li><a href="#s3">Parabola Anatomy</a></li>
+    <li><a href="#s4">Sketching Parabolas</a></li>
+    <li><a href="#s5">Finding the Equation</a></li>
+    <li><a href="#s6">Intersection Problems</a></li>
+    <li><a href="#s7">Simultaneous Equations</a></li>
+    <li><a href="#s8">Quadratic Inequalities</a></li>
+    <li><a href="#s9">Cubic Functions</a></li>
+    <li><a href="#cheat">Cheat Sheet</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ SECTION 1 ============ -->
+<section id="s1">
+  <div class="section-num">Section 01</div>
+  <h2>The three <em>forms</em> of a quadratic</h2>
+  <p class="section-intro">Every quadratic is the same animal in three different outfits. Knowing which outfit is which — and how to swap between them — is the foundation of the whole topic.</p>
+
+  <p>A quadratic function is any polynomial where the highest power of $x$ is $2$. The graph is always a <strong>parabola</strong>, which is concave up if $a > 0$ and concave down if $a < 0$.</p>
+
+  <div class="two-up">
+    <div class="method-card">
+      <div class="when">General form</div>
+      <h5>$y = ax^2 + bx + c$</h5>
+      <p>Best for finding the $y$-intercept (it's just $c$) and for using the axis-of-symmetry shortcut $x = -\frac{b}{2a}$.</p>
+    </div>
+    <div class="method-card">
+      <div class="when">Factored form</div>
+      <h5>$y = a(x-\alpha)(x-\beta)$</h5>
+      <p>Best for reading $x$-intercepts directly: they are $\alpha$ and $\beta$. The axis of symmetry sits halfway between them.</p>
+    </div>
+  </div>
+  <div class="method-card" style="margin-top: 0;">
+    <div class="when">Vertex form</div>
+    <h5>$y = a(x-h)^2 + k$</h5>
+    <p>Best for reading the <strong>vertex</strong> directly: it sits at $(h, k)$. The sign trick: $(x+2)^2$ means $h = -2$, not $+2$.</p>
+  </div>
+
+  <div class="warning">
+    <span class="tag">Sign trap</span>
+    In vertex form $y = a(x-h)^2 + k$, the $h$ is what you <em>subtract</em>. So $y = (x+3)^2 - 5$ has vertex $(-3, -5)$, not $(3, -5)$.
+  </div>
+
+  <div class="example">
+    <div class="question">Rewrite $y = 2x^2 + 10x + 12$ in factored form and vertex form.</div>
+    <div class="solution">
+      <p><strong>Factored:</strong> Take out the $2$, then factorise.</p>
+      <p>$y = 2(x^2 + 5x + 6) = 2(x+2)(x+3)$</p>
+      <p><strong>Vertex:</strong> Complete the square.</p>
+      <p>$y = 2(x^2 + 5x) + 12 = 2\left[(x + \tfrac{5}{2})^2 - \tfrac{25}{4}\right] + 12 = 2(x + \tfrac{5}{2})^2 - \tfrac{1}{2}$</p>
+      <p>Vertex is $\left(-\tfrac{5}{2}, -\tfrac{1}{2}\right)$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 01 · <em>Three Forms</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">Which form is best for reading the $y$-intercept straight off the page?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>General form $y = ax^2 + bx + c$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Factored form $y = a(x-\alpha)(x-\beta)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Vertex form $y = a(x-h)^2 + k$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>You always have to substitute</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> In general form, the constant $c$ <em>is</em> the $y$-intercept — substituting $x = 0$ gives $y = c$ immediately.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">What is the vertex of $y = 3(x - 4)^2 + 5$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(4, 5)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-4, 5)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(4, -5)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(-4, -5)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Vertex form is $y = a(x-h)^2 + k$ with vertex $(h, k)$. Here $(x-4)$ gives $h = 4$ — the sign flips when you read it.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">What are the $x$-intercepts of $y = -2(x + 3)(x - 1)$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x = -3$ and $x = 1$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x = 3$ and $x = -1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x = 3$ and $x = 1$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$x = -3$ and $x = -1$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Each factor equals zero at a root. $(x+3) = 0$ gives $x = -3$, and $(x-1) = 0$ gives $x = 1$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">What is the vertex of $y = (x + 2)^2 - 7$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(2, -7)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-2, -7)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(-2, 7)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(2, 7)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $(x+2)^2 = (x-(-2))^2$, so $h = -2$. The constant $-7$ is $k$. Vertex is $(-2, -7)$.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">Expanding $y = -(x - 1)(x + 5)$ gives:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$y = -x^2 - 4x + 5$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$y = -x^2 + 4x - 5$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$y = x^2 + 4x - 5$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$y = -x^2 - 4x - 5$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $(x-1)(x+5) = x^2 + 4x - 5$. Negating: $-x^2 - 4x + 5$.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2 ============ -->
+<section id="s2">
+  <div class="section-num">Section 02</div>
+  <h2>The <em>discriminant</em></h2>
+  <p class="section-intro">The single most overpowered formula in this topic. It tells you how many times your parabola hits the x-axis — without you ever needing to solve the equation.</p>
+
+  <div class="formula">
+    <span class="label">The discriminant</span>
+    $\Delta = b^2 - 4ac$
+  </div>
+
+  <p>It's literally the bit under the square-root sign of the quadratic formula. Three things can happen:</p>
+
+  <div class="three-up">
+    <div class="case-card">
+      <div class="delta">$\Delta > 0$</div>
+      <div class="case-label">Two distinct roots</div>
+      <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="60" x2="110" y2="60" stroke="#45506b" stroke-width="1"/>
+        <line x1="60" y1="10" x2="60" y2="90" stroke="#45506b" stroke-width="1"/>
+        <path d="M 20,20 Q 60,110 100,20" stroke="#c8553d" stroke-width="2.5" fill="none"/>
+        <circle cx="32" cy="60" r="3" fill="#c8553d"/>
+        <circle cx="88" cy="60" r="3" fill="#c8553d"/>
+      </svg>
+      <div class="desc">Cuts the x-axis twice. Perfect square → rational. Otherwise → irrational.</div>
+    </div>
+    <div class="case-card">
+      <div class="delta">$\Delta = 0$</div>
+      <div class="case-label">Equal / double root</div>
+      <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="60" x2="110" y2="60" stroke="#45506b" stroke-width="1"/>
+        <line x1="60" y1="10" x2="60" y2="90" stroke="#45506b" stroke-width="1"/>
+        <path d="M 20,20 Q 60,100 100,20" stroke="#c8553d" stroke-width="2.5" fill="none"/>
+        <circle cx="60" cy="60" r="3.5" fill="#c8553d"/>
+      </svg>
+      <div class="desc">Touches the x-axis once. The vertex sits exactly on the axis.</div>
+    </div>
+    <div class="case-card">
+      <div class="delta">$\Delta < 0$</div>
+      <div class="case-label">No real roots</div>
+      <svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="60" x2="110" y2="60" stroke="#45506b" stroke-width="1"/>
+        <line x1="60" y1="10" x2="60" y2="90" stroke="#45506b" stroke-width="1"/>
+        <path d="M 20,30 Q 60,90 100,30" stroke="#c8553d" stroke-width="2.5" fill="none"/>
+      </svg>
+      <div class="desc">Doesn't cross at all. Positive definite if $a>0$, negative definite if $a<0$.</div>
+    </div>
+  </div>
+
+  <div class="demo">
+    <div class="demo-title">Watch the discriminant in motion</div>
+    <div class="demo-subtitle">The parabola $y = x^2 + c$ slides up and down as $c$ changes. Watch $\Delta = -4c$ shift through positive, zero, and negative — and watch the roots appear, merge, then vanish.</div>
+    <div class="demo-stage">
+      <svg id="discDemo" class="demo-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="155" x2="335" y2="155" stroke="#c9bea5" stroke-width="1"/>
+        <line x1="180" y1="20" x2="180" y2="205" stroke="#c9bea5" stroke-width="1"/>
+        <text x="338" y="159" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">x</text>
+        <text x="184" y="20" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">y</text>
+        <path class="parabola" d="" stroke="#c8553d" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <circle class="root1" r="5" fill="#1a2238" opacity="0"/>
+        <circle class="root2" r="5" fill="#1a2238" opacity="0"/>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Constant</span>
+          <span class="readout-value" id="discCValue">c = 0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Discriminant Δ</span>
+          <span class="readout-value" id="discDeltaValue">0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Real roots</span>
+          <span class="readout-value" id="discRootsValue">One</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <span class="tag">Definite parabolas</span>
+    A parabola is <strong>positive definite</strong> if it sits entirely above the x-axis (always positive). This requires $\Delta < 0$ AND $a > 0$. <strong>Negative definite</strong> is the mirror: $\Delta < 0$ AND $a < 0$. Both conditions are needed — don't forget the second one.
+  </div>
+
+  <h3>Finding values of $k$</h3>
+  <p>A huge chunk of discriminant questions ask you to find values of a parameter $k$ that make a certain root-condition happen. The recipe is always the same:</p>
+
+  <ol class="styled">
+    <li>Identify $a$, $b$, $c$ in terms of $k$.</li>
+    <li>Write $\Delta = b^2 - 4ac$ and simplify into a quadratic (or inequality) in $k$.</li>
+    <li>Apply the condition: $\Delta > 0$, $= 0$, or $< 0$.</li>
+    <li>Solve for $k$ — often this itself is a quadratic inequality.</li>
+  </ol>
+
+  <div class="example">
+    <div class="question">Find $k$ such that $x^2 - (k+4)x + (k+7) = 0$ has equal roots.</div>
+    <div class="solution">
+      <p>Equal roots means $\Delta = 0$. Here $a = 1$, $b = -(k+4)$, $c = k+7$.</p>
+      <p>$\Delta = (k+4)^2 - 4(k+7) = k^2 + 8k + 16 - 4k - 28 = k^2 + 4k - 12 = 0$</p>
+      <p>$(k+6)(k-2) = 0$, so $k = -6$ or $k = 2$.</p>
+    </div>
+  </div>
+
+  <div class="warning">
+    <span class="tag">Watch the coefficient of $x^2$</span>
+    If the question says "the equation" and the coefficient of $x^2$ contains $k$ (e.g. $(k+1)x^2 - kx + 1 = 0$), then $k = -1$ would make it linear, not quadratic. State this case separately or exclude it.
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 02 · <em>Discriminant</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">For $y = x^2 - 4x + 3$, calculate $\Delta$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$-4$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$4$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$28$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$0$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $\Delta = b^2 - 4ac = (-4)^2 - 4(1)(3) = 16 - 12 = 4$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">How many real roots does $y = 2x^2 - 4x + 2$ have?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>None</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>One (a double root)</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Two distinct</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Cannot be determined</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $\Delta = (-4)^2 - 4(2)(2) = 16 - 16 = 0$. The parabola touches the $x$-axis at exactly one point.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">For what values of $k$ does $x^2 + kx + 9 = 0$ have equal roots?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$k = 3$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$k = \pm 3$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$k = \pm 6$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$k = 6$ only</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Equal roots ⇒ $\Delta = 0$. So $k^2 - 36 = 0$, giving $k^2 = 36$ and $k = \pm 6$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">A parabola is <em>positive definite</em> when:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$\Delta > 0$ and $a > 0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$\Delta < 0$ and $a > 0$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$\Delta < 0$ and $a < 0$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$\Delta = 0$ and $a > 0$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Positive definite means the parabola sits entirely above the $x$-axis. That needs no real roots ($\Delta < 0$) AND concave up ($a > 0$).</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">The roots of $y = x^2 + 5x + 6$ are:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Rational and distinct</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Irrational and distinct</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Equal (one repeated)</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Not real</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $\Delta = 25 - 24 = 1$. Positive and a perfect square ⇒ two distinct rational roots. (It factors as $(x+2)(x+3)$.)</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3 ============ -->
+<section id="s3">
+  <div class="section-num">Section 03</div>
+  <h2>Parabola <em>anatomy</em></h2>
+  <p class="section-intro">Five features, every time: concavity, y-intercept, x-intercepts, axis of symmetry, vertex. Lock these down and you can sketch any parabola in under a minute.</p>
+
+  <div class="anatomy">
+    <svg viewBox="0 0 400 280" xmlns="http://www.w3.org/2000/svg">
+      <!-- axes -->
+      <line x1="40" y1="240" x2="380" y2="240" stroke="#45506b" stroke-width="1.5"/>
+      <line x1="200" y1="20" x2="200" y2="260" stroke="#45506b" stroke-width="1.5"/>
+      <text x="375" y="232" font-family="Newsreader" font-style="italic" font-size="14" fill="#45506b">x</text>
+      <text x="208" y="28" font-family="Newsreader" font-style="italic" font-size="14" fill="#45506b">y</text>
+      <!-- axis of symmetry -->
+      <line x1="220" y1="20" x2="220" y2="260" stroke="#d4a017" stroke-width="1" stroke-dasharray="4,4"/>
+      <!-- parabola -->
+      <path d="M 70,60 Q 220,360 370,60" stroke="#c8553d" stroke-width="3" fill="none"/>
+      <!-- y-intercept -->
+      <circle cx="200" cy="120" r="5" fill="#4a6b5c"/>
+      <text x="148" y="115" font-family="JetBrains Mono" font-size="11" fill="#4a6b5c">y-int</text>
+      <!-- x-intercepts -->
+      <circle cx="130" cy="240" r="5" fill="#c8553d"/>
+      <circle cx="310" cy="240" r="5" fill="#c8553d"/>
+      <text x="110" y="260" font-family="JetBrains Mono" font-size="11" fill="#c8553d">α</text>
+      <text x="310" y="260" font-family="JetBrains Mono" font-size="11" fill="#c8553d">β</text>
+      <!-- vertex -->
+      <circle cx="220" cy="200" r="6" fill="#1a2238"/>
+      <line x1="220" y1="200" x2="290" y2="180" stroke="#1a2238" stroke-width="1"/>
+      <text x="295" y="184" font-family="Newsreader" font-style="italic" font-size="13" fill="#1a2238">vertex (turning point)</text>
+      <!-- axis label -->
+      <text x="226" y="40" font-family="Newsreader" font-style="italic" font-size="13" fill="#d4a017">axis of symmetry</text>
+    </svg>
+  </div>
+
+  <div class="demo">
+    <div class="demo-title">The vertex and axis on the move</div>
+    <div class="demo-subtitle">Here the parabola is $y = (x-h)^2 + k$ with $h$ and $k$ drifting. Notice how the vertex and axis of symmetry move together — the axis is always $x = h$.</div>
+    <div class="demo-stage">
+      <svg id="anatomyDemo" class="demo-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="128" x2="335" y2="128" stroke="#c9bea5" stroke-width="1"/>
+        <line x1="180" y1="20" x2="180" y2="205" stroke="#c9bea5" stroke-width="1"/>
+        <text x="338" y="132" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">x</text>
+        <text x="184" y="20" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">y</text>
+        <line class="axis-line" x1="180" y1="20" x2="180" y2="205" stroke="#d4a017" stroke-width="1.5" stroke-dasharray="4,4"/>
+        <path class="parabola" d="" stroke="#c8553d" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <circle class="vertex-dot" cx="180" cy="128" r="6" fill="#1a2238"/>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Vertex</span>
+          <span class="readout-value" id="anatVertex">(0.0, 0.0)</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Axis of symmetry</span>
+          <span class="readout-value" id="anatAxis">x = 0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Concavity</span>
+          <span class="readout-value positive">Up (a = 1)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>The axis of symmetry</h3>
+  <p>If a parabola has two x-intercepts, the axis sits exactly halfway between them. If not, use the formula — which comes from completing the square on the general form:</p>
+
+  <div class="formula">
+    <span class="label">Axis of symmetry</span>
+    $x = -\dfrac{b}{2a}$
+  </div>
+
+  <h3>Finding the vertex</h3>
+  <p>The vertex lies on the axis of symmetry, so its x-coordinate is $-\frac{b}{2a}$. To get the y-coordinate, <strong>substitute that x-value back into the original equation</strong>.</p>
+
+  <h3>Domain & Range</h3>
+  <p>Every parabola has domain $(-\infty, \infty)$. The range depends on concavity and the y-value of the vertex (call it $k$):</p>
+  <ul>
+    <li>If $a > 0$ (concave up, minimum at vertex): range is $[k, \infty)$</li>
+    <li>If $a < 0$ (concave down, maximum at vertex): range is $(-\infty, k]$</li>
+  </ul>
+
+  <div class="example">
+    <div class="question">Find the vertex of $f(x) = -x^2 + 2x + 8$.</div>
+    <div class="solution">
+      <p>$a = -1, b = 2$, so axis of symmetry: $x = -\dfrac{2}{2(-1)} = 1$.</p>
+      <p>Sub $x = 1$: $f(1) = -1 + 2 + 8 = 9$. Vertex is $(1, 9)$.</p>
+      <p>Since $a < 0$, this is a maximum. Range is $(-\infty, 9]$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 03 · <em>Parabola Anatomy</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">What is the axis of symmetry of $y = 2x^2 - 8x + 5$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x = -2$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x = 2$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x = 4$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$x = -4$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $x = -\dfrac{b}{2a} = -\dfrac{-8}{2(2)} = \dfrac{8}{4} = 2$.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">Find the vertex of $y = x^2 - 6x + 11$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(3, 2)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-3, 2)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(3, -2)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(6, 11)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Axis: $x = -\dfrac{-6}{2} = 3$. Sub $x = 3$: $y = 9 - 18 + 11 = 2$. Vertex $(3, 2)$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">What is the range of $y = -x^2 + 4x - 1$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$[3, \infty)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-\infty, 3]$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$[-3, \infty)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(-\infty, -3]$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $a < 0$ means concave down (maximum). Vertex: $x = 2$, $y = -4 + 8 - 1 = 3$. So $y$ never exceeds $3$, giving range $(-\infty, 3]$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">What is the domain of <em>every</em> quadratic function?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$[0, \infty)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-\infty, \infty)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Depends on $a$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Depends on the vertex</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> You can substitute any real $x$ into $ax^2 + bx + c$. The range varies, but the domain is always $\mathbb{R}$.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">If a parabola has $x$-intercepts at $-3$ and $7$, where is its axis of symmetry?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x = 2$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x = 5$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x = -2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$x = 4$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> The axis sits halfway between the roots: $\dfrac{-3 + 7}{2} = 2$.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4 ============ -->
+<section id="s4">
+  <div class="section-num">Section 04</div>
+  <h2>Sketching <em>parabolas</em></h2>
+  <p class="section-intro">A "sketch" is not a "graph". You need the key features labelled — not graph-paper accuracy. The form you're given determines the easiest route.</p>
+
+  <div class="concept">
+    <span class="tag">Sketching checklist</span>
+    Every sketch needs: <strong>concavity</strong>, <strong>y-intercept</strong>, <strong>x-intercepts</strong> (if they exist), and the <strong>vertex</strong>. Label each one. That's it.
+  </div>
+
+  <h3>From general form $y = ax^2 + bx + c$</h3>
+  <ol class="styled">
+    <li>Concavity from sign of $a$.</li>
+    <li>y-intercept is $c$ (or sub $x = 0$).</li>
+    <li>x-intercepts: factor or use the quadratic formula.</li>
+    <li>Axis of symmetry: $x = -\frac{b}{2a}$.</li>
+    <li>Vertex y-value: sub the axis into the equation.</li>
+  </ol>
+
+  <h3>From factored form $y = a(x - \alpha)(x - \beta)$</h3>
+  <ol class="styled">
+    <li>Concavity from $a$.</li>
+    <li>x-intercepts straight off: $\alpha$ and $\beta$.</li>
+    <li>Axis of symmetry: $x = \frac{\alpha + \beta}{2}$.</li>
+    <li>y-intercept: sub $x = 0$.</li>
+    <li>Vertex y-value: sub the axis into the equation.</li>
+  </ol>
+
+  <h3>From vertex form $y = a(x - h)^2 + k$</h3>
+  <ol class="styled">
+    <li>Concavity from $a$.</li>
+    <li>Vertex is $(h, k)$ — straight off the page.</li>
+    <li>y-intercept: sub $x = 0$.</li>
+    <li>x-intercepts: solve $a(x-h)^2 + k = 0$ if they exist.</li>
+  </ol>
+
+  <div class="example">
+    <div class="question">Sketch $y = (2-x)(x-3)$.</div>
+    <div class="solution">
+      <p><strong>Concavity:</strong> Expanding gives $y = -x^2 + 5x - 6$, so $a = -1$ → concave down.</p>
+      <p><strong>x-intercepts:</strong> $x = 2$ and $x = 3$.</p>
+      <p><strong>y-intercept:</strong> $y = (2)(-3) = -6$.</p>
+      <p><strong>Axis of symmetry:</strong> $x = \frac{2+3}{2} = \frac{5}{2}$.</p>
+      <p><strong>Vertex:</strong> $y = -\left(\tfrac{5}{2}\right)^2 + 5\left(\tfrac{5}{2}\right) - 6 = \tfrac{1}{4}$. Vertex is $\left(\tfrac{5}{2}, \tfrac{1}{4}\right)$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 04 · <em>Sketching Parabolas</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">For $y = -(x-2)^2 + 4$, what is the concavity?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Concave up</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Concave down</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Neither — it's a straight line</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Cannot be determined</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $a = -1 < 0$ — that's a concave-down parabola. The "$-$" out the front does the work.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">The $y$-intercept of $y = 3x^2 - 5x + 7$ is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$3$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$7$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$-7$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Substitute $x = 0$: $y = 7$. In general form, the $y$-intercept is just $c$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">For $y = (x+1)(x-5)$, the axis of symmetry is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x = -2$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x = 2$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x = 4$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$x = -4$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Roots are $-1$ and $5$. Halfway between: $\dfrac{-1+5}{2} = 2$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">The vertex of $y = 2(x + 3)^2 - 8$ is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(3, 8)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-3, -8)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(3, -8)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(-3, 8)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $(x+3)^2 = (x-(-3))^2$, so $h = -3$, and the constant $-8$ is $k$. Vertex $(-3, -8)$.</div>
+    </div>
+    <div class="quiz-question" data-answer="d">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">Which feature is NOT essential for a complete parabola sketch?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Vertex</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$y$-intercept</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x$-intercepts (if they exist)</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>The focus and directrix</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Focus/directrix isn't required at Year 11. Vertex, $y$-intercept, $x$-intercepts and concavity are the four things to label.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5 ============ -->
+<section id="s5">
+  <div class="section-num">Section 05</div>
+  <h2>Finding the <em>equation</em></h2>
+  <p class="section-intro">Given a few features of a parabola, work backwards to its equation. The trick: pick the form that matches what you've been given.</p>
+
+  <div class="two-up">
+    <div class="method-card">
+      <div class="when">You have: x-intercepts + a</div>
+      <h5>Use factored form</h5>
+      <p>$y = a(x - \alpha)(x - \beta)$. Plug in $\alpha$, $\beta$ and your known $a$, then expand if asked for general form.</p>
+    </div>
+    <div class="method-card">
+      <div class="when">You have: vertex + one point</div>
+      <h5>Use vertex form</h5>
+      <p>$y = a(x - h)^2 + k$. Plug in the vertex for $(h, k)$, then sub the extra point to solve for $a$.</p>
+    </div>
+  </div>
+
+  <div class="method-card" style="margin-top:0;">
+    <div class="when">You have: three points, no other info</div>
+    <h5>Use simultaneous equations</h5>
+    <p>Start with $y = ax^2 + bx + c$. Each of the three points gives one equation in $a, b, c$. Solve the 3×3 system. See Section 7 for the technique.</p>
+  </div>
+
+  <div class="example">
+    <div class="question">Find the parabola with vertex $(-2, 3)$ passing through $(0, 7)$, in general form.</div>
+    <div class="solution">
+      <p>Start in vertex form: $y = a(x + 2)^2 + 3$.</p>
+      <p>Sub $(0, 7)$: $7 = a(2)^2 + 3 \Rightarrow 4a = 4 \Rightarrow a = 1$.</p>
+      <p>So $y = (x+2)^2 + 3 = x^2 + 4x + 7$.</p>
+    </div>
+  </div>
+
+  <h3>Equivalent quadratics</h3>
+  <p>If two quadratic functions are equal <em>for all $x$</em>, then when written in general form their corresponding coefficients must be identical. Expand, match $x^2$ coefficients, match $x$ coefficients, match constants — three equations.</p>
+
+  <div class="warning">
+    <span class="tag">Why this works</span>
+    Two polynomials can only agree at every single x-value if they are <em>literally the same polynomial</em>. There's no other way for it to happen.
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 05 · <em>Finding the Equation</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">A parabola has $x$-intercepts at $1$ and $5$ with $a = 2$. Its equation in factored form is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$y = 2(x-1)(x-5)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$y = 2(x+1)(x+5)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$y = 2(x-1)(x+5)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$y = (x-1)(x-5)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Factored form is $y = a(x-\alpha)(x-\beta)$ with $\alpha, \beta$ the roots. So $y = 2(x-1)(x-5)$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">A parabola has vertex $(3, -1)$ and passes through $(4, 1)$. What is $a$ in $y = a(x-3)^2 - 1$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$1$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$2$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$-2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$\tfrac{1}{2}$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Sub $(4, 1)$: $1 = a(4-3)^2 - 1 = a - 1$, so $a = 2$.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">If $f(x) = 3x^2 + 5x + 2$ and $g(x) = ax^2 + bx + c$ have the same graph for all $x$, what is $a + b + c$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$5$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$7$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$10$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Cannot be determined</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Equivalent quadratics have identical coefficients. So $a = 3$, $b = 5$, $c = 2$, summing to $10$.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">To find the equation of a parabola through three points, the easiest starting form is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Factored form</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Vertex form</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>General form</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Either factored or vertex</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Each point gives one equation in $a$, $b$, $c$ — three equations, three unknowns. General form turns it into a clean linear system.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">If a parabola has vertex $(0, k)$, its axis of symmetry is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>The $y$-axis</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>The $x$-axis</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$y = k$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Depends on $a$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> The axis is always the vertical line through the vertex. Vertex at $(0, k)$ ⇒ axis is $x = 0$, the $y$-axis.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 6 ============ -->
+<section id="s6">
+  <div class="section-num">Section 06</div>
+  <h2>Intersection <em>problems</em></h2>
+  <p class="section-intro">Finding where a parabola meets a line is the same as finding the x-intercepts — just with a moved x-axis. The discriminant tells you whether they meet, touch, or miss entirely.</p>
+
+  <p>Solving $f(x) = k$ finds where $y = f(x)$ meets the horizontal line $y = k$. More generally, to find where $y = f(x)$ meets $y = g(x)$, set $f(x) = g(x)$ and solve.</p>
+
+  <div class="demo">
+    <div class="demo-title">Tangent, secant, or miss?</div>
+    <div class="demo-subtitle">A horizontal line $y = c$ glides over the parabola $y = x^2$. Below the vertex it misses entirely. At the vertex it kisses the curve (tangent). Above, it slices through twice (secant).</div>
+    <div class="demo-stage">
+      <svg id="tangentDemo" class="demo-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="164" x2="335" y2="164" stroke="#c9bea5" stroke-width="1"/>
+        <line x1="180" y1="20" x2="180" y2="205" stroke="#c9bea5" stroke-width="1"/>
+        <text x="338" y="168" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">x</text>
+        <text x="184" y="20" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">y</text>
+        <path d="" class="static-parabola" stroke="#c8553d" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <line class="intersect-line" x1="30" x2="335" y1="100" y2="100" stroke="#4a6b5c" stroke-width="2.5"/>
+        <circle class="idot1" r="5.5" fill="#1a2238" opacity="0"/>
+        <circle class="idot2" r="5.5" fill="#1a2238" opacity="0"/>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Horizontal line</span>
+          <span class="readout-value" id="tanCValue">y = 0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Discriminant</span>
+          <span class="readout-value" id="tanDeltaValue">0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Status</span>
+          <span class="readout-value" id="tanStatus">Tangent</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="concept">
+    <span class="tag">Two key words</span>
+    A <strong>tangent</strong> meets a curve at exactly one point ($\Delta = 0$ after combining). A <strong>secant</strong> meets a curve at two distinct points ($\Delta > 0$).
+  </div>
+
+  <div class="example">
+    <div class="question">Prove $y = 5x + 2$ is a tangent to $y = 2x^2 + x + 4$.</div>
+    <div class="solution">
+      <p>Set them equal: $2x^2 + x + 4 = 5x + 2$</p>
+      <p>$2x^2 - 4x + 2 = 0$</p>
+      <p>$\Delta = (-4)^2 - 4(2)(2) = 16 - 16 = 0$</p>
+      <p>$\Delta = 0$ means exactly one intersection point — so yes, it's a tangent. $\blacksquare$</p>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="question">Find $c$ if $y = 2x - 3$ is a secant to $y = -x^2 + 3x + c$.</div>
+    <div class="solution">
+      <p>Set equal: $-x^2 + 3x + c = 2x - 3$, so $-x^2 + x + (c+3) = 0$, or $x^2 - x - (c+3) = 0$.</p>
+      <p>Secant needs $\Delta > 0$: $(-1)^2 - 4(1)(-(c+3)) > 0$</p>
+      <p>$1 + 4c + 12 > 0 \Rightarrow 4c + 13 > 0 \Rightarrow c > -\tfrac{13}{4}$</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 06 · <em>Intersection Problems</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">For $y = x^2 + 3$ to be tangent to $y = k$, what must $k$ equal?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$3$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Any value greater than $3$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Any value less than $3$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> The vertex of $y = x^2 + 3$ is $(0, 3)$. A horizontal line tangent to the parabola must touch it at the vertex, so $k = 3$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">A line is a tangent to a parabola when, after setting them equal, the discriminant satisfies:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$\Delta > 0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$\Delta = 0$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$\Delta < 0$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>The line is horizontal</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Tangent ⇒ exactly one intersection point ⇒ one solution to the combined equation ⇒ $\Delta = 0$.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">How many intersection points does a <em>secant</em> line have with a curve?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Infinitely many</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> "Secant" literally means a line that cuts a curve at two points. Hence $\Delta > 0$ once you equate them.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">$y = x^2$ and $y = -1$ intersect at how many points?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Infinitely many</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $x^2 = -1$ has no real solutions. The line $y = -1$ sits entirely below the parabola.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">Find the points of intersection of $y = x^2$ and $y = x + 2$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(2, 4)$ and $(-1, 1)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(2, 4)$ only</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(-1, 1)$ only</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>No intersection</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $x^2 = x + 2 \Rightarrow x^2 - x - 2 = 0 \Rightarrow (x-2)(x+1) = 0$. So $x = 2$ giving $(2, 4)$, and $x = -1$ giving $(-1, 1)$.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 7 ============ -->
+<section id="s7">
+  <div class="section-num">Section 07</div>
+  <h2>Simultaneous <em>equations</em></h2>
+  <p class="section-intro">Three techniques. Pick the right one and the problem is half-solved before you start computing.</p>
+
+  <div class="three-up">
+    <div class="case-card" style="text-align:left; padding: 24px;">
+      <div class="delta" style="font-size:18px;">Graphical</div>
+      <div class="case-label">Best when sketches are quick</div>
+      <p style="font-size:14px; font-style:italic; color:var(--ink-soft); margin-top:12px;">Graph both curves on the same axes. Read off the points of intersection. Limited by graph accuracy — only useful for nice integer solutions.</p>
+    </div>
+    <div class="case-card" style="text-align:left; padding: 24px;">
+      <div class="delta" style="font-size:18px;">Substitution</div>
+      <div class="case-label">Best when one is already <em>y = ...</em></div>
+      <p style="font-size:14px; font-style:italic; color:var(--ink-soft); margin-top:12px;">Substitute one equation into the other. Always the right move with a linear + quadratic pair, or two quadratics in $y = ...$ form.</p>
+    </div>
+    <div class="case-card" style="text-align:left; padding: 24px;">
+      <div class="delta" style="font-size:18px;">Elimination</div>
+      <div class="case-label">Best for two linears in $ax + by = c$</div>
+      <p style="font-size:14px; font-style:italic; color:var(--ink-soft); margin-top:12px;">Add or subtract the equations (possibly after multiplying) so one variable cancels. Almost always quickest for linear systems.</p>
+    </div>
+  </div>
+
+  <h3>Substitution with two quadratics</h3>
+  <div class="example">
+    <div class="question">Find the intersection of $y = 2x^2 + 3x + 5$ and $y = x^2 - 4x - 7$.</div>
+    <div class="solution">
+      <p>Set equal: $2x^2 + 3x + 5 = x^2 - 4x - 7$</p>
+      <p>$x^2 + 7x + 12 = 0 \Rightarrow (x+3)(x+4) = 0$</p>
+      <p>$x = -3$: $y = (-3)^2 - 4(-3) - 7 = 9 + 12 - 7 = 14$ → $(-3, 14)$</p>
+      <p>$x = -4$: $y = 16 + 16 - 7 = 25$ → $(-4, 25)$</p>
+    </div>
+  </div>
+
+  <h3>Elimination — the multiply-then-cancel trick</h3>
+  <div class="example">
+    <div class="question">Solve $2x + 5y = 13$ and $3x - 4y = -15$.</div>
+    <div class="solution">
+      <p>To eliminate $x$, multiply the first by $3$ and the second by $2$:</p>
+      <p>$6x + 15y = 39$<br>$6x - 8y = -30$</p>
+      <p>Subtract: $23y = 69 \Rightarrow y = 3$</p>
+      <p>Sub into first: $2x + 15 = 13 \Rightarrow x = -1$</p>
+    </div>
+  </div>
+
+  <h3>Finding a parabola through three points</h3>
+  <div class="example">
+    <div class="question">Find the parabola passing through $(0, 2)$, $(3, 5)$ and $(4, 10)$.</div>
+    <div class="solution">
+      <p>Start with $y = ax^2 + bx + c$.</p>
+      <p>$(0, 2) \Rightarrow c = 2$</p>
+      <p>$(3, 5) \Rightarrow 9a + 3b + 2 = 5 \Rightarrow 9a + 3b = 3 \Rightarrow 3a + b = 1$</p>
+      <p>$(4, 10) \Rightarrow 16a + 4b + 2 = 10 \Rightarrow 16a + 4b = 8 \Rightarrow 4a + b = 2$</p>
+      <p>Subtract: $a = 1$, so $b = 1 - 3 = -2$.</p>
+      <p>$y = x^2 - 2x + 2$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 07 · <em>Simultaneous Equations</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">Solve $y = 2x + 1$ and $y = -x + 4$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(1, 3)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(3, 1)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(0, 1)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(-1, 3)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $2x + 1 = -x + 4 \Rightarrow 3x = 3 \Rightarrow x = 1$. Then $y = 2(1) + 1 = 3$.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">Which method is most efficient for $3x + 2y = 12$ and $3x - 2y = 0$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Graphical</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Substitution</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Elimination (add them)</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Trial and error</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Coefficients of $y$ are $+2$ and $-2$ — opposite. Adding eliminates $y$ instantly: $6x = 12 \Rightarrow x = 2$.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">At most, how many points can two different parabolas intersect at?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Up to $4$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Setting them equal gives (at most) a quadratic equation, so up to $2$ solutions. The $x^2$ terms may even cancel, leaving a linear equation.</div>
+    </div>
+    <div class="quiz-question" data-answer="c">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">At most, how many points can a line and a parabola intersect at?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$0$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$3$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Substituting gives a quadratic — so at most two real solutions (secant). Tangent gives one, missing gives zero.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">To find a parabola through 3 points, how many equations and unknowns do you need?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>2 equations, 2 unknowns</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>3 equations, 3 unknowns</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>3 equations, 2 unknowns</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>1 equation, 3 unknowns</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Three unknowns ($a$, $b$, $c$) need three independent equations to pin them down. Each point gives one equation.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 8 ============ -->
+<section id="s8">
+  <div class="section-num">Section 08</div>
+  <h2>Quadratic <em>inequalities</em></h2>
+  <p class="section-intro">Don't try to solve these algebraically by "moving things across". Sketch the parabola, find where it sits above or below the x-axis, and read off the answer.</p>
+
+  <div class="concept">
+    <span class="tag">The graphical method</span>
+    <ol style="margin-top: 12px; margin-bottom: 0;">
+      <li>Move everything to one side so it's $\,(\text{quadratic}) \;\square\; 0\,$ where $\square$ is your inequality.</li>
+      <li>Find the roots (the x-intercepts).</li>
+      <li>Sketch the parabola roughly — you only really need the roots and concavity.</li>
+      <li>Shade the region where the parabola is on the correct side of the x-axis.</li>
+      <li>Read off the x-values of the shaded region.</li>
+    </ol>
+  </div>
+
+  <div class="warning">
+    <span class="tag">Inequality direction</span>
+    For $f(x) > 0$, you want where the parabola is <em>above</em> the x-axis. For $f(x) < 0$, you want <em>below</em>. Use $\le$ / $\ge$ if the roots themselves are included (closed intervals); use $<$ / $>$ if not (open intervals).
+  </div>
+
+  <div class="demo">
+    <div class="demo-title">Above and below the axis</div>
+    <div class="demo-subtitle">Same concave-up parabola $y = (x-2)(x+1)$, with roots at $-1$ and $2$. The shaded segment on the x-axis flips between the two inequality directions — outside the roots when $f(x) > 0$, between the roots when $f(x) < 0$.</div>
+    <div class="demo-stage">
+      <svg id="ineqDemo" class="demo-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="110" x2="335" y2="110" stroke="#c9bea5" stroke-width="1"/>
+        <line x1="180" y1="20" x2="180" y2="205" stroke="#c9bea5" stroke-width="1"/>
+        <text x="338" y="114" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">x</text>
+        <text x="184" y="20" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">y</text>
+        <path id="ineqParabola" d="" stroke="#c8553d" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <path class="axis-shade" d="" stroke="#4a6b5c" stroke-width="6" fill="none" stroke-linecap="round"/>
+        <circle cx="142.5" cy="110" r="4" fill="#1a2238"/>
+        <circle cx="255" cy="110" r="4" fill="#1a2238"/>
+        <text x="138" y="128" font-family="JetBrains Mono" font-size="10" fill="#45506b">−1</text>
+        <text x="253" y="128" font-family="JetBrains Mono" font-size="10" fill="#45506b">2</text>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Currently solving</span>
+          <span class="readout-value" id="ineqLabel">f(x) > 0</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Solution set</span>
+          <span class="readout-value" id="ineqSolution" style="font-size:15px;">x &lt; −1 or x &gt; 2</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Region</span>
+          <span class="readout-value" id="ineqRegion" style="font-size:14px;">Outside the roots</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="question">Solve $x^2 + 3x + 2 \geq 0$.</div>
+    <div class="solution">
+      <p>Factor: $(x+1)(x+2) \geq 0$. Roots are $-1$ and $-2$. Concave up.</p>
+      <p>A concave-up parabola is at or above zero <em>outside</em> the roots — so on the wings.</p>
+      <p>Solution: $x \leq -2$ or $x \geq -1$.</p>
+    </div>
+  </div>
+
+  <div class="example">
+    <div class="question">Solve $x^2 - 25 < 0$.</div>
+    <div class="solution">
+      <p>$(x-5)(x+5) < 0$. Roots are $\pm 5$. Concave up.</p>
+      <p>Strictly below zero means <em>between</em> the roots.</p>
+      <p>Solution: $-5 < x < 5$.</p>
+    </div>
+  </div>
+
+  <div class="pull-quote">Above the axis → outside the roots. Below the axis → between the roots. (Reversed if concave down.)</div>
+
+  <div class="example">
+    <div class="question">Solve $x^2 + 4x + 1 \leq 0$ (no nice factors — use the quadratic formula).</div>
+    <div class="solution">
+      <p>Roots: $x = \dfrac{-4 \pm \sqrt{16 - 4}}{2} = \dfrac{-4 \pm 2\sqrt{3}}{2} = -2 \pm \sqrt{3}$.</p>
+      <p>Concave up, so $\le 0$ is between the roots.</p>
+      <p>Solution: $-2 - \sqrt{3} \leq x \leq -2 + \sqrt{3}$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 08 · <em>Quadratic Inequalities</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">Solve $(x-2)(x+3) > 0$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$-3 < x < 2$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x < -3$ or $x > 2$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x > -3$ and $x < 2$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>All real numbers</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Concave up, roots $-3$ and $2$. Above the axis is outside the roots — so $x < -3$ or $x > 2$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">Solve $x^2 - 9 \leq 0$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x \leq -3$ or $x \geq 3$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$-3 \leq x \leq 3$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$-3 < x < 3$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>No solution</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $(x-3)(x+3) \le 0$. Concave up parabola is at or below the axis <em>between</em> the roots — including the roots themselves because of $\le$.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">Solve $-x^2 + 4 \geq 0$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$-2 \leq x \leq 2$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$x \leq -2$ or $x \geq 2$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>All real numbers</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>No solution</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Rearrange: $x^2 \le 4$, so $-2 \le x \le 2$. (Or: concave-down parabola with roots $\pm 2$ — at or above zero between the roots.)</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">A concave-up parabola has roots at $-4$ and $1$. The solution to $f(x) < 0$ is:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$x < -4$ or $x > 1$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$-4 < x < 1$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$-4 \leq x \leq 1$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>No solution</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Below the axis on a concave-up parabola is <em>between</em> the roots — open interval because the inequality is strict.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">Solve $x^2 + 1 > 0$.</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>All real numbers</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>No solution</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$x > 1$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$x \neq 0$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $\Delta = -4 < 0$ and $a = 1 > 0$ — the parabola is positive definite, sitting entirely above the axis. So every real $x$ works.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 9 ============ -->
+<section id="s9">
+  <div class="section-num">Section 09</div>
+  <h2>Cubic <em>functions</em></h2>
+  <p class="section-intro">Power 3 instead of 2. Up to three x-intercepts, one inflection point, and a characteristic S-shape (or its mirror).</p>
+
+  <h3>The three forms</h3>
+  <div class="two-up">
+    <div class="method-card">
+      <div class="when">Simple cubic</div>
+      <h5>$y = kx^3$</h5>
+      <p>Horizontal point of inflection at the origin. Slopes up-right if $k > 0$, down-right if $k < 0$. Bigger $|k|$ → steeper.</p>
+    </div>
+    <div class="method-card">
+      <div class="when">Factored form</div>
+      <h5>$y = k(x-\alpha)(x-\beta)(x-\gamma)$</h5>
+      <p>Three x-intercepts: $\alpha, \beta, \gamma$. The curve has two turning points and one inflection. Same sign rules for $k$.</p>
+    </div>
+  </div>
+  <div class="method-card" style="margin-top:0;">
+    <div class="when">Transformed form</div>
+    <h5>$y = k(x-h)^3 + c$</h5>
+    <p>The horizontal point of inflection sits at $(h, c)$. Same shape as $y = kx^3$, just shifted.</p>
+  </div>
+
+  <div class="demo">
+    <div class="demo-title">When two roots collide</div>
+    <div class="demo-subtitle">Watch what happens as one root drifts toward another in $y = 0.3(x-a)(x-1.5)(x+1.5)$. When $a$ matches an existing root, two roots fuse into a double root — and the curve stops crossing the axis, instead just touching and bouncing.</div>
+    <div class="demo-stage">
+      <svg id="cubicDemo" class="demo-svg" viewBox="0 0 360 220" xmlns="http://www.w3.org/2000/svg">
+        <line x1="30" y1="110" x2="335" y2="110" stroke="#c9bea5" stroke-width="1"/>
+        <line x1="180" y1="20" x2="180" y2="205" stroke="#c9bea5" stroke-width="1"/>
+        <text x="338" y="114" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">x</text>
+        <text x="184" y="20" font-family="JetBrains Mono" font-size="10" fill="#45506b" font-style="italic">y</text>
+        <circle cx="90" cy="110" r="3.5" fill="#c9bea5"/>
+        <circle cx="270" cy="110" r="3.5" fill="#c9bea5"/>
+        <text x="84" y="128" font-family="JetBrains Mono" font-size="10" fill="#45506b">−1.5</text>
+        <text x="262" y="128" font-family="JetBrains Mono" font-size="10" fill="#45506b">1.5</text>
+        <path class="cubic-path" d="" stroke="#c8553d" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <circle class="moving-root" r="5" fill="#1a2238"/>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Moving root</span>
+          <span class="readout-value" id="cubicAValue">a = 0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Number of distinct roots</span>
+          <span class="readout-value" id="cubicRootCount">3</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Behaviour at moving root</span>
+          <span class="readout-value" id="cubicBehaviour" style="font-size:14px;">Crosses</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Sketching simple cubics</h3>
+  <ol class="styled">
+    <li>Mark the inflection point (origin for $y = kx^3$, otherwise from the form).</li>
+    <li>Decide overall slope direction from sign of $k$.</li>
+    <li>Plot one extra point (often $x = 1$) to fix the steepness.</li>
+  </ol>
+
+  <h3>Sketching factored cubics</h3>
+  <ol class="styled">
+    <li>Mark all x-intercepts.</li>
+    <li>Find the y-intercept by substituting $x = 0$.</li>
+    <li>Use the sign of $k$: positive starts bottom-left, climbs up-right; negative does the opposite.</li>
+    <li>The curve crosses the x-axis at each simple root and "wiggles" between them.</li>
+  </ol>
+
+  <h3>Double roots — the "bounce"</h3>
+  <div class="concept">
+    <span class="tag">Key idea</span>
+    A repeated factor like $(x-1)^2$ means the curve <strong>touches</strong> the x-axis at $x = 1$ without crossing it — it "bounces" off. This is the same idea as $\Delta = 0$ for parabolas.
+  </div>
+
+  <div class="example">
+    <div class="question">Sketch $y = -(x-1)^2(x+1)$.</div>
+    <div class="solution">
+      <p>x-intercepts: $x = 1$ (double root → bounce) and $x = -1$ (simple root → cross).</p>
+      <p>y-intercept: $y = -(0-1)^2(0+1) = -1$.</p>
+      <p>Leading coefficient is $-1$ (negative), so the curve starts top-left, slopes overall downward to the right.</p>
+      <p>Shape: comes down from top-left, crosses at $x = -1$, dips down through $(0,-1)$, bounces off the x-axis at $x = 1$, then heads down to the bottom-right.</p>
+    </div>
+  </div>
+
+  <h3>Sketching from general form</h3>
+  <p>Factorise first — usually by taking out a common factor of $x$, then factorising what's left as a quadratic.</p>
+
+  <div class="example">
+    <div class="question">Sketch $y = x^3 + 7x^2 + 12x$.</div>
+    <div class="solution">
+      <p>Factor: $y = x(x^2 + 7x + 12) = x(x+3)(x+4)$</p>
+      <p>x-intercepts: $0$, $-3$, $-4$. All simple roots — curve crosses at each.</p>
+      <p>Positive leading coefficient → starts bottom-left, ends top-right, with two turning points between the intercepts.</p>
+    </div>
+  </div>
+
+  <h3>Finding $k$ for $y = kx^3$</h3>
+  <div class="example">
+    <div class="question">The curve $y = kx^3$ passes through $(-2, 2)$. Find $k$.</div>
+    <div class="solution">
+      <p>$2 = k(-2)^3 = -8k$, so $k = -\dfrac{1}{4}$.</p>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Section 09 · <em>Cubic Functions</em></div>
+      <div class="quiz-progress">0 / 5</div>
+    </div>
+    <div class="quiz-question" data-answer="d">
+      <div class="q-num">QUESTION 01</div>
+      <div class="q-text">How many real $x$-intercepts can a cubic function have?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Exactly $3$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$0$, $1$, $2$, or $3$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Always exactly $1$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$1$, $2$, or $3$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> A cubic runs from $-\infty$ to $+\infty$ (or the reverse), so it <em>must</em> cross the axis at least once. With a double root it can have 2; with three distinct roots, 3.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 02</div>
+      <div class="q-text">For $y = (x-1)^2(x-3)$, what happens at $x = 1$?</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Curve crosses the $x$-axis</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Curve touches and bounces off</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Curve has a discontinuity</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Curve has a vertical asymptote</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> $(x-1)^2$ is a repeated factor — that's a double root, which makes the curve touch and bounce off rather than cross.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 03</div>
+      <div class="q-text">For $y = kx^3$ with $k < 0$, the graph:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>Slopes up left to right</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>Slopes down left to right</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>Is a parabola</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>Has three $x$-intercepts</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Negative leading coefficient flips the standard $y = x^3$ shape vertically — so it goes from top-left to bottom-right.</div>
+    </div>
+    <div class="quiz-question" data-answer="a">
+      <div class="q-num">QUESTION 04</div>
+      <div class="q-text">The horizontal point of inflection of $y = 2(x - 3)^3 + 5$ is at:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$(3, 5)$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$(-3, 5)$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$(3, -5)$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$(2, 5)$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Transformed form $y = k(x-h)^3 + c$ has its HPI at $(h, c)$. Here $h = 3$, $c = 5$.</div>
+    </div>
+    <div class="quiz-question" data-answer="b">
+      <div class="q-num">QUESTION 05</div>
+      <div class="q-text">For $y = -(x+2)(x-1)(x-3)$, as $x \to +\infty$:</div>
+      <div class="q-options">
+        <button class="option" data-choice="a"><span class="letter">A</span>$y \to +\infty$</button>
+        <button class="option" data-choice="b"><span class="letter">B</span>$y \to -\infty$</button>
+        <button class="option" data-choice="c"><span class="letter">C</span>$y \to 0$</button>
+        <button class="option" data-choice="d"><span class="letter">D</span>$y \to -3$</button>
+      </div>
+      <div class="q-feedback"><strong>Why:</strong> Expanding gives a leading term of $-x^3$. Negative coefficient on $x^3$ means the graph drops on the right, so $y \to -\infty$.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CHEAT SHEET ============ -->
+<section id="cheat" class="cheat-sheet">
+  <div class="section-num" style="color: var(--coral-soft);">The cheat sheet</div>
+  <h2>Everything in <em>one page</em></h2>
+
+  <h3>Quadratic</h3>
+  <div class="formula-line"><span class="desc">General form</span><span class="eq">$y = ax^2 + bx + c$</span></div>
+  <div class="formula-line"><span class="desc">Factored form</span><span class="eq">$y = a(x - \alpha)(x - \beta)$</span></div>
+  <div class="formula-line"><span class="desc">Vertex form</span><span class="eq">$y = a(x - h)^2 + k$, vertex $(h, k)$</span></div>
+  <div class="formula-line"><span class="desc">Quadratic formula</span><span class="eq">$x = \dfrac{-b \pm \sqrt{b^2 - 4ac}}{2a}$</span></div>
+  <div class="formula-line"><span class="desc">Axis of symmetry</span><span class="eq">$x = -\dfrac{b}{2a}$</span></div>
+
+  <h3>Discriminant</h3>
+  <div class="formula-line"><span class="desc">Definition</span><span class="eq">$\Delta = b^2 - 4ac$</span></div>
+  <div class="formula-line"><span class="desc">Two distinct real roots</span><span class="eq">$\Delta > 0$</span></div>
+  <div class="formula-line"><span class="desc">Equal (double) root</span><span class="eq">$\Delta = 0$</span></div>
+  <div class="formula-line"><span class="desc">No real roots</span><span class="eq">$\Delta < 0$</span></div>
+  <div class="formula-line"><span class="desc">Rational roots</span><span class="eq">$\Delta$ is a perfect square</span></div>
+  <div class="formula-line"><span class="desc">Positive definite</span><span class="eq">$\Delta < 0$ and $a > 0$</span></div>
+  <div class="formula-line"><span class="desc">Negative definite</span><span class="eq">$\Delta < 0$ and $a < 0$</span></div>
+  <div class="formula-line"><span class="desc">Tangent condition</span><span class="eq">$\Delta = 0$ (after equating curves)</span></div>
+  <div class="formula-line"><span class="desc">Secant condition</span><span class="eq">$\Delta > 0$ (after equating curves)</span></div>
+
+  <h3>Inequalities</h3>
+  <div class="formula-line"><span class="desc">Above axis (concave up)</span><span class="eq">Outside the roots</span></div>
+  <div class="formula-line"><span class="desc">Below axis (concave up)</span><span class="eq">Between the roots</span></div>
+  <div class="formula-line"><span class="desc">Above axis (concave down)</span><span class="eq">Between the roots</span></div>
+  <div class="formula-line"><span class="desc">Below axis (concave down)</span><span class="eq">Outside the roots</span></div>
+
+  <h3>Cubic</h3>
+  <div class="formula-line"><span class="desc">General form</span><span class="eq">$y = ax^3 + bx^2 + cx + d$</span></div>
+  <div class="formula-line"><span class="desc">Factored form</span><span class="eq">$y = k(x - \alpha)(x - \beta)(x - \gamma)$</span></div>
+  <div class="formula-line"><span class="desc">Transformed form</span><span class="eq">$y = k(x - h)^3 + c$</span></div>
+  <div class="formula-line"><span class="desc">Double root</span><span class="eq">Curve "bounces" off the x-axis</span></div>
+  <div class="formula-line"><span class="desc">$y = kx^3$, $k > 0$</span><span class="eq">Slopes up left → right</span></div>
+  <div class="formula-line"><span class="desc">$y = kx^3$, $k < 0$</span><span class="eq">Slopes down left → right</span></div>
+</section>
+
+</main>
+
+<footer>
+  <p>Now go do Exercises 5–9 on Canvas. The only way these tricks stick is by doing them yourself, in your own handwriting, under time pressure.</p>
+  <div class="signature">— good luck</div>
+</footer>
+
+<script>
+// ============ QUIZ LOGIC ============
+document.querySelectorAll('.quiz').forEach(quiz => {
+  const questions = quiz.querySelectorAll('.quiz-question');
+  const total = questions.length;
+  const progressEl = quiz.querySelector('.quiz-progress');
+  let answered = 0;
+  if (progressEl) progressEl.textContent = '0 / ' + total;
+
+  questions.forEach(q => {
+    const correctAnswer = q.dataset.answer;
+    const options = q.querySelectorAll('.option');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        if (q.classList.contains('done')) return;
+        q.classList.add('done');
+        const choice = opt.dataset.choice;
+        options.forEach(o => {
+          o.disabled = true;
+          if (o.dataset.choice === correctAnswer) o.classList.add('correct');
+          else if (o.dataset.choice === choice) o.classList.add('wrong');
+        });
+        const feedback = q.querySelector('.q-feedback');
+        if (feedback) {
+          feedback.classList.add('show');
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([feedback]).catch(() => {});
+          }
+        }
+        answered++;
+        if (progressEl) progressEl.textContent = answered + ' / ' + total;
+      });
+    });
+  });
+});
+
+// ============ ANIMATION HELPER ============
+function buildPath(xMin, xMax, fn, mapX, mapY, steps) {
+  steps = steps || 100;
+  const dx = (xMax - xMin) / steps;
+  let d = '';
+  for (let i = 0; i <= steps; i++) {
+    const x = xMin + i * dx;
+    const y = fn(x);
+    const sy = mapY(y);
+    if (sy < -100 || sy > 320) continue;
+    const sx = mapX(x);
+    d += (d === '' ? 'M' : ' L') + ' ' + sx.toFixed(1) + ' ' + sy.toFixed(1);
+  }
+  return d;
+}
+
+// ============ 1) DISCRIMINANT ============
+(function() {
+  const svg = document.getElementById('discDemo');
+  if (!svg) return;
+  const path = svg.querySelector('.parabola');
+  const r1 = svg.querySelector('.root1');
+  const r2 = svg.querySelector('.root2');
+  const cOut = document.getElementById('discCValue');
+  const dOut = document.getElementById('discDeltaValue');
+  const rootsOut = document.getElementById('discRootsValue');
+  const mapX = mx => 180 + 37.5 * mx;
+  const mapY = my => 155 - 15 * my;
+  let t = 0;
+  function frame() {
+    t += 0.008;
+    const c = 2.5 * Math.sin(t) - 0.5;
+    const delta = -4 * c;
+    path.setAttribute('d', buildPath(-3.5, 3.5, x => x*x + c, mapX, mapY));
+    cOut.textContent = 'c = ' + c.toFixed(2);
+    dOut.textContent = delta.toFixed(2);
+    dOut.classList.remove('positive', 'negative', 'zero');
+    if (delta > 0.15) {
+      const root = Math.sqrt(-c);
+      r1.setAttribute('cx', mapX(-root)); r1.setAttribute('cy', mapY(0));
+      r2.setAttribute('cx', mapX(root)); r2.setAttribute('cy', mapY(0));
+      r1.style.opacity = 1; r2.style.opacity = 1;
+      rootsOut.textContent = 'Two';
+      dOut.classList.add('positive');
+    } else if (delta < -0.15) {
+      r1.style.opacity = 0; r2.style.opacity = 0;
+      rootsOut.textContent = 'None';
+      dOut.classList.add('negative');
+    } else {
+      r1.setAttribute('cx', mapX(0)); r1.setAttribute('cy', mapY(0));
+      r1.style.opacity = 1; r2.style.opacity = 0;
+      rootsOut.textContent = 'One (double)';
+      dOut.classList.add('zero');
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ============ 2) ANATOMY ============
+(function() {
+  const svg = document.getElementById('anatomyDemo');
+  if (!svg) return;
+  const path = svg.querySelector('.parabola');
+  const vertex = svg.querySelector('.vertex-dot');
+  const axisLine = svg.querySelector('.axis-line');
+  const vOut = document.getElementById('anatVertex');
+  const aOut = document.getElementById('anatAxis');
+  const mapX = mx => 180 + 37.5 * mx;
+  const mapY = my => 128 - 18 * my;
+  let t = 0;
+  function frame() {
+    t += 0.011;
+    const h = 2.3 * Math.sin(t);
+    const k = 1.5 * Math.sin(t * 1.3) - 0.8;
+    path.setAttribute('d', buildPath(-3.5, 3.5, x => (x-h)*(x-h) + k, mapX, mapY));
+    vertex.setAttribute('cx', mapX(h));
+    vertex.setAttribute('cy', mapY(k));
+    axisLine.setAttribute('x1', mapX(h));
+    axisLine.setAttribute('x2', mapX(h));
+    vOut.textContent = '(' + h.toFixed(1) + ', ' + k.toFixed(1) + ')';
+    aOut.textContent = 'x = ' + h.toFixed(2);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ============ 3) TANGENT/SECANT ============
+(function() {
+  const svg = document.getElementById('tangentDemo');
+  if (!svg) return;
+  const staticPath = svg.querySelector('.static-parabola');
+  const line = svg.querySelector('.intersect-line');
+  const dot1 = svg.querySelector('.idot1');
+  const dot2 = svg.querySelector('.idot2');
+  const cOut = document.getElementById('tanCValue');
+  const dOut = document.getElementById('tanDeltaValue');
+  const statusOut = document.getElementById('tanStatus');
+  const mapX = mx => 180 + 37.5 * mx;
+  const mapY = my => 164 - 18 * my;
+  // Render static parabola y = x^2
+  staticPath.setAttribute('d', buildPath(-3.2, 3.2, x => x*x, mapX, mapY));
+  let t = 0;
+  function frame() {
+    t += 0.008;
+    const c = 3.5 + 3.7 * Math.sin(t); // c oscillates roughly in [-0.2, 7.2]
+    const delta = 4 * c;
+    const ly = mapY(c);
+    line.setAttribute('y1', ly);
+    line.setAttribute('y2', ly);
+    cOut.textContent = 'y = ' + c.toFixed(2);
+    dOut.textContent = delta.toFixed(2);
+    dOut.classList.remove('positive', 'negative', 'zero');
+    statusOut.classList.remove('positive', 'negative', 'zero');
+    if (c > 0.1) {
+      const root = Math.sqrt(c);
+      dot1.setAttribute('cx', mapX(-root)); dot1.setAttribute('cy', mapY(c));
+      dot2.setAttribute('cx', mapX(root)); dot2.setAttribute('cy', mapY(c));
+      dot1.style.opacity = 1; dot2.style.opacity = 1;
+      statusOut.textContent = 'Secant (2 pts)';
+      dOut.classList.add('positive');
+      statusOut.classList.add('positive');
+    } else if (c > -0.1) {
+      dot1.setAttribute('cx', mapX(0)); dot1.setAttribute('cy', mapY(0));
+      dot1.style.opacity = 1; dot2.style.opacity = 0;
+      statusOut.textContent = 'Tangent (1 pt)';
+      dOut.classList.add('zero');
+      statusOut.classList.add('zero');
+    } else {
+      dot1.style.opacity = 0; dot2.style.opacity = 0;
+      statusOut.textContent = 'Misses (0 pts)';
+      dOut.classList.add('negative');
+      statusOut.classList.add('negative');
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ============ 4) INEQUALITY ============
+(function() {
+  const svg = document.getElementById('ineqDemo');
+  if (!svg) return;
+  const parabolaPath = document.getElementById('ineqParabola');
+  const axisShade = svg.querySelector('.axis-shade');
+  const labelOut = document.getElementById('ineqLabel');
+  const solOut = document.getElementById('ineqSolution');
+  const regionOut = document.getElementById('ineqRegion');
+  const mapX = mx => 180 + 37.5 * mx;
+  const mapY = my => 110 - 22.5 * my;
+  // Render parabola y = (x-2)(x+1) = x² - x - 2
+  parabolaPath.setAttribute('d', buildPath(-2.8, 3.6, x => (x-2)*(x+1), mapX, mapY));
+  let mode = -1, cycleT = 0;
+  function frame() {
+    cycleT += 0.0045;
+    const newMode = Math.floor(cycleT) % 2;
+    if (newMode !== mode) {
+      mode = newMode;
+      if (mode === 0) {
+        labelOut.innerHTML = 'f(x) &gt; 0';
+        solOut.innerHTML = 'x &lt; &minus;1 or x &gt; 2';
+        regionOut.textContent = 'Outside the roots';
+        const a = mapX(-2.8), b = mapX(-1), c = mapX(2), d = mapX(3.6), y0 = mapY(0);
+        axisShade.setAttribute('d',
+          'M ' + a.toFixed(1) + ' ' + y0 + ' L ' + b.toFixed(1) + ' ' + y0 +
+          ' M ' + c.toFixed(1) + ' ' + y0 + ' L ' + d.toFixed(1) + ' ' + y0);
+      } else {
+        labelOut.innerHTML = 'f(x) &lt; 0';
+        solOut.innerHTML = '&minus;1 &lt; x &lt; 2';
+        regionOut.textContent = 'Between the roots';
+        const a = mapX(-1), b = mapX(2), y0 = mapY(0);
+        axisShade.setAttribute('d',
+          'M ' + a.toFixed(1) + ' ' + y0 + ' L ' + b.toFixed(1) + ' ' + y0);
+      }
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ============ 5) CUBIC ============
+(function() {
+  const svg = document.getElementById('cubicDemo');
+  if (!svg) return;
+  const path = svg.querySelector('.cubic-path');
+  const movingRoot = svg.querySelector('.moving-root');
+  const aOut = document.getElementById('cubicAValue');
+  const countOut = document.getElementById('cubicRootCount');
+  const behaviourOut = document.getElementById('cubicBehaviour');
+  const mapX = mx => 180 + 60 * mx;
+  const mapY = my => 110 - 30 * my;
+  let t = 0;
+  function frame() {
+    t += 0.007;
+    const a = 1.7 * Math.sin(t);
+    const k = 0.3;
+    path.setAttribute('d', buildPath(-2.5, 2.5, x => k*(x-a)*(x-1.5)*(x+1.5), mapX, mapY));
+    movingRoot.setAttribute('cx', mapX(a));
+    movingRoot.setAttribute('cy', mapY(0));
+    aOut.textContent = 'a = ' + a.toFixed(2);
+    countOut.classList.remove('zero');
+    behaviourOut.classList.remove('zero');
+    const tol = 0.12;
+    if (Math.abs(a - 1.5) < tol) {
+      countOut.textContent = '2 (double at 1.5)';
+      behaviourOut.textContent = 'Bounces';
+      countOut.classList.add('zero');
+      behaviourOut.classList.add('zero');
+    } else if (Math.abs(a + 1.5) < tol) {
+      countOut.textContent = '2 (double at −1.5)';
+      behaviourOut.textContent = 'Bounces';
+      countOut.classList.add('zero');
+      behaviourOut.classList.add('zero');
+    } else {
+      countOut.textContent = '3 distinct';
+      behaviourOut.textContent = 'Crosses';
+    }
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+
+</body>
+</html>
