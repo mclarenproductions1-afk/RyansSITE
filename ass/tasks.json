@@ -40,16 +40,6 @@
     "createdAt": "2026-04-01"
   },
   {
-    "id": "ba76c20c-0fc7-4df4-8521-d5f7f466b874",
-    "title": "Soldier Performance",
-    "subject": "CAPA",
-    "type": "test",
-    "dueDate": "2026-04-24",
-    "notes": "",
-    "completed": true,
-    "createdAt": "2026-04-01"
-  },
-  {
     "id": "dba8e035-4981-4937-ac3e-ef82c883832f",
     "title": "Creative Writing and Reflection Task",
     "subject": "Extension English",
