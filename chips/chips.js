@@ -75,11 +75,11 @@ async function saveData(data, sha) {
 
 function defaultData() {
   return {
-    currentWeek:                1,
-    nextWeekTomQuincyAttending: true,
-    bowlCost:                   BOWL_COST,
-    sheetsUrl:                  "",
-    weeks:                      []
+    currentWeek:    1,
+    nextWeekAbsent: [],
+    bowlCost:       BOWL_COST,
+    sheetsUrl:      "",
+    weeks:          []
   };
 }
 
@@ -225,14 +225,25 @@ function computeSuggestedPayments(weeks, nextWeekAttendance) {
   return { payments, balances, n, S };
 }
 
-/** Build the nextWeekAttendance object from data flags. */
+/**
+ * Build the nextWeekAttendance object from data flags.
+ * New format: data.nextWeekAbsent = ["Fletcher", "Tom", ...]
+ * Legacy format: data.nextWeekTomQuincyAttending = false  (auto-migrated on first save)
+ */
 function getNextWeekAttendance(data) {
   const att = {};
   for (const p of PEOPLE) att[p] = 1;
-  if (!data.nextWeekTomQuincyAttending) {
+
+  if (Array.isArray(data.nextWeekAbsent)) {
+    for (const p of data.nextWeekAbsent) {
+      if (PEOPLE.includes(p)) att[p] = 0;
+    }
+  } else if (data.nextWeekTomQuincyAttending === false) {
+    // Legacy fallback — treat as Tom & Quincy absent
     att.Tom    = 0;
     att.Quincy = 0;
   }
+
   return att;
 }
 

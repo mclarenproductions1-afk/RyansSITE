@@ -148,34 +148,44 @@
   .setting-card.url-card { flex-direction: column; align-items: stretch; gap: 8px; }
   .setting-card.url-card .setting-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #888; }
 
-  /* Toggle switch */
-  .toggle {
-    position: relative;
-    display: inline-block;
-    width: 40px;
-    height: 22px;
-    flex-shrink: 0;
-  }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    inset: 0;
-    background: #e5e5e5;
-    border-radius: 22px;
-    transition: .2s;
-  }
-  .toggle-slider::before {
-    content: "";
-    position: absolute;
-    width: 16px; height: 16px;
-    left: 3px; bottom: 3px;
+  /* Absence person buttons */
+  .absence-card { flex-direction: column; align-items: stretch; gap: 10px; }
+  .absence-card .setting-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #888; }
+  .absence-people { display: flex; gap: 6px; flex-wrap: wrap; }
+  .absence-btn {
+    padding: 5px 13px;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
     background: #fff;
-    border-radius: 50%;
-    transition: .2s;
+    color: #888;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
   }
-  .toggle input:checked + .toggle-slider { background: #111; }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+  .absence-btn:hover { border-color: #bbb; color: #111; }
+  .absence-btn.is-absent {
+    background: #111;
+    border-color: #111;
+    color: #fff;
+  }
+  .absence-shortcuts { display: flex; gap: 6px; align-items: center; }
+  .absence-shortcut {
+    padding: 3px 10px;
+    border-radius: 4px;
+    border: 1px solid #e5e5e5;
+    background: #fff;
+    color: #888;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+  }
+  .absence-shortcut:hover { border-color: #111; color: #111; }
+  .absence-shortcut-label { font-size: 0.7rem; color: #bbb; }
 
   /* Number input */
   .week-input {
@@ -459,13 +469,13 @@
       <div class="section-title">Settings</div>
       <div class="settings-grid">
 
-        <div class="setting-card">
-          <span class="setting-label">Tom &amp; Quincy next week?</span>
-          <label class="toggle">
-            <input type="checkbox" id="tq-toggle" onchange="onTQToggle()" />
-            <span class="toggle-slider"></span>
-          </label>
-          <span id="tq-label" class="setting-label" style="color:#888;min-width:24px"></span>
+        <div class="setting-card absence-card">
+          <span class="setting-label">Absent next session</span>
+          <div class="absence-people" id="absence-people"></div>
+          <div class="absence-shortcuts">
+            <span class="absence-shortcut-label">Shortcut:</span>
+            <button class="absence-shortcut" onclick="toggleTQ()">Tom &amp; Quincy</button>
+          </div>
         </div>
 
         <div class="setting-card">
@@ -840,13 +850,47 @@ function showToast(msg) {
   toastTimer = setTimeout(() => el.classList.remove("show"), 3000);
 }
 
-/* ── Settings handlers ────────────────────────────────────────── */
-function onTQToggle() {
-  appData.nextWeekTomQuincyAttending = document.getElementById("tq-toggle").checked;
-  document.getElementById("tq-label").textContent =
-    appData.nextWeekTomQuincyAttending ? "Yes" : "No";
+/* ── Absence handlers ─────────────────────────────────────────── */
+function ensureAbsentArray() {
+  // Migrate legacy data on first interaction
+  if (!Array.isArray(appData.nextWeekAbsent)) {
+    appData.nextWeekAbsent = (appData.nextWeekTomQuincyAttending === false)
+      ? ["Tom", "Quincy"] : [];
+  }
+}
+
+function toggleAbsent(person) {
+  ensureAbsentArray();
+  const idx = appData.nextWeekAbsent.indexOf(person);
+  if (idx >= 0) appData.nextWeekAbsent.splice(idx, 1);
+  else          appData.nextWeekAbsent.push(person);
+  renderAbsenceButtons();
   renderSuggested();
   persist();
+}
+
+function toggleTQ() {
+  ensureAbsentArray();
+  const tqOut = appData.nextWeekAbsent.includes("Tom") &&
+                appData.nextWeekAbsent.includes("Quincy");
+  if (tqOut) {
+    appData.nextWeekAbsent = appData.nextWeekAbsent.filter(p => p !== "Tom" && p !== "Quincy");
+  } else {
+    if (!appData.nextWeekAbsent.includes("Tom"))   appData.nextWeekAbsent.push("Tom");
+    if (!appData.nextWeekAbsent.includes("Quincy")) appData.nextWeekAbsent.push("Quincy");
+  }
+  renderAbsenceButtons();
+  renderSuggested();
+  persist();
+}
+
+function renderAbsenceButtons() {
+  ensureAbsentArray();
+  document.getElementById("absence-people").innerHTML = PEOPLE.map(p => {
+    const out = appData.nextWeekAbsent.includes(p);
+    return `<button class="absence-btn${out ? " is-absent" : ""}"
+                    onclick="toggleAbsent('${p}')">${p}</button>`;
+  }).join("");
 }
 
 function onWeekChange() {
@@ -875,10 +919,10 @@ function onSheetsUrlChange() {
 
 /* ── Render all ───────────────────────────────────────────────── */
 function renderAll() {
-  document.getElementById("tq-toggle").checked    = appData.nextWeekTomQuincyAttending;
-  document.getElementById("tq-label").textContent = appData.nextWeekTomQuincyAttending ? "Yes" : "No";
-  document.getElementById("week-input").value     = appData.currentWeek;
-  document.getElementById("sheets-url-input").value = appData.sheetsUrl || "";
+  ensureAbsentArray();
+  renderAbsenceButtons();
+  document.getElementById("week-input").value        = appData.currentWeek;
+  document.getElementById("sheets-url-input").value  = appData.sheetsUrl || "";
 
   if (appData.sheetsUrl) {
     setSheetsStatus("synced", "Sheets connected");

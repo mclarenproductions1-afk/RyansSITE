@@ -354,10 +354,12 @@ function renderLanding(data) {
   /* ── Next session banner ────────────────────────────────────── */
   document.getElementById("banner-title").textContent = `Week ${data.currentWeek}`;
 
-  const tqNote = data.nextWeekTomQuincyAttending
-    ? `${nextAttendees.length} people · $13 bowl`
-    : `<strong>Tom &amp; Quincy absent</strong> · ${nextAttendees.length} people · $13 bowl`;
-  document.getElementById("banner-note").innerHTML = tqNote;
+  const absentList = PEOPLE.filter(p => nextWeekAtt[p] === 0);
+  const absentNote = absentList.length
+    ? `<strong>${absentList.join(" &amp; ")} absent</strong> · `
+    : "";
+  document.getElementById("banner-note").innerHTML =
+    `${absentNote}${nextAttendees.length} people · $13 bowl`;
 
   /* ── Last session recap ─────────────────────────────────────── */
   const lastSessionEl  = document.getElementById("last-session");
