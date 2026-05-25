@@ -20,57 +20,6 @@
         "Fletcher": 0.5,
         "Quincy": 0
       }
-    },
-    {
-      "weekNumber": 1,
-      "attendance": {
-        "Roy": 0,
-        "Ryan": 0,
-        "Tom": 0,
-        "Fletcher": 0,
-        "Quincy": 0
-      },
-      "payments": {
-        "Roy": 0,
-        "Ryan": 0,
-        "Tom": 0,
-        "Fletcher": 0,
-        "Quincy": 0
-      }
-    },
-    {
-      "weekNumber": 2,
-      "attendance": {
-        "Roy": 0,
-        "Ryan": 0,
-        "Tom": 0,
-        "Fletcher": 0,
-        "Quincy": 0
-      },
-      "payments": {
-        "Roy": 0,
-        "Ryan": 0,
-        "Tom": 0,
-        "Fletcher": 0,
-        "Quincy": 0
-      }
-    },
-    {
-      "weekNumber": 3,
-      "attendance": {
-        "Roy": 1,
-        "Ryan": 1,
-        "Tom": 1,
-        "Fletcher": 0,
-        "Quincy": 1
-      },
-      "payments": {
-        "Roy": 0,
-        "Ryan": 0,
-        "Tom": 0,
-        "Fletcher": 0,
-        "Quincy": 0
-      }
     }
   ]
 }
