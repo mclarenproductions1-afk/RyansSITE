@@ -486,6 +486,13 @@
       </div>
     </div>
 
+    <!-- ── Next session payments (immediately after settings) ──── -->
+    <div class="section-block">
+      <div class="section-title" id="payments-title">Next session — Week —</div>
+      <div class="payment-rows" id="payment-rows"></div>
+      <div id="formula-card" class="formula-card" style="margin-top:10px"></div>
+    </div>
+
     <!-- ── Data table ─────────────────────────────────────────── -->
     <div class="section-block">
       <div class="section-title">Week Data</div>
@@ -531,13 +538,6 @@
         </thead>
         <tbody id="summary-tbody"></tbody>
       </table>
-    </div>
-
-    <!-- ── Suggested payments ─────────────────────────────────── -->
-    <div class="section-block">
-      <div class="section-title">Suggested Payments — Next Week</div>
-      <div id="formula-card" class="formula-card"></div>
-      <div class="payment-rows" id="payment-rows"></div>
     </div>
 
     <!-- ── Google Sheets setup ────────────────────────────────── -->
@@ -979,37 +979,44 @@ function renderSummary() {
 
 /* ── Suggested payments ───────────────────────────────────────── */
 function renderSuggested() {
-  const nextAtt = getNextWeekAttendance(appData);
+  const nextAtt       = getNextWeekAttendance(appData);
   const { payments, balances, n, S } = computeSuggestedPayments(appData.weeks, nextAtt);
   const attendeeNames = PEOPLE.filter(p => nextAtt[p] === 1);
-  const step = n > 0 ? (BOWL_COST + S) / n : 0;
+  const step          = n > 0 ? (BOWL_COST + S) / n : 0;
 
-  document.getElementById("formula-card").innerHTML = `
-    <div class="formula-meta">
-      <strong>Attending (n = ${n}):</strong> ${attendeeNames.join(", ") || "nobody"}<br>
-      <strong>S</strong> = sum of attending balances =
-        ${attendeeNames.map(p => fmtBalance(balances[p])).join(" + ") || "—"}
-        = <strong>${fmtBalance(S)}</strong><br>
-      <strong>Base amount</strong> = (C + S) / n = ($${BOWL_COST} + ${fmtBalance(S)}) / ${n}
-        = <code>$${step.toFixed(4)}</code><br>
-      <strong>Each person:</strong> base amount − their balance
-    </div>`;
+  // Update section title
+  document.getElementById("payments-title").textContent =
+    `Next session — Week ${appData.currentWeek}`;
 
+  // Big payment rows (matching landing page card style)
   document.getElementById("payment-rows").innerHTML = PEOPLE.map(p => {
     const isAbsent = nextAtt[p] === 0;
     const bal      = balances[p];
     const pay      = payments[p];
+    const bClass   = bal > 0.005 ? "pos" : bal < -0.005 ? "neg" : "zer";
     return `
       <div class="payment-row${isAbsent ? " absent" : ""}">
         <span class="p-name">${escHtml(p)}</span>
         <span class="p-calc">
           ${isAbsent
             ? "not attending"
-            : `$${step.toFixed(4)} − (${fmtBalance(bal)}) = $${pay.toFixed(4)}`}
+            : `balance ${fmtBalance(bal)} · $${step.toFixed(4)} − (${fmtBalance(bal)})`}
         </span>
-        <span class="p-amount">${isAbsent ? "—" : `$${pay.toFixed(2)}`}</span>
+        <span class="p-amount" style="${isAbsent ? "color:#ccc" : ""}">
+          ${isAbsent ? "Absent" : `$${pay.toFixed(2)}`}
+        </span>
       </div>`;
   }).join("");
+
+  // Formula working (collapsible context)
+  document.getElementById("formula-card").innerHTML = `
+    <div class="formula-meta">
+      <strong>Formula working:</strong>
+      n = ${n} (${attendeeNames.join(", ") || "nobody"}) ·
+      S = ${attendeeNames.map(p => fmtBalance(balances[p])).join(" + ") || "—"} = <strong>${fmtBalance(S)}</strong> ·
+      base = ($${BOWL_COST} + ${fmtBalance(S)}) / ${n} = <code>$${step.toFixed(4)}</code> ·
+      each person pays base − their balance
+    </div>`;
 }
 
 /* ── Copy Apps Script ─────────────────────────────────────────── */
