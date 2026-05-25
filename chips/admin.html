@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin — Chips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #fff;
+    color: #111;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0 clamp(1rem, 4vw, 2.5rem);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .back-link {
+    font-size: 0.82rem;
+    color: #888;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: #111; }
+  .logo {
+    font-size: 0.97rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #111;
+  }
+  #save-indicator {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 9px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    opacity: 0;
+    pointer-events: none;
+    color: #888;
+  }
+  #save-indicator.saving { opacity: 1; border-color: #e5e5e5; color: #888; }
+  #save-indicator.saved  { opacity: 1; border-color: #e5e5e5; color: #111; }
+  #save-indicator.error  { opacity: 1; border-color: #e5e5e5; color: #111; }
+
+  /* ── Main ───────────────────────────────────────────────────── */
+  main {
+    padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2.5rem);
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── Section title ──────────────────────────────────────────── */
+  .section-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+  .section-block { margin-bottom: 2.5rem; }
+
+  /* ── Settings card ──────────────────────────────────────────── */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 16px 20px;
+  }
+  .setting-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .setting-label {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #111;
+  }
+
+  /* Toggle switch */
+  .toggle-wrap { display: flex; align-items: center; gap: 8px; }
+  .toggle {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: #e5e5e5;
+    border-radius: 22px;
+    transition: .2s;
+  }
+  .toggle-slider::before {
+    content: "";
+    position: absolute;
+    width: 16px; height: 16px;
+    left: 3px; bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .2s;
+  }
+  .toggle input:checked + .toggle-slider { background: #111; }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+  /* Week number input */
+  .week-input {
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    color: #111;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    width: 72px;
+    text-align: center;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .week-input:focus { border-color: #111; box-shadow: 0 0 0 2px rgba(0,0,0,.08); }
+
+  /* ── Data table ─────────────────────────────────────────────── */
+  .table-scroll { overflow-x: auto; }
+  table { border-collapse: collapse; font-size: 0.82rem; min-width: 100%; }
+  th {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #888;
+    text-align: center;
+    padding: 6px 10px;
+    border-bottom: 1px solid #e5e5e5;
+    white-space: nowrap;
+  }
+  th.col-week { text-align: left; }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+    color: #111;
+  }
+  td.col-week { text-align: left; font-weight: 600; }
+  tr:last-child td { border-bottom: none; }
+
+  .editable {
+    display: inline-block;
+    min-width: 36px;
+    padding: 3px 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    text-align: center;
+  }
+  .editable:hover  { border-color: #ccc; background: #fafafa; }
+  .editable:focus  { border-color: #111; background: #fff; box-shadow: 0 0 0 2px rgba(0,0,0,.06); }
+  .editable.absent { color: #bbb; }
+
+  /* ── Add Week button ────────────────────────────────────────── */
+  .btn-add-week {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #111;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    letter-spacing: -0.01em;
+    transition: background 0.15s;
+    margin-top: 12px;
+  }
+  .btn-add-week:hover { background: #333; }
+
+  /* ── Summary table ──────────────────────────────────────────── */
+  .summary-table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+  .summary-table th {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #888;
+    text-align: left;
+    padding: 6px 14px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+  .summary-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: left;
+  }
+  .summary-table tr:last-child td { border-bottom: none; }
+  .pos { color: #16a34a; font-weight: 600; }
+  .neg { color: #dc2626; font-weight: 600; }
+  .zer { color: #888; }
+
+  /* ── Suggested payments section ─────────────────────────────── */
+  .formula-card {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    font-size: 0.83rem;
+    line-height: 1.7;
+  }
+  .formula-card .formula-meta {
+    color: #888;
+    margin-bottom: 10px;
+  }
+  .formula-card code {
+    background: #f0f0f0;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-size: 0.82em;
+    color: #444;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .payment-rows { display: flex; flex-direction: column; gap: 6px; }
+  .payment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 0.85rem;
+  }
+  .payment-row .p-name { font-weight: 600; }
+  .payment-row .p-calc { font-size: 0.75rem; color: #888; }
+  .payment-row .p-amount { font-weight: 700; font-size: 1rem; letter-spacing: -0.02em; }
+  .payment-row.absent { opacity: 0.4; }
+
+  /* ── Loading ────────────────────────────────────────────────── */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid #e5e5e5;
+    border-top-color: #111;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 4rem auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { text-align: center; color: #888; font-size: 0.85rem; }
+
+  /* ── Scrollbar ──────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ccc; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a class="back-link" href="/chips">← Chips</a>
+    <span class="logo">Admin</span>
+  </div>
+  <div id="save-indicator">Saving…</div>
+</header>
+
+<main>
+  <div class="spinner" id="spinner"></div>
+  <p class="loading-msg" id="loading-msg">Loading…</p>
+
+  <div id="admin-body" style="display:none">
+
+    <!-- ── Settings ────────────────────────────────────────────── -->
+    <div class="section-block">
+      <div class="section-title">Settings</div>
+      <div class="settings-row">
+        <div class="setting-item">
+          <span class="setting-label">Tom &amp; Quincy attending next week?</span>
+          <label class="toggle">
+            <input type="checkbox" id="tq-toggle" onchange="onTQToggle()" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span id="tq-label" class="setting-label" style="color:#888"></span>
+        </div>
+        <div class="setting-item">
+          <span class="setting-label">Current week:</span>
+          <input type="number" id="week-input" class="week-input" min="1" value="1"
+                 onblur="onWeekChange()" onkeydown="if(event.key==='Enter')this.blur()" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Data table ──────────────────────────────────────────── -->
+    <div class="section-block">
+      <div class="section-title">Week Data</div>
+      <div class="table-scroll">
+        <table id="data-table">
+          <thead>
+            <tr>
+              <th class="col-week">Week</th>
+              <th>Roy<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">att</span></th>
+              <th>Roy<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">paid</span></th>
+              <th>Ryan<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">att</span></th>
+              <th>Ryan<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">paid</span></th>
+              <th>Tom<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">att</span></th>
+              <th>Tom<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">paid</span></th>
+              <th>Fletcher<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">att</span></th>
+              <th>Fletcher<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">paid</span></th>
+              <th>Quincy<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">att</span></th>
+              <th>Quincy<br><span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.9em">paid</span></th>
+            </tr>
+          </thead>
+          <tbody id="data-tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn-add-week" onclick="addWeek()">
+        <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+          <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Add Week
+      </button>
+    </div>
+
+    <!-- ── Per-person summary ───────────────────────────────────── -->
+    <div class="section-block">
+      <div class="section-title">Balances</div>
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Person</th>
+            <th>Total Paid</th>
+            <th>Total Fair Share</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+        <tbody id="summary-tbody"></tbody>
+      </table>
+    </div>
+
+    <!-- ── Suggested payments ───────────────────────────────────── -->
+    <div class="section-block">
+      <div class="section-title">Suggested Payments — Next Week</div>
+      <div id="formula-card" class="formula-card"></div>
+      <div class="payment-rows" id="payment-rows"></div>
+    </div>
+
+  </div><!-- /admin-body -->
+</main>
+
+<script src="chips.js"></script>
+<script>
+/* ── Password gate ──────────────────────────────────────────────── */
+(function() {
+  const pw = prompt("Admin password:");
+  if (pw !== "chips2024") {
+    window.location.replace("/chips");
+  }
+})();
+
+/* ── State ──────────────────────────────────────────────────────── */
+let appData = null;
+let fileSHA = null;
+let saveTimer;
+
+/* ── Boot ───────────────────────────────────────────────────────── */
+(async function() {
+  try {
+    const result = await loadData();
+    appData = result.data;
+    fileSHA = result.sha;
+    hideLoading();
+    renderAll();
+  } catch (e) {
+    document.getElementById("spinner").style.display    = "none";
+    document.getElementById("loading-msg").textContent = "Error: " + e.message;
+  }
+})();
+
+function hideLoading() {
+  document.getElementById("spinner").style.display     = "none";
+  document.getElementById("loading-msg").style.display = "none";
+  document.getElementById("admin-body").style.display  = "";
+}
+
+/* ── Save indicator ─────────────────────────────────────────────── */
+function showSave(state, text) {
+  const el = document.getElementById("save-indicator");
+  el.className    = state;
+  el.textContent  = text;
+  clearTimeout(saveTimer);
+  if (state === "saved") saveTimer = setTimeout(() => { el.className = ""; }, 3000);
+}
+
+/* ── Persist ────────────────────────────────────────────────────── */
+async function persist() {
+  showSave("saving", "Saving…");
+  try {
+    fileSHA = await saveData(appData, fileSHA);
+    showSave("saved", "Saved ✓");
+  } catch (e) {
+    showSave("error", "Error saving ✗");
+    console.error(e);
+  }
+}
+
+/* ── Settings handlers ──────────────────────────────────────────── */
+function onTQToggle() {
+  appData.nextWeekTomQuincyAttending = document.getElementById("tq-toggle").checked;
+  document.getElementById("tq-label").textContent =
+    appData.nextWeekTomQuincyAttending ? "Yes" : "No";
+  renderSuggested();
+  persist();
+}
+
+function onWeekChange() {
+  const val = parseInt(document.getElementById("week-input").value, 10);
+  if (!isNaN(val) && val >= 1) {
+    appData.currentWeek = val;
+    persist();
+  }
+}
+
+/* ── Render all ─────────────────────────────────────────────────── */
+function renderAll() {
+  // Settings
+  document.getElementById("tq-toggle").checked     = appData.nextWeekTomQuincyAttending;
+  document.getElementById("tq-label").textContent  = appData.nextWeekTomQuincyAttending ? "Yes" : "No";
+  document.getElementById("week-input").value      = appData.currentWeek;
+
+  renderTable();
+  renderSummary();
+  renderSuggested();
+}
+
+/* ── Data table ─────────────────────────────────────────────────── */
+function renderTable() {
+  const tbody = document.getElementById("data-tbody");
+  if (appData.weeks.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="11" style="text-align:center;color:#888;padding:1.5rem">No weeks yet — click Add Week</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = appData.weeks.map((week, wi) => {
+    let cells = `<td class="col-week">Week ${week.weekNumber}</td>`;
+    for (const p of PEOPLE) {
+      const att  = week.attendance[p];
+      const paid = week.payments[p] || 0;
+      const attClass = att === 0 ? " absent" : "";
+      cells += `
+        <td>
+          <span class="editable${attClass}" contenteditable="true"
+                onblur="cellBlur(this, ${wi}, 'attendance', '${p}')"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                >${att}</span>
+        </td>
+        <td>
+          <span class="editable" contenteditable="true"
+                onblur="cellBlur(this, ${wi}, 'payments', '${p}')"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur()}"
+                >${paid.toFixed(2)}</span>
+        </td>`;
+    }
+    return `<tr>${cells}</tr>`;
+  }).join("");
+}
+
+function cellBlur(el, weekIndex, field, person) {
+  const raw = el.textContent.trim();
+  let val = parseFloat(raw);
+
+  if (field === "attendance") {
+    val = val === 0 ? 0 : 1;
+    el.textContent = val;
+    el.className   = "editable" + (val === 0 ? " absent" : "");
+    appData.weeks[weekIndex].attendance[person] = val;
+  } else {
+    if (isNaN(val) || val < 0) { val = 0; }
+    el.textContent = val.toFixed(2);
+    appData.weeks[weekIndex].payments[person] = val;
+  }
+
+  renderSummary();
+  renderSuggested();
+  persist();
+}
+
+/* ── Add Week ───────────────────────────────────────────────────── */
+function addWeek() {
+  const attendance = {};
+  const payments   = {};
+  for (const p of PEOPLE) { attendance[p] = 1; payments[p] = 0; }
+
+  appData.weeks.push({
+    weekNumber: appData.currentWeek,
+    attendance,
+    payments
+  });
+
+  renderTable();
+  renderSummary();
+  renderSuggested();
+  persist();
+}
+
+/* ── Summary ────────────────────────────────────────────────────── */
+function renderSummary() {
+  const tbody    = document.getElementById("summary-tbody");
+  const balances = computeBalances(appData.weeks);
+
+  tbody.innerHTML = PEOPLE.map(p => {
+    let totalPaid  = 0;
+    let totalShare = 0;
+
+    for (const week of appData.weeks) {
+      totalPaid += week.payments[p] || 0;
+      const n    = PEOPLE.filter(x => week.attendance[x] === 1).length;
+      if (n > 0 && week.attendance[p] === 1) {
+        totalShare += BOWL_COST / n;
+      }
+    }
+
+    const bal    = balances[p];
+    const bClass = bal > 0.005 ? "pos" : bal < -0.005 ? "neg" : "zer";
+
+    return `
+      <tr>
+        <td style="font-weight:600">${escHtml(p)}</td>
+        <td>$${totalPaid.toFixed(2)}</td>
+        <td>$${totalShare.toFixed(2)}</td>
+        <td class="${bClass}">${fmtBalance(bal)}</td>
+      </tr>`;
+  }).join("");
+}
+
+/* ── Suggested payments ─────────────────────────────────────────── */
+function renderSuggested() {
+  const nextAtt = getNextWeekAttendance(appData);
+  const { payments, balances, n, S } = computeSuggestedPayments(appData.weeks, nextAtt);
+
+  const attendeeNames = PEOPLE.filter(p => nextAtt[p] === 1);
+  const step          = n > 0 ? (BOWL_COST + S) / n : 0;
+
+  document.getElementById("formula-card").innerHTML = `
+    <div class="formula-meta">
+      <strong>Attending (n = ${n}):</strong> ${attendeeNames.length ? attendeeNames.join(", ") : "nobody"}<br>
+      <strong>S</strong> = sum of attending balances =
+        ${attendeeNames.map(p => `${fmtBalance(balances[p])}`).join(" + ") || "—"}
+        = <strong>${fmtBalance(S)}</strong><br>
+      <strong>Base amount</strong> = (C + S) / n = ($${BOWL_COST} + ${fmtBalance(S)}) / ${n} = <code>$${step.toFixed(4)}</code><br>
+      <strong>Each person</strong>: base amount − their balance
+    </div>
+  `;
+
+  document.getElementById("payment-rows").innerHTML = PEOPLE.map(p => {
+    const isAbsent = nextAtt[p] === 0;
+    const bal      = balances[p];
+    const pay      = payments[p];
+    return `
+      <div class="payment-row${isAbsent ? " absent" : ""}">
+        <span class="p-name">${escHtml(p)}</span>
+        <span class="p-calc">
+          ${isAbsent
+            ? "not attending"
+            : `$${step.toFixed(4)} − (${fmtBalance(bal)}) = $${pay.toFixed(4)}`}
+        </span>
+        <span class="p-amount">
+          ${isAbsent ? "—" : `$${pay.toFixed(2)}`}
+        </span>
+      </div>`;
+  }).join("");
+}
+</script>
+</body>
+</html>

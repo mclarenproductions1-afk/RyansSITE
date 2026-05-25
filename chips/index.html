@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Chips — Cost Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #fff;
+    color: #111;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────── */
+  header {
+    background: #fff;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 0 clamp(1rem, 4vw, 2.5rem);
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .back-link {
+    font-size: 0.82rem;
+    color: #888;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: #111; }
+  .logo {
+    font-size: 0.97rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: #111;
+  }
+  .admin-link {
+    font-size: 0.78rem;
+    color: #888;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 5px 10px;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    transition: all 0.15s;
+    letter-spacing: -0.01em;
+  }
+  .admin-link:hover { border-color: #111; color: #111; }
+
+  /* ── Main ───────────────────────────────────────────────────── */
+  main {
+    padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 2.5rem);
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ── Info strip ─────────────────────────────────────────────── */
+  .info-strip {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+    flex-wrap: wrap;
+  }
+  .info-chip {
+    background: #fafafa;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 10px 16px;
+    font-size: 0.82rem;
+  }
+  .info-chip strong { font-weight: 700; color: #111; }
+  .info-chip span   { color: #888; }
+
+  /* ── Section label ──────────────────────────────────────────── */
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    margin-bottom: 12px;
+    padding-left: 2px;
+  }
+
+  /* ── Person grid ────────────────────────────────────────────── */
+  .person-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+  }
+
+  /* ── Person card ────────────────────────────────────────────── */
+  .person-card {
+    display: block;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 18px 20px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s;
+    animation: cardIn .2s ease both;
+  }
+  .person-card:hover { border-color: #111; }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .person-name {
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #111;
+    margin-bottom: 10px;
+  }
+
+  .person-balance {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    margin-bottom: 4px;
+  }
+  .person-balance.positive { color: #16a34a; }
+  .person-balance.negative { color: #dc2626; }
+  .person-balance.zero     { color: #888; }
+
+  .person-balance-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .person-balance-label.positive { color: #16a34a; }
+  .person-balance-label.negative { color: #dc2626; }
+  .person-balance-label.zero     { color: #bbb; }
+
+  .person-payment {
+    font-size: 0.75rem;
+    color: #888;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .person-payment strong { color: #111; font-weight: 700; }
+
+  .absent-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: #f0f0f0;
+    color: #888;
+    padding: 2px 7px;
+    border-radius: 3px;
+    margin-top: 2px;
+  }
+
+  /* ── Loading ────────────────────────────────────────────────── */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2px solid #e5e5e5;
+    border-top-color: #111;
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 4rem auto 1rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-msg { text-align: center; color: #888; font-size: 0.85rem; }
+
+  /* ── Mobile ─────────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .person-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ── Scrollbar ──────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e5e5e5; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #ccc; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <a class="back-link" href="/">← Study Hub</a>
+    <span class="logo">Chips</span>
+  </div>
+  <a class="admin-link" href="/chips/admin">Admin</a>
+</header>
+
+<main>
+  <div id="info-strip" class="info-strip" style="display:none">
+    <div class="info-chip">
+      <span>Week </span><strong id="info-week">—</strong>
+    </div>
+    <div class="info-chip">
+      <span>Bowl cost: </span><strong>$13</strong>
+    </div>
+    <div id="info-tq" class="info-chip" style="display:none">
+      <span id="info-tq-text"></span>
+    </div>
+  </div>
+
+  <div class="section-label">Group</div>
+
+  <div class="spinner" id="spinner"></div>
+  <p class="loading-msg" id="loading-msg">Loading…</p>
+
+  <div class="person-grid" id="person-grid"></div>
+</main>
+
+<script src="chips.js"></script>
+<script>
+(async function() {
+  try {
+    const { data } = await loadData();
+    renderLanding(data);
+  } catch (e) {
+    document.getElementById("spinner").style.display    = "none";
+    document.getElementById("loading-msg").textContent = "Error loading data: " + e.message;
+  }
+})();
+
+function renderLanding(data) {
+  document.getElementById("spinner").style.display     = "none";
+  document.getElementById("loading-msg").style.display = "none";
+
+  // Info strip
+  document.getElementById("info-strip").style.display  = "";
+  document.getElementById("info-week").textContent      = data.currentWeek;
+
+  const tqEl   = document.getElementById("info-tq");
+  const tqText = document.getElementById("info-tq-text");
+  tqEl.style.display  = "";
+  tqText.innerHTML    = data.nextWeekTomQuincyAttending
+    ? `<strong>Tom &amp; Quincy</strong> attending next week`
+    : `<strong>Tom &amp; Quincy</strong> absent next week`;
+
+  const nextWeekAtt = getNextWeekAttendance(data);
+  const { payments, balances } = computeSuggestedPayments(data.weeks, nextWeekAtt);
+
+  const grid = document.getElementById("person-grid");
+  grid.innerHTML = PEOPLE.map(name => {
+    const balance = balances[name];
+    const payment = payments[name];
+    const isAbsent = nextWeekAtt[name] === 0;
+
+    const bClass = balance > 0.005 ? "positive" : balance < -0.005 ? "negative" : "zero";
+    const bLabel = balance > 0.005 ? "in credit"  : balance < -0.005 ? "owes"    : "settled up";
+
+    return `
+      <a class="person-card" href="/chips/${name}">
+        <div class="person-name">${escHtml(name)}</div>
+        <div class="person-balance ${bClass}">${fmtBalance(balance)}</div>
+        <div class="person-balance-label ${bClass}">${bLabel}</div>
+        <div class="person-payment">
+          ${isAbsent
+            ? `Next week: <span class="absent-badge">Absent</span>`
+            : `Next week: <strong>${fmt(payment)}</strong>`}
+        </div>
+      </a>`;
+  }).join("");
+}
+</script>
+</body>
+</html>
