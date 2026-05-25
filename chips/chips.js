@@ -16,6 +16,13 @@ const BOWL_COST = 13;
 const DATA_PATH = "chips/data.json";
 const API_URL   = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${DATA_PATH}`;
 
+/* ── Google Sheets sync state ────────────────────────────────── */
+// Set automatically from data.sheetsUrl when loadData() runs.
+// Admin page calls setSheetsUrl() after updating the URL.
+let _sheetsUrl = "";
+function hasSheetsSync()    { return !!_sheetsUrl && _sheetsUrl.startsWith("https://"); }
+function setSheetsUrl(url)  { _sheetsUrl = url || ""; }
+
 /* ── GitHub API helpers — exact pattern from ass/index.html ────── */
 function ghHeaders() {
   return {
@@ -31,6 +38,7 @@ async function loadData() {
   if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
   const raw  = await res.json();
   const data = JSON.parse(atob(raw.content.replace(/\s/g, "")));
+  _sheetsUrl = data.sheetsUrl || "";   // pick up sheets URL from the data file
   return { data, sha: raw.sha };
 }
 
@@ -58,16 +66,105 @@ async function saveData(data, sha) {
   if (!res.ok) throw new Error(`GitHub ${res.status}`);
 
   const result = await res.json();
+
+  // Mirror to Google Sheets after a successful GitHub write (non-blocking)
+  writeToSheets(data);
+
   return result.content.sha;
 }
 
 function defaultData() {
   return {
-    currentWeek:               1,
+    currentWeek:                1,
     nextWeekTomQuincyAttending: true,
-    bowlCost:                  BOWL_COST,
-    weeks:                     []
+    bowlCost:                   BOWL_COST,
+    sheetsUrl:                  "",
+    weeks:                      []
   };
+}
+
+/* ── Google Sheets API ───────────────────────────────────────── */
+
+/**
+ * Read the current data from Google Sheets via the deployed Apps Script.
+ * GET requests to Apps Script web apps work cross-origin because Google's
+ * redirect target (script.googleusercontent.com) sets Access-Control-Allow-Origin: *
+ */
+async function readFromSheets() {
+  if (!hasSheetsSync()) return null;
+  try {
+    const res = await fetch(`${_sheetsUrl}?t=${Date.now()}`, { redirect: "follow" });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.error) { console.warn("Sheets error:", data.error); return null; }
+    return data;
+  } catch (e) {
+    console.warn("Sheets read failed:", e.message);
+    return null;
+  }
+}
+
+/**
+ * Write data to Google Sheets.
+ * Uses mode:'no-cors' (opaque request) because Apps Script web apps don't
+ * support CORS preflight for POST. We omit Content-Type so the browser
+ * treats this as a "simple request" — it IS sent; we just can't read the response.
+ * This is fine because it's a fire-and-forget mirror write.
+ */
+function writeToSheets(data) {
+  if (!hasSheetsSync()) return;
+  try {
+    fetch(_sheetsUrl, {
+      method: "POST",
+      mode:   "no-cors",
+      body:   JSON.stringify(data)
+      // No Content-Type — defaults to text/plain, satisfying "simple request" rules
+    });
+  } catch (e) {
+    console.warn("Sheets write failed:", e.message);
+  }
+}
+
+/**
+ * Start polling Google Sheets every intervalMs.
+ * If the sheet data differs from local state, calls onNewData(sheetsData).
+ * Pages use this to detect edits made directly in the spreadsheet.
+ *
+ * @param {() => object} getLocalData  Returns the current in-memory data object
+ * @param {(data) => void} onNewData   Called when a change is detected
+ * @param {number} intervalMs          Poll interval (default 60s)
+ */
+function startSheetsPolling(getLocalData, onNewData, intervalMs = 60_000) {
+  if (!hasSheetsSync()) return;
+
+  setInterval(async () => {
+    try {
+      const sheetsData = await readFromSheets();
+      if (!sheetsData) return;
+
+      const local = getLocalData();
+      if (!local) return;
+
+      if (!datasEqual(sheetsData, local)) {
+        onNewData(sheetsData);
+      }
+    } catch (e) {
+      console.warn("Sheets poll error:", e.message);
+    }
+  }, intervalMs);
+}
+
+/**
+ * Compare only the logical data fields, ignoring sheetsUrl itself so that
+ * adding/changing the URL doesn't falsely trigger a "sheet was updated" event.
+ */
+function datasEqual(a, b) {
+  const norm = d => JSON.stringify({
+    currentWeek:                d.currentWeek,
+    nextWeekTomQuincyAttending: d.nextWeekTomQuincyAttending,
+    weeks:                      d.weeks
+  });
+  return norm(a) === norm(b);
 }
 
 /* ── Formula ──────────────────────────────────────────────────── */
@@ -172,10 +269,10 @@ function escHtml(s) {
   const test1       = Math.abs(balanceSum) < 0.001;
 
   // Test 2: suggested payments for 3-person week sum to exactly 13
-  const nextAtt     = { Roy: 1, Ryan: 1, Tom: 0, Fletcher: 1, Quincy: 0 };
+  const nextAtt      = { Roy: 1, Ryan: 1, Tom: 0, Fletcher: 1, Quincy: 0 };
   const { payments } = computeSuggestedPayments(testWeeks, nextAtt);
-  const paymentSum  = Object.values(payments).reduce((a, b) => a + b, 0);
-  const test2       = Math.abs(paymentSum - 13) < 0.001;
+  const paymentSum   = Object.values(payments).reduce((a, b) => a + b, 0);
+  const test2        = Math.abs(paymentSum - 13) < 0.001;
 
   if (test1 && test2) {
     console.log("Chips self-test: PASS");

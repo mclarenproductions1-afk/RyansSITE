@@ -2,6 +2,7 @@
   "currentWeek": 2,
   "nextWeekTomQuincyAttending": true,
   "bowlCost": 13,
+  "sheetsUrl": "",
   "weeks": [
     {
       "weekNumber": 1,

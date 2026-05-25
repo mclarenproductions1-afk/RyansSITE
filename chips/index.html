@@ -230,10 +230,28 @@
 
 <script src="chips.js"></script>
 <script>
+let _landingData = null;
+let _landingSHA  = null;
+
 (async function() {
   try {
-    const { data } = await loadData();
-    renderLanding(data);
+    const result = await loadData();
+    _landingData = result.data;
+    _landingSHA  = result.sha;
+    renderLanding(_landingData);
+    // Poll Sheets every 60s for edits made directly in the spreadsheet
+    startSheetsPolling(
+      () => _landingData,
+      async (sheetsData) => {
+        console.log("Sheets change detected — syncing to GitHub");
+        try {
+          // saveData handles 409 SHA conflicts internally, so pass cached SHA
+          _landingSHA  = await saveData(sheetsData, _landingSHA);
+          _landingData = sheetsData;
+          renderLanding(sheetsData);
+        } catch (e) { console.warn("Sheets→GitHub sync failed:", e.message); }
+      }
+    );
   } catch (e) {
     document.getElementById("spinner").style.display    = "none";
     document.getElementById("loading-msg").textContent = "Error loading data: " + e.message;
