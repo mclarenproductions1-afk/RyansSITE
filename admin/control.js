@@ -113,6 +113,34 @@
     _sync: _syncNow
   };
 
+  // ── Gambling sign-up prompt ────────────────────────────────────────────────
+  var GAMBLING_PATHS = ['/road', '/slots'];
+  function isGamblingPage() {
+    var p = location.pathname.replace(/\/+$/, '') || '/';
+    for (var i = 0; i < GAMBLING_PATHS.length; i++) {
+      if (p === GAMBLING_PATHS[i] || p.startsWith(GAMBLING_PATHS[i] + '/')) return true;
+    }
+    return false;
+  }
+
+  function injectGamblingPrompt() {
+    if (!isGamblingPage()) return;
+    if (isLoggedIn()) return;
+    if (sessionStorage.getItem('gambling-prompt-dismissed')) return;
+    var next = encodeURIComponent(location.pathname);
+    var el = document.createElement('div');
+    el.id = '__gambling-prompt';
+    el.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;font-family:Inter,system-ui,sans-serif';
+    el.innerHTML = '<div style="background:#10122a;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:36px 32px;max-width:380px;width:90%;text-align:center">'
+      + '<div style="font-size:44px;margin-bottom:14px">🐔</div>'
+      + '<div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">Save your progress</div>'
+      + '<div style="font-size:13px;color:#7b88b5;line-height:1.65;margin-bottom:24px">You\'re playing as a guest. Your $1,000 starting balance won\'t be saved when you leave. Sign up to keep your winnings across sessions.</div>'
+      + '<a href="/login?next=' + next + '" style="display:block;padding:12px;background:#f5c842;color:#111;border-radius:7px;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">Create Account / Sign In</a>'
+      + '<button onclick="document.getElementById(\'__gambling-prompt\').remove();sessionStorage.setItem(\'gambling-prompt-dismissed\',\'1\')" style="width:100%;padding:11px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#7b88b5;font-size:13px;cursor:pointer;font-family:inherit">Play without saving</button>'
+      + '</div>';
+    document.body.appendChild(el);
+  }
+
   // ── User badge (fixed top-right) ───────────────────────────────────────────
   function injectBadge() {
     if (isExempt()) return;
@@ -200,6 +228,7 @@
   function init() {
     injectSchool();
     injectBadge();
+    injectGamblingPrompt();
     if (isLoggedIn()) {
       _lastActivity = Date.now();
       _syncNow(); // sync on page load
