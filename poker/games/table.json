@@ -1,7 +1,17 @@
 {
   "status": "waiting",
   "players": [
-    null,
+    {
+      "name": "bigballs67",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-05-28T03:50:28.338Z"
+    },
     null,
     null,
     null,
@@ -23,5 +33,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-05-28T03:50:22.521Z"
+  "updatedAt": "2026-05-28T03:50:28.338Z"
 }
