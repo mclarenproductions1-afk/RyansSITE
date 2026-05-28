@@ -233,6 +233,7 @@
   <div class="hint">Enter to send</div>
 </div>
 
+<script src="/admin/control.js"></script>
 <script>
 (function() {
 
@@ -243,7 +244,8 @@
   }
 
   // ── Identity ────────────────────────────────────────────────────────────────
-  let username = localStorage.getItem('chat-name') || '';
+  const _rysUser = window.RYS ? window.RYS.user() : null;
+  let username = _rysUser || localStorage.getItem('chat-name') || '';
   let userId   = localStorage.getItem('chat-uid');
   if (!userId) {
     userId = 'u' + Math.random().toString(36).slice(2, 10);
@@ -252,7 +254,7 @@
 
   function setUsername(name) {
     username = (name || '').trim().slice(0, 24) || 'Anonymous';
-    localStorage.setItem('chat-name', username);
+    if (!_rysUser) localStorage.setItem('chat-name', username);
     document.getElementById('username-display').textContent = username;
     if (channel) {
       channel.presence.update({ user: username, uid: userId, typing: '' });
@@ -280,8 +282,15 @@
   nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
   document.getElementById('btn-rename').addEventListener('click', showModal);
 
-  if (!username) showModal();
-  else document.getElementById('username-display').textContent = username;
+  if (_rysUser) {
+    // Logged in via RYS — use account username, hide rename
+    document.getElementById('username-display').textContent = _rysUser;
+    document.getElementById('btn-rename').style.display = 'none';
+  } else if (!username) {
+    showModal();
+  } else {
+    document.getElementById('username-display').textContent = username;
+  }
 
   // ── Ably setup ───────────────────────────────────────────────────────────────
   const ably    = new Ably.Realtime({ key: ABLY_API_KEY, clientId: userId });
@@ -546,6 +555,5 @@
 
 })();
 </script>
-<script src="/admin/control.js"></script>
 </body>
 </html>

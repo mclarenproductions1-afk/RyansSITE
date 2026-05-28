@@ -208,6 +208,34 @@
     </div>
   </div>
 
+  <!-- Users -->
+  <div class="section">
+    <div class="section-title">Users</div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)">
+        <div>
+          <div class="card-title" style="margin-bottom:0">All Accounts</div>
+        </div>
+        <button class="btn-ghost" onclick="loadUsers()" style="font-size:11px;padding:5px 12px">Refresh</button>
+      </div>
+      <div id="users-table-wrap" style="overflow-x:auto">
+        <table id="users-table" style="width:100%;border-collapse:collapse;font-size:13px">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:10px 20px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Username</th>
+              <th style="text-align:right;padding:10px 20px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Balance</th>
+              <th style="text-align:left;padding:10px 20px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Last Active</th>
+              <th style="text-align:left;padding:10px 20px;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em">Last Page</th>
+            </tr>
+          </thead>
+          <tbody id="users-tbody">
+            <tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted);font-size:13px">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Raw state -->
   <div class="section">
     <div class="section-title">Current State</div>
@@ -249,6 +277,7 @@ function unlock() {
   document.getElementById('gate').style.display  = 'none';
   document.getElementById('panel').style.display = 'block';
   loadState();
+  loadUsers();
 }
 
 // ── GitHub state ──────────────────────────────────────────────
@@ -359,6 +388,70 @@ document.getElementById('btn-maint-off').addEventListener('click', () => {
 });
 
 document.getElementById('btn-refresh').addEventListener('click', loadState);
+
+// ── Users ──────────────────────────────────────────────────────
+const AUTH_API = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/auth/';
+
+function timeAgo(ts) {
+  if (!ts) return '—';
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  return d + 'd ago';
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Loading…</td></tr>';
+  try {
+    const r = await fetch(AUTH_API + 'index.json?_=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    const idx = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    const users = idx.users || [];
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">No users yet.</td></tr>';
+      return;
+    }
+    const files = await Promise.all(users.map(async u => {
+      try {
+        const fr = await fetch(AUTH_API + 'users/' + encodeURIComponent(u) + '.json?_=' + Date.now(), {
+          headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
+          cache: 'no-store'
+        });
+        if (!fr.ok) return null;
+        const fj = await fr.json();
+        return JSON.parse(atob(fj.content.replace(/\s/g,'')));
+      } catch(_) { return null; }
+    }));
+    const rows = files.filter(Boolean).sort((a,b) => (b.lastActive||0) - (a.lastActive||0));
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">No user data.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map((u, i) => `
+      <tr style="border-top:${i===0?'none':'1px solid var(--border)'}">
+        <td style="padding:12px 20px;font-weight:600">${escRow(u.username||'—')}</td>
+        <td style="padding:12px 20px;text-align:right;font-variant-numeric:tabular-nums">${u.balance != null ? '$'+u.balance : '—'}</td>
+        <td style="padding:12px 20px;color:var(--muted)">${timeAgo(u.lastActive)}</td>
+        <td style="padding:12px 20px;color:var(--muted);font-size:12px;font-family:monospace">${escRow(u.lastPage||'—')}</td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#c0392b">Error: ' + e.message + '</td></tr>';
+  }
+}
+
+function escRow(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign In — Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg:#fff; --text:#111; --muted:#888; --border:#e5e5e5; }
+  html { font-size: 16px; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; display:flex; flex-direction:column; }
+  header { padding:24px 40px; border-bottom:1px solid var(--border); display:flex; align-items:center; }
+  .logo { font-size:15px; font-weight:600; color:var(--text); letter-spacing:-0.2px; }
+  main { flex:1; display:flex; align-items:center; justify-content:center; padding:40px 20px; }
+  .box { width:100%; max-width:360px; }
+  h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
+  .sub { font-size:13px; color:var(--muted); margin-bottom:28px; }
+  .tabs { display:flex; border:1px solid var(--border); border-radius:4px; margin-bottom:24px; overflow:hidden; }
+  .tab { flex:1; padding:9px; font-size:13px; font-weight:500; font-family:inherit; background:none; border:none; cursor:pointer; color:var(--muted); transition:background 0.12s,color 0.12s; }
+  .tab.active { background:var(--text); color:#fff; }
+  label { display:block; font-size:12px; font-weight:500; color:var(--muted); margin-bottom:5px; letter-spacing:0.04em; text-transform:uppercase; }
+  input { width:100%; border:1px solid var(--border); border-radius:4px; padding:10px 12px; font-size:14px; font-family:inherit; color:var(--text); outline:none; transition:border-color 0.12s; margin-bottom:16px; }
+  input:focus { border-color:var(--text); }
+  .btn { width:100%; padding:11px; background:var(--text); color:#fff; border:none; border-radius:4px; font-size:14px; font-weight:500; font-family:inherit; cursor:pointer; margin-top:4px; }
+  .btn:disabled { opacity:0.5; cursor:default; }
+  .err { font-size:13px; color:#c0392b; margin-top:12px; min-height:18px; }
+  .ok  { font-size:13px; color:#27ae60; margin-top:12px; min-height:18px; }
+  footer { padding:20px 40px; border-top:1px solid var(--border); font-size:12px; color:var(--muted); }
+  @media(max-width:480px){ header{padding:20px;} footer{padding:16px 20px;} }
+</style>
+</head>
+<body>
+<header><div class="logo">Study Hub</div></header>
+<main>
+  <div class="box">
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to access Study Hub</p>
+    <div class="tabs">
+      <button class="tab active" id="tab-in" onclick="switchTab('in')">Sign in</button>
+      <button class="tab" id="tab-up" onclick="switchTab('up')">Register</button>
+    </div>
+
+    <!-- Sign in -->
+    <div id="pane-in">
+      <label for="si-user">Username</label>
+      <input id="si-user" type="text" autocomplete="username" spellcheck="false" autocapitalize="none">
+      <label for="si-pass">Password</label>
+      <input id="si-pass" type="password" autocomplete="current-password">
+      <button class="btn" id="btn-in" onclick="signIn()">Sign in</button>
+      <div class="err" id="err-in"></div>
+    </div>
+
+    <!-- Register -->
+    <div id="pane-up" style="display:none">
+      <label for="su-user">Username</label>
+      <input id="su-user" type="text" autocomplete="username" spellcheck="false" autocapitalize="none" placeholder="2–20 chars, a–z 0–9 _">
+      <label for="su-pass">Password</label>
+      <input id="su-pass" type="password" autocomplete="new-password">
+      <label for="su-pass2">Confirm password</label>
+      <input id="su-pass2" type="password" autocomplete="new-password">
+      <button class="btn" id="btn-up" onclick="register()">Create account</button>
+      <div class="err" id="err-up"></div>
+      <div class="ok"  id="ok-up"></div>
+    </div>
+  </div>
+</main>
+<footer>bigballzlord.online</footer>
+<script>
+(function(){
+'use strict';
+
+var TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+var REPO  = 'mclarenproductions1-afk/RyansSITE';
+var API   = 'https://api.github.com/repos/' + REPO + '/contents/';
+var SESS  = 'rys-sess';
+var BAL   = 'rys-bal';
+
+// Redirect if already logged in
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem(SESS)||'null');
+    if (s && s.exp > Date.now()) {
+      var next = new URLSearchParams(location.search).get('next') || '/';
+      location.replace(next);
+    }
+  } catch(_){}
+})();
+
+function switchTab(t) {
+  document.getElementById('pane-in').style.display = t==='in' ? '' : 'none';
+  document.getElementById('pane-up').style.display = t==='up' ? '' : 'none';
+  document.getElementById('tab-in').className = 'tab' + (t==='in'?' active':'');
+  document.getElementById('tab-up').className = 'tab' + (t==='up'?' active':'');
+}
+window.switchTab = switchTab;
+
+async function sha256hex(str) {
+  var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('rys:' + str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function ghGet(path) {
+  var r = await fetch(API + path + '?_=' + Date.now(), {
+    headers:{ Authorization:'Bearer '+TOKEN, Accept:'application/vnd.github+json' },
+    cache:'no-store'
+  });
+  if (!r.ok) return null;
+  var j = await r.json();
+  var content = atob(j.content.replace(/\s/g,''));
+  return { data: JSON.parse(content), sha: j.sha };
+}
+
+async function ghPut(path, data, sha, msg) {
+  var body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch:'main' };
+  if (sha) body.sha = sha;
+  var r = await fetch(API + path, {
+    method:'PUT',
+    headers:{ Authorization:'Bearer '+TOKEN, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
+    body: JSON.stringify(body)
+  });
+  return r;
+}
+
+// ── Sign in ──────────────────────────────────────────────────────────────────
+window.signIn = async function() {
+  var u = document.getElementById('si-user').value.trim().toLowerCase();
+  var p = document.getElementById('si-pass').value;
+  var err = document.getElementById('err-in');
+  var btn = document.getElementById('btn-in');
+  err.textContent = '';
+  if (!u || !p) { err.textContent = 'Enter username and password.'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in…';
+  try {
+    var res = await ghGet('auth/users/' + encodeURIComponent(u) + '.json');
+    if (!res) { err.textContent = 'User not found.'; return; }
+    var h = await sha256hex(p);
+    if (res.data.passwordHash !== h) { err.textContent = 'Wrong password.'; return; }
+    // Save session
+    localStorage.setItem(SESS, JSON.stringify({ u: u, h: h, exp: Date.now() + 7*24*3600*1000 }));
+    localStorage.setItem(BAL, String(res.data.balance || 1000));
+    // Update lastActive async (don't block)
+    ghPut('auth/users/'+encodeURIComponent(u)+'.json',
+      Object.assign({}, res.data, { lastActive: Date.now(), lastPage: '/' }),
+      res.sha, 'auth: login ' + u);
+    var next = new URLSearchParams(location.search).get('next') || '/';
+    location.replace(next);
+  } catch(e) {
+    err.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+};
+
+// ── Register ──────────────────────────────────────────────────────────────────
+window.register = async function() {
+  var u  = document.getElementById('su-user').value.trim().toLowerCase();
+  var p  = document.getElementById('su-pass').value;
+  var p2 = document.getElementById('su-pass2').value;
+  var err = document.getElementById('err-up');
+  var ok  = document.getElementById('ok-up');
+  var btn = document.getElementById('btn-up');
+  err.textContent = ''; ok.textContent = '';
+
+  if (!/^[a-z0-9_]{2,20}$/.test(u)) { err.textContent = 'Username: 2–20 chars, letters/numbers/underscore only.'; return; }
+  if (p.length < 4) { err.textContent = 'Password must be at least 4 characters.'; return; }
+  if (p !== p2)     { err.textContent = 'Passwords do not match.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Creating account…';
+  try {
+    // Check if username taken
+    var existing = await ghGet('auth/users/' + encodeURIComponent(u) + '.json');
+    if (existing) { err.textContent = 'Username already taken.'; return; }
+
+    var h = await sha256hex(p);
+    var now = Date.now();
+    var userObj = { username: u, passwordHash: h, created: now, lastActive: now, lastPage: '/', balance: 1000 };
+
+    // Write user file
+    var wr = await ghPut('auth/users/'+encodeURIComponent(u)+'.json', userObj, null, 'auth: register '+u);
+    if (!wr.ok) { err.textContent = 'Failed to create account (' + wr.status + ').'; return; }
+
+    // Update index with retry
+    var attempts = 0;
+    while (attempts < 4) {
+      var idx = await ghGet('auth/index.json');
+      var list = (idx && idx.data && idx.data.users) ? idx.data.users : [];
+      if (!list.includes(u)) list.push(u);
+      var ir = await ghPut('auth/index.json', { users: list }, idx ? idx.sha : null, 'auth: add user '+u);
+      if (ir.ok) break;
+      if (ir.status === 409) { attempts++; await new Promise(r=>setTimeout(r,600)); continue; }
+      break; // non-conflict error, move on
+    }
+
+    // Auto sign in
+    localStorage.setItem(SESS, JSON.stringify({ u: u, h: h, exp: now + 7*24*3600*1000 }));
+    localStorage.setItem(BAL, '1000');
+    ok.textContent = 'Account created! Redirecting…';
+    setTimeout(function(){
+      var next = new URLSearchParams(location.search).get('next') || '/';
+      location.replace(next);
+    }, 800);
+  } catch(e) {
+    err.textContent = 'Error: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create account';
+  }
+};
+
+// Enter key support
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter') return;
+  if (document.getElementById('pane-in').style.display !== 'none') signIn();
+  else register();
+});
+
+})();
+</script>
+</body>
+</html>
