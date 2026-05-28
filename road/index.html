@@ -17,7 +17,7 @@ header { padding:12px 20px; border-bottom:1px solid var(--border); display:flex;
 .title { font-size:14px; font-weight:600; }
 .kbd { font-size:11px; color:var(--muted); margin-left:auto; }
 .kbd kbd { display:inline-block; padding:1px 5px; border:1px solid rgba(255,255,255,0.12); border-radius:3px; font-size:10px; font-family:inherit; color:var(--muted); margin:0 1px; }
-#canvas-wrap { flex:1; min-height:0; max-height:480px; overflow:hidden; cursor:pointer; }
+#canvas-wrap { flex:1; min-height:0; overflow:hidden; cursor:pointer; }
 canvas { display:block; width:100%; height:100%; }
 .ctrl { flex-shrink:0; background:var(--panel); border-top:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
 .cg { display:flex; flex-direction:column; gap:4px; }
@@ -148,8 +148,8 @@ function rrect(x,y,w,h,r){
   ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
 }
 
-function loadBal(){ bal=window.RYS?window.RYS.bal():1000; if(!bal||bal<1)bal=1000; }
-function saveBal(){ if(window.RYS)window.RYS.setBal(bal); }
+function loadBal(){ bal=parseInt(localStorage.getItem('rys-bal')||'0',10); if(!bal||bal<1)bal=1000; }
+function saveBal(){ localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal); }
 function dispBal(){ $id('bal-disp').textContent='$'+bal.toLocaleString(); }
 
 function setDiff(d){

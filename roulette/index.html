@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roulette</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#0a0c20; --panel:#0f1128; --border:rgba(255,255,255,0.07);
+  --muted:#5a6490; --green:#1ecb4f; --yellow:#f5c842; --purple:#6c5dd3; --red:#ef4444;
+}
+html, body { height:100%; background:var(--bg); color:#fff; font-family:'Inter',system-ui,sans-serif; display:flex; flex-direction:column; overflow:hidden; }
+header { padding:12px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; flex-shrink:0; background:var(--panel); }
+.back { font-size:13px; color:var(--muted); text-decoration:none; }
+.back:hover { color:#fff; }
+.title { font-size:14px; font-weight:600; }
+.bal-badge { margin-left:auto; font-size:13px; color:var(--muted); }
+.bal-badge span { color:#fff; font-weight:600; }
+
+main { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:24px; padding:20px; overflow:auto; }
+
+/* Wheel */
+#wheel-wrap { position:relative; width:min(320px, 80vw); aspect-ratio:1; flex-shrink:0; }
+#wheel-canvas { width:100%; height:100%; border-radius:50%; }
+.wheel-pointer {
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  width:0; height:0;
+  border-left:10px solid transparent; border-right:10px solid transparent; border-top:20px solid var(--yellow);
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+  z-index:2;
+}
+
+/* Result display */
+#result-display {
+  font-size:32px; font-weight:700; letter-spacing:-1px; min-height:40px; text-align:center;
+}
+#result-sub { font-size:13px; color:var(--muted); min-height:18px; text-align:center; }
+#result-sub.win { color:var(--green); font-weight:600; }
+#result-sub.lose { color:var(--red); font-weight:600; }
+
+/* Bet board */
+.board { display:flex; flex-direction:column; gap:8px; width:100%; max-width:520px; flex-shrink:0; }
+.bet-row { display:flex; gap:6px; }
+.bet-btn {
+  flex:1; height:40px; border:1px solid var(--border); border-radius:6px;
+  font-size:12px; font-weight:600; font-family:inherit; cursor:pointer;
+  background:rgba(255,255,255,0.04); color:var(--muted); transition:all 0.12s;
+}
+.bet-btn:hover { color:#fff; border-color:rgba(255,255,255,0.2); }
+.bet-btn.active { color:#fff; border-color:currentColor; }
+.bet-btn.red  { color:#ff6b6b; }  .bet-btn.red.active  { background:rgba(239,68,68,0.18); border-color:#ef4444; }
+.bet-btn.blk  { color:#aaa; }     .bet-btn.blk.active  { background:rgba(255,255,255,0.10); border-color:#aaa; }
+.bet-btn.grn  { color:var(--green); } .bet-btn.grn.active { background:rgba(30,203,79,0.15); border-color:var(--green); }
+.bet-btn.ylw  { color:var(--yellow); } .bet-btn.ylw.active { background:rgba(245,200,66,0.15); border-color:var(--yellow); }
+.bet-btn.purp { color:#a78bfa; }   .bet-btn.purp.active { background:rgba(108,93,211,0.20); border-color:#a78bfa; }
+
+/* Bottom controls */
+.ctrl { flex-shrink:0; background:var(--panel); border-top:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.cg { display:flex; flex-direction:column; gap:4px; }
+.cl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.bal-val { font-size:20px; font-weight:700; letter-spacing:-.5px; }
+.bet-wrap { display:flex; align-items:stretch; height:40px; background:rgba(255,255,255,.04); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
+.bet-pre { padding:0 10px; display:flex; align-items:center; font-size:14px; color:var(--muted); border-right:1px solid var(--border); }
+#bet-inp { width:90px; padding:0 10px; background:transparent; border:none; outline:none; font-size:14px; font-weight:600; color:#fff; font-family:inherit; }
+#bet-inp::-webkit-inner-spin-button { display:none; }
+.bet-adj { display:flex; border-left:1px solid var(--border); }
+.bet-adj button { width:38px; background:none; border:none; border-right:1px solid var(--border); color:var(--muted); font-size:11px; font-weight:600; cursor:pointer; font-family:inherit; transition:color .1s,background .1s; }
+.bet-adj button:last-child { border-right:none; }
+.bet-adj button:hover { color:#fff; background:rgba(255,255,255,.06); }
+.sp { flex:1; min-width:0; }
+.btn { height:40px; padding:0 28px; border:none; border-radius:6px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; transition:opacity .1s,transform .08s; }
+.btn:active { transform:scale(0.96); }
+.btn:disabled { opacity:.3; cursor:not-allowed; transform:none; }
+.btn-spin { background:var(--yellow); color:#111; }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="/">← Home</a>
+  <span class="title">Roulette</span>
+  <div class="bal-badge">Balance: <span id="hdr-bal">—</span></div>
+</header>
+
+<main>
+  <div id="wheel-wrap">
+    <div class="wheel-pointer"></div>
+    <canvas id="wheel-canvas" width="400" height="400"></canvas>
+  </div>
+
+  <div>
+    <div id="result-display">—</div>
+    <div id="result-sub">Pick a bet and spin</div>
+  </div>
+
+  <div class="board">
+    <div class="bet-row">
+      <button class="bet-btn red" data-bet="red"   onclick="toggleBet('red')"  >Red (2×)</button>
+      <button class="bet-btn blk" data-bet="black" onclick="toggleBet('black')">Black (2×)</button>
+      <button class="bet-btn grn" data-bet="green" onclick="toggleBet('green')">Green (14×)</button>
+    </div>
+    <div class="bet-row">
+      <button class="bet-btn ylw" data-bet="odd"  onclick="toggleBet('odd')" >Odd (2×)</button>
+      <button class="bet-btn ylw" data-bet="even" onclick="toggleBet('even')">Even (2×)</button>
+      <button class="bet-btn purp" data-bet="low"  onclick="toggleBet('low')" >Low 1–18 (2×)</button>
+      <button class="bet-btn purp" data-bet="high" onclick="toggleBet('high')">High 19–36 (2×)</button>
+    </div>
+    <div class="bet-row" id="dozen-row">
+      <button class="bet-btn purp" data-bet="1st12" onclick="toggleBet('1st12')">1st 12 (3×)</button>
+      <button class="bet-btn purp" data-bet="2nd12" onclick="toggleBet('2nd12')">2nd 12 (3×)</button>
+      <button class="bet-btn purp" data-bet="3rd12" onclick="toggleBet('3rd12')">3rd 12 (3×)</button>
+    </div>
+  </div>
+</main>
+
+<div class="ctrl">
+  <div class="cg">
+    <div class="cl">Balance</div>
+    <div class="bal-val" id="bal-disp">$1,000</div>
+  </div>
+  <div class="cg">
+    <div class="cl">Bet Amount</div>
+    <div class="bet-wrap">
+      <span class="bet-pre">$</span>
+      <input id="bet-inp" type="number" min="1" max="999999" value="10">
+      <div class="bet-adj">
+        <button onclick="adjBet(0.5)">½</button>
+        <button onclick="adjBet(2)">2×</button>
+        <button onclick="maxBet()">Max</button>
+      </div>
+    </div>
+  </div>
+  <div class="sp"></div>
+  <button class="btn btn-spin" id="btn-spin" onclick="spin()">Spin</button>
+</div>
+
+<script>
+'use strict';
+
+// ── Wheel data ────────────────────────────────────────────────────────────────
+// Standard European roulette sequence (37 slots: 0 + 1-36)
+const SEQUENCE = [
+  0,32,15,19,4,21,2,25,17,34,6,27,13,36,11,30,8,23,10,5,
+  24,16,33,1,20,14,31,9,22,18,29,7,28,12,35,3,26
+];
+const RED_NUMS = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+
+function numColor(n) {
+  if (n === 0) return '#1ecb4f';
+  return RED_NUMS.has(n) ? '#c0392b' : '#181818';
+}
+
+// ── Canvas wheel ──────────────────────────────────────────────────────────────
+const canvas = document.getElementById('wheel-canvas');
+const ctx = canvas.getContext('2d');
+const N = SEQUENCE.length;
+const SLICE = (Math.PI * 2) / N;
+
+let wheelAngle = 0;
+let spinning = false;
+let spinVel = 0;
+let spinTarget = 0;
+let spinLanded = false;
+
+function drawWheel(angle) {
+  const cx = canvas.width / 2, cy = canvas.height / 2, R = cx - 4;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (let i = 0; i < N; i++) {
+    const a0 = angle + i * SLICE - SLICE / 2;
+    const a1 = a0 + SLICE;
+    const num = SEQUENCE[i];
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, a0, a1);
+    ctx.closePath();
+    ctx.fillStyle = numColor(num);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Number label
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle + i * SLICE);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const fs = Math.max(7, R * 0.09);
+    ctx.font = `700 ${fs}px Inter,sans-serif`;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(String(num), R * 0.78, 0);
+    ctx.restore();
+  }
+
+  // Center cap
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.14, 0, Math.PI * 2);
+  ctx.fillStyle = '#0a0c20';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+function landedIndex(angle) {
+  // Pointer is at top (angle = -PI/2 relative to canvas)
+  // Normalize angle so 0 = top
+  const norm = (((-angle) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  const idx = Math.floor(norm / SLICE) % N;
+  return idx;
+}
+
+// ── Balance ───────────────────────────────────────────────────────────────────
+let bal = 1000;
+
+function loadBal() {
+  bal = parseInt(localStorage.getItem('rys-bal') || '0', 10);
+  if (!bal || bal < 1) bal = 1000;
+}
+function saveBal() {
+  localStorage.setItem('rys-bal', String(bal));
+  if (window.RYS) window.RYS.setBal(bal);
+}
+function dispBal() {
+  const s = '$' + bal.toLocaleString();
+  document.getElementById('bal-disp').textContent = s;
+  document.getElementById('hdr-bal').textContent = s;
+}
+
+function adjBet(f) {
+  const i = document.getElementById('bet-inp');
+  i.value = Math.max(1, Math.min(bal, Math.floor((parseFloat(i.value) || 10) * f)));
+}
+function maxBet() { document.getElementById('bet-inp').value = bal; }
+
+// ── Bet selection ─────────────────────────────────────────────────────────────
+let activeBet = null;
+
+function toggleBet(b) {
+  activeBet = activeBet === b ? null : b;
+  document.querySelectorAll('.bet-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.bet === activeBet);
+  });
+}
+
+function betPayout(num, betType) {
+  if (betType === 'red')   return RED_NUMS.has(num) ? 2 : 0;
+  if (betType === 'black') return (!RED_NUMS.has(num) && num !== 0) ? 2 : 0;
+  if (betType === 'green') return num === 0 ? 14 : 0;
+  if (betType === 'odd')   return (num !== 0 && num % 2 === 1) ? 2 : 0;
+  if (betType === 'even')  return (num !== 0 && num % 2 === 0) ? 2 : 0;
+  if (betType === 'low')   return (num >= 1 && num <= 18) ? 2 : 0;
+  if (betType === 'high')  return (num >= 19 && num <= 36) ? 2 : 0;
+  if (betType === '1st12') return (num >= 1 && num <= 12) ? 3 : 0;
+  if (betType === '2nd12') return (num >= 13 && num <= 24) ? 3 : 0;
+  if (betType === '3rd12') return (num >= 25 && num <= 36) ? 3 : 0;
+  return 0;
+}
+
+// ── Spin ──────────────────────────────────────────────────────────────────────
+function spin() {
+  if (spinning) return;
+  if (!activeBet) { setResult('—', 'Pick a bet first', ''); return; }
+
+  const bet = Math.max(1, Math.min(bal, parseInt(document.getElementById('bet-inp').value, 10) || 10));
+  if (bal < bet) { setResult('—', 'Not enough balance', 'lose'); return; }
+
+  bal -= bet;
+  saveBal(); dispBal();
+  document.getElementById('btn-spin').disabled = true;
+
+  // Pick a random landing slot
+  const landSlot = Math.floor(Math.random() * N);
+  const targetAngle = wheelAngle + (Math.PI * 2) * (5 + Math.random() * 4)
+    + (landSlot * SLICE - (((-wheelAngle) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
+
+  spinning = true;
+  spinLanded = false;
+  setResult('—', 'Spinning…', '');
+
+  const duration = 4000 + Math.random() * 1500;
+  const startAngle = wheelAngle;
+  const startTime = performance.now();
+
+  function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function frame(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    wheelAngle = startAngle + (targetAngle - startAngle) * easeOut(t);
+    drawWheel(wheelAngle);
+
+    if (t < 1) {
+      requestAnimationFrame(frame);
+    } else {
+      wheelAngle = targetAngle;
+      spinning = false;
+      document.getElementById('btn-spin').disabled = false;
+
+      // Determine landed number
+      const idx = landedIndex(wheelAngle);
+      const num = SEQUENCE[idx];
+      const mult = betPayout(num, activeBet);
+      const numCol = numColor(num);
+
+      document.getElementById('result-display').textContent = num;
+      document.getElementById('result-display').style.color =
+        num === 0 ? 'var(--green)' : RED_NUMS.has(num) ? '#ff6b6b' : '#fff';
+
+      if (mult > 0) {
+        const win = Math.floor(bet * mult);
+        bal += win;
+        saveBal(); dispBal();
+        setResult(null, `+$${win.toLocaleString()} · ${mult}× payout`, 'win');
+      } else {
+        setResult(null, `Lost $${bet.toLocaleString()}`, 'lose');
+      }
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
+function setResult(num, sub, cls) {
+  if (num !== null) {
+    document.getElementById('result-display').textContent = num;
+    document.getElementById('result-display').style.color = '#fff';
+  }
+  const s = document.getElementById('result-sub');
+  s.textContent = sub;
+  s.className = 'result-sub' + (cls ? ' ' + cls : '');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadBal(); dispBal();
+drawWheel(wheelAngle);
+</script>
+<script src="/admin/control.js"></script>
+<script>
+// Re-sync balance display after control.js loads
+(function() {
+  function refresh() {
+    const raw = parseInt(localStorage.getItem('rys-bal') || '0', 10);
+    if (raw > 0) {
+      const s = '$' + raw.toLocaleString();
+      const d = document.getElementById('bal-disp');
+      const h = document.getElementById('hdr-bal');
+      if (d) d.textContent = s;
+      if (h) h.textContent = s;
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
+  else refresh();
+})();
+</script>
+</body>
+</html>
