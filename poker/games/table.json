@@ -17,8 +17,8 @@
     },
     {
       "name": "ryan",
-      "chips": 1000,
-      "bet": 0,
+      "chips": 980,
+      "bet": 20,
       "hand": [
         "As",
         "Jh"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Call",
       "joinedAt": "2026-05-28T03:50:27.748Z"
     },
     {
@@ -111,12 +111,12 @@
     "8s"
   ],
   "communityCards": [],
-  "pot": 30,
+  "pot": 50,
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-05-28T03:51:48.774Z",
+  "currentTurn": 2,
+  "turnStartedAt": "2026-05-28T03:52:05.262Z",
   "lastAggressor": 3,
   "roundStartPlayer": 3,
   "actions": [
@@ -124,7 +124,12 @@
       "slot": 0,
       "action": "fold",
       "amount": 0
+    },
+    {
+      "slot": 1,
+      "action": "call",
+      "amount": 20
     }
   ],
-  "updatedAt": "2026-05-28T03:51:48.774Z"
+  "updatedAt": "2026-05-28T03:52:05.262Z"
 }
