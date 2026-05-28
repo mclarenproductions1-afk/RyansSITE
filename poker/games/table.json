@@ -1,133 +1,27 @@
 {
-  "status": "showdown",
+  "status": "waiting",
   "players": [
-    {
-      "name": "bigballs67",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [
-        "6c",
-        "Js"
-      ],
-      "folded": true,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Fold",
-      "joinedAt": "2026-05-28T03:50:28.338Z"
-    },
     null,
     null,
-    {
-      "name": "Parma sean",
-      "chips": 1030,
-      "bet": 20,
-      "hand": [
-        "Kc",
-        "8d"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Wins!",
-      "joinedAt": "2026-05-28T03:50:50.396Z"
-    },
+    null,
+    null,
     null,
     null
   ],
-  "queue": [
-    {
-      "name": "ryan",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-05-28T03:52:22.580Z"
-    }
-  ],
-  "handNum": 1,
-  "dealer": 1,
-  "phase": "showdown",
-  "deck": [
-    "3s",
-    "6h",
-    "5d",
-    "4d",
-    "2c",
-    "6s",
-    "4s",
-    "9d",
-    "Qd",
-    "10s",
-    "3h",
-    "9s",
-    "5h",
-    "7s",
-    "7d",
-    "10h",
-    "Ah",
-    "2d",
-    "10c",
-    "10d",
-    "2h",
-    "7h",
-    "9c",
-    "4c",
-    "Jd",
-    "5s",
-    "8c",
-    "8h",
-    "4h",
-    "Ad",
-    "2s",
-    "Jc",
-    "Ks",
-    "5c",
-    "Qc",
-    "7c",
-    "6d",
-    "Kh",
-    "3d",
-    "Kd",
-    "Qh",
-    "Qs",
-    "Ac",
-    "8s"
-  ],
+  "queue": [],
+  "handNum": 0,
+  "dealer": 0,
+  "phase": "waiting",
+  "deck": [],
   "communityCards": [],
   "pot": 0,
   "sidePots": [],
-  "currentBet": 20,
+  "currentBet": 0,
   "minRaise": 20,
   "currentTurn": -1,
-  "turnStartedAt": "2026-05-28T03:52:05.262Z",
-  "lastAggressor": 3,
-  "roundStartPlayer": 3,
-  "actions": [
-    {
-      "slot": 0,
-      "action": "fold",
-      "amount": 0
-    },
-    {
-      "slot": 1,
-      "action": "call",
-      "amount": 20
-    },
-    {
-      "slot": 2,
-      "action": "fold",
-      "amount": 0
-    }
-  ],
-  "updatedAt": "2026-05-28T03:53:07.076Z",
-  "lastWinners": [
-    {
-      "slot": 3,
-      "hand": "All others folded",
-      "amount": 50
-    }
-  ]
+  "turnStartedAt": null,
+  "lastAggressor": -1,
+  "roundStartPlayer": -1,
+  "actions": [],
+  "updatedAt": "2026-05-28T03:53:21.032Z"
 }
