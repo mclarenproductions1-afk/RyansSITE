@@ -1,0 +1,6 @@
+{
+  "reload_at": 0,
+  "banner": { "enabled": false, "text": "", "type": "info" },
+  "maintenance": { "enabled": false, "message": "" },
+  "updated_at": "2026-05-28T00:00:00.000Z"
+}

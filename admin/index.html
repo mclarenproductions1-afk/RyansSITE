@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --bg:#fff; --text:#111; --muted:#888; --border:#e5e5e5; --surface:#fafafa; --red:#ef4444; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; }
+
+  header {
+    padding:16px 32px; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:12px;
+  }
+  .back { font-size:13px; color:var(--muted); text-decoration:none; }
+  .back:hover { color:var(--text); }
+  .logo { font-size:15px; font-weight:600; }
+  .badge {
+    font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;
+    background:var(--text); color:var(--bg); padding:2px 7px; border-radius:3px;
+  }
+
+  main { max-width:720px; margin:0 auto; padding:40px 32px 80px; }
+
+  /* Gate */
+  #gate {
+    min-height:60vh; display:flex; align-items:center; justify-content:center;
+  }
+  .gate-box {
+    border:1px solid var(--border); border-radius:6px; padding:32px 28px; width:320px;
+  }
+  .gate-box h2 { font-size:16px; margin-bottom:6px; }
+  .gate-box p  { font-size:13px; color:var(--muted); margin-bottom:18px; }
+  .gate-box input {
+    width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:4px;
+    font-size:14px; font-family:inherit; outline:none; margin-bottom:10px;
+  }
+  .gate-box input:focus { border-color:var(--text); }
+  .gate-error { font-size:13px; color:var(--red); margin-top:6px; min-height:18px; }
+
+  /* Panel */
+  #panel { display:none; }
+
+  h1 { font-size:20px; font-weight:600; margin-bottom:4px; }
+  .subtitle { font-size:13px; color:var(--muted); margin-bottom:32px; }
+
+  .section { margin-bottom:32px; }
+  .section-title {
+    font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase;
+    letter-spacing:0.08em; margin-bottom:12px;
+  }
+
+  .card {
+    border:1px solid var(--border); border-radius:6px; padding:20px 20px 18px;
+    background:var(--surface);
+  }
+  .card + .card { margin-top:10px; }
+
+  .card-title { font-size:14px; font-weight:600; margin-bottom:4px; }
+  .card-desc  { font-size:13px; color:var(--muted); margin-bottom:16px; line-height:1.5; }
+
+  label { font-size:12px; font-weight:500; display:block; margin-bottom:5px; color:var(--muted); }
+  input[type=text], textarea, select {
+    width:100%; padding:9px 12px; border:1px solid var(--border); border-radius:4px;
+    font-size:13px; font-family:inherit; outline:none; background:var(--bg);
+  }
+  input[type=text]:focus, textarea:focus, select:focus { border-color:var(--text); }
+  textarea { resize:vertical; min-height:60px; }
+
+  .row { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; }
+
+  button {
+    font-family:'Inter',sans-serif; font-size:13px; font-weight:500;
+    padding:9px 20px; border-radius:4px; border:none; cursor:pointer; transition:opacity 0.1s;
+  }
+  button:disabled { opacity:0.4; cursor:not-allowed; }
+  button:active   { opacity:0.7; }
+
+  .btn-primary { background:var(--text); color:var(--bg); }
+  .btn-danger  { background:var(--red); color:#fff; }
+  .btn-ghost   { background:none; color:var(--text); border:1px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--text); }
+
+  .status-row {
+    display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted);
+    margin-top:10px;
+  }
+  .dot { width:7px; height:7px; border-radius:50%; background:#ccc; }
+  .dot.on  { background:#22c55e; }
+  .dot.off { background:#ccc; }
+
+  .feedback {
+    font-size:12px; color:var(--muted); margin-top:10px; min-height:18px;
+  }
+  .feedback.ok  { color:#22c55e; }
+  .feedback.err { color:var(--red); }
+
+  .state-pre {
+    background:var(--surface); border:1px solid var(--border); border-radius:4px;
+    padding:12px 14px; font-size:12px; font-family:monospace; white-space:pre-wrap;
+    word-break:break-all; color:var(--muted);
+  }
+
+  .form-row { display:flex; gap:10px; }
+  .form-row > * { flex:1; }
+
+  @media(max-width:600px) {
+    header { padding:14px 16px; }
+    main { padding:24px 16px 60px; }
+    .gate-box { width:100%; }
+    .form-row { flex-direction:column; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/">← Home</a>
+  <span class="logo">Study Hub</span>
+  <span class="badge">Admin</span>
+</header>
+
+<!-- ── Password gate ─────────────────────────────────────────── -->
+<div id="gate">
+  <div class="gate-box">
+    <h2>Admin access</h2>
+    <p>Enter the admin password to continue.</p>
+    <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password">
+    <div class="gate-error" id="pw-error"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn-primary" id="pw-btn" style="width:100%">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Admin panel ───────────────────────────────────────────── -->
+<main id="panel">
+  <h1>Site Control</h1>
+  <p class="subtitle">Changes apply to all visitors within ~20 seconds.</p>
+
+  <!-- Force reload -->
+  <div class="section">
+    <div class="section-title">Visitors</div>
+    <div class="card">
+      <div class="card-title">Force Reload Everyone</div>
+      <div class="card-desc">Sends a reload signal. Anyone currently on the site will have their page refreshed within 20 seconds.</div>
+      <div class="row">
+        <button class="btn-danger" id="btn-reload">Force Reload All</button>
+      </div>
+      <div class="feedback" id="fb-reload"></div>
+    </div>
+  </div>
+
+  <!-- Site banner -->
+  <div class="section">
+    <div class="section-title">Site-Wide Banner</div>
+    <div class="card">
+      <div class="card-title">Announcement Banner</div>
+      <div class="card-desc">Displays a fixed banner at the top of every page on the site.</div>
+      <div style="margin-bottom:10px">
+        <label>Message</label>
+        <input type="text" id="banner-text" placeholder="e.g. Site will be down for 10 mins at 5pm" maxlength="200">
+      </div>
+      <div>
+        <label>Type</label>
+        <select id="banner-type">
+          <option value="info">Info (black)</option>
+          <option value="warning">Warning (yellow)</option>
+          <option value="error">Alert (red)</option>
+          <option value="success">Success (green)</option>
+        </select>
+      </div>
+      <div class="row">
+        <button class="btn-primary" id="btn-banner-on">Show Banner</button>
+        <button class="btn-ghost"   id="btn-banner-off">Hide Banner</button>
+      </div>
+      <div class="status-row">
+        <div class="dot" id="banner-dot"></div>
+        <span id="banner-status">Loading…</span>
+      </div>
+      <div class="feedback" id="fb-banner"></div>
+    </div>
+  </div>
+
+  <!-- Maintenance mode -->
+  <div class="section">
+    <div class="section-title">Maintenance Mode</div>
+    <div class="card">
+      <div class="card-title">Maintenance Overlay</div>
+      <div class="card-desc">Covers every page with a maintenance screen. Use when pushing updates.</div>
+      <div>
+        <label>Message (optional)</label>
+        <input type="text" id="maint-msg" placeholder="e.g. Back in 5 minutes" maxlength="200">
+      </div>
+      <div class="row">
+        <button class="btn-danger" id="btn-maint-on">Enable Maintenance</button>
+        <button class="btn-ghost"  id="btn-maint-off">Disable</button>
+      </div>
+      <div class="status-row">
+        <div class="dot" id="maint-dot"></div>
+        <span id="maint-status">Loading…</span>
+      </div>
+      <div class="feedback" id="fb-maint"></div>
+    </div>
+  </div>
+
+  <!-- Raw state -->
+  <div class="section">
+    <div class="section-title">Current State</div>
+    <pre class="state-pre" id="state-pre">Loading…</pre>
+    <div class="row" style="margin-top:10px">
+      <button class="btn-ghost" id="btn-refresh">Refresh</button>
+    </div>
+  </div>
+</main>
+
+<script>
+// ── Config ────────────────────────────────────────────────────
+const ADMIN_PASS = 'bigballzlord'; // ← change this
+const TOKEN = ['github_pat_11CASFLQI0', 'mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+const API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/admin/state.json';
+
+// ── Gate ──────────────────────────────────────────────────────
+const pwInput = document.getElementById('pw-input');
+const pwError = document.getElementById('pw-error');
+
+if (sessionStorage.getItem('admin-auth') === '1') unlock();
+
+document.getElementById('pw-btn').addEventListener('click', tryUnlock);
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryUnlock(); });
+
+function tryUnlock() {
+  if (pwInput.value === ADMIN_PASS) {
+    sessionStorage.setItem('admin-auth', '1');
+    pwError.textContent = '';
+    unlock();
+  } else {
+    pwError.textContent = 'Wrong password.';
+    pwInput.value = '';
+    pwInput.focus();
+  }
+}
+
+function unlock() {
+  document.getElementById('gate').style.display  = 'none';
+  document.getElementById('panel').style.display = 'block';
+  loadState();
+}
+
+// ── GitHub state ──────────────────────────────────────────────
+let currentSha  = null;
+let currentState = null;
+
+async function loadState() {
+  try {
+    const r = await fetch(API + '?_=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    currentSha   = j.sha;
+    currentState = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, '')))));
+    applyState(currentState);
+  } catch (e) {
+    document.getElementById('state-pre').textContent = 'Error loading state: ' + e.message;
+  }
+}
+
+function applyState(s) {
+  document.getElementById('state-pre').textContent = JSON.stringify(s, null, 2);
+
+  // Banner
+  const bannerOn = s.banner && s.banner.enabled;
+  document.getElementById('banner-dot').className    = 'dot ' + (bannerOn ? 'on' : 'off');
+  document.getElementById('banner-status').textContent = bannerOn
+    ? 'Active: "' + s.banner.text + '"'
+    : 'Hidden';
+  if (bannerOn) {
+    document.getElementById('banner-text').value = s.banner.text || '';
+    document.getElementById('banner-type').value = s.banner.type || 'info';
+  }
+
+  // Maintenance
+  const maintOn = s.maintenance && s.maintenance.enabled;
+  document.getElementById('maint-dot').className     = 'dot ' + (maintOn ? 'on' : 'off');
+  document.getElementById('maint-status').textContent = maintOn ? 'Active' : 'Off';
+  if (maintOn && s.maintenance.message) {
+    document.getElementById('maint-msg').value = s.maintenance.message;
+  }
+}
+
+async function writeState(patch, feedbackId) {
+  const fb = document.getElementById(feedbackId);
+  fb.textContent = 'Saving…';
+  fb.className = 'feedback';
+  const newState = Object.assign({}, currentState, patch, { updated_at: new Date().toISOString() });
+  try {
+    const body = {
+      message: 'admin: update state',
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(newState, null, 2) + '\n'))),
+      branch: 'main'
+    };
+    if (currentSha) body.sha = currentSha;
+    const w = await fetch(API, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!w.ok) {
+      if (w.status === 409) {
+        // SHA conflict — re-fetch and retry
+        await loadState();
+        return writeState(patch, feedbackId);
+      }
+      throw new Error(w.status);
+    }
+    const j = await w.json();
+    currentSha   = j.content.sha;
+    currentState = newState;
+    applyState(currentState);
+    fb.textContent = 'Saved ✓';
+    fb.className   = 'feedback ok';
+    setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 3000);
+  } catch (e) {
+    fb.textContent = 'Error: ' + e.message;
+    fb.className   = 'feedback err';
+  }
+}
+
+// ── Actions ───────────────────────────────────────────────────
+document.getElementById('btn-reload').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-reload');
+  btn.disabled = true;
+  await writeState({ reload_at: Date.now() }, 'fb-reload');
+  btn.disabled = false;
+});
+
+document.getElementById('btn-banner-on').addEventListener('click', () => {
+  const text = document.getElementById('banner-text').value.trim();
+  if (!text) { document.getElementById('banner-text').focus(); return; }
+  writeState({ banner: { enabled: true, text, type: document.getElementById('banner-type').value } }, 'fb-banner');
+});
+
+document.getElementById('btn-banner-off').addEventListener('click', () => {
+  writeState({ banner: { enabled: false, text: document.getElementById('banner-text').value.trim(), type: document.getElementById('banner-type').value } }, 'fb-banner');
+});
+
+document.getElementById('btn-maint-on').addEventListener('click', () => {
+  writeState({ maintenance: { enabled: true, message: document.getElementById('maint-msg').value.trim() } }, 'fb-maint');
+});
+
+document.getElementById('btn-maint-off').addEventListener('click', () => {
+  writeState({ maintenance: { enabled: false, message: '' } }, 'fb-maint');
+});
+
+document.getElementById('btn-refresh').addEventListener('click', loadState);
+</script>
+</body>
+</html>

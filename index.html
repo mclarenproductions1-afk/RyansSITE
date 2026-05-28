@@ -130,6 +130,38 @@
 
 <main>
 
+  <!-- Updates banner -->
+  <div id="updates-banner" style="margin-bottom:32px;border:1px solid var(--border);border-radius:4px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface)">
+      <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted)">What's New</span>
+      <button onclick="this.closest('#updates-banner').style.display='none';sessionStorage.setItem('hide-updates','1')" style="font-size:11px;color:var(--muted);background:none;border:none;cursor:pointer;font-family:inherit;padding:0">Dismiss</button>
+    </div>
+    <div style="display:flex;flex-direction:column">
+      <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;min-width:68px">May 2026</span>
+        <span style="font-size:13px;font-weight:500">ChatRandom</span>
+        <span style="font-size:13px;color:var(--muted)">Omegle-style random video chat — hit Next to find a new stranger</span>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;min-width:68px">May 2026</span>
+        <span style="font-size:13px;font-weight:500">Girlfriend</span>
+        <span style="font-size:13px;color:var(--muted)">AI girlfriend chat with 5 different vibes</span>
+      </div>
+      
+      <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px;border-bottom:1px solid var(--border)">
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;min-width:68px">Early 2026</span>
+        <span style="font-size:13px;font-weight:500">Poker</span>
+        <span style="font-size:13px;color:var(--muted)">Texas Hold'em for up to 6 players, no room codes needed</span>
+      </div>
+      
+      <div style="display:flex;align-items:baseline;gap:10px;padding:10px 16px">
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;min-width:68px">Early 2026</span>
+        <span style="font-size:13px;font-weight:500">Chips tracker</span>
+        <span style="font-size:13px;color:var(--muted)">Track chip bowl costs across the group with suggested payments</span>
+      </div>
+    </div>
+  </div>
+
   <div class="section-label">Maths</div>
   <div class="grid">
 
@@ -228,8 +260,19 @@
 
 </main>
 
-<footer>bigballzlord.online</footer>
+<footer style="display:flex;align-items:center;justify-content:space-between">
+  <span>bigballzlord.online</span>
+  <a href="/admin" style="font-size:11px;color:var(--muted);text-decoration:none;opacity:0.4">admin</a>
+</footer>
 
+<script src="/admin/control.js"></script>
+<script>
+// Hide updates banner if already dismissed
+if (sessionStorage.getItem('hide-updates')) {
+  var b = document.getElementById('updates-banner');
+  if (b) b.style.display = 'none';
+}
+</script>
 <script>
 (function() {
   const TOKEN = ["github_pat_11CASFLQI0", "mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy"].join("");
