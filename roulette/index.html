@@ -206,11 +206,11 @@ function drawWheel(angle) {
 }
 
 function landedIndex(angle) {
-  // Pointer is at top (angle = -PI/2 relative to canvas)
-  // Normalize angle so 0 = top
-  const norm = (((-angle) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-  const idx = Math.floor(norm / SLICE) % N;
-  return idx;
+  // Pointer is at the top of the canvas = -PI/2 in canvas coords.
+  // Slice i has its centre at angle (angle + i*SLICE).
+  // Find which i puts its centre closest to -PI/2.
+  const raw = (-Math.PI / 2 - angle) / SLICE;
+  return (((Math.round(raw) % N) + N) % N);
 }
 
 // ── Balance ───────────────────────────────────────────────────────────────────
@@ -272,10 +272,14 @@ function spin() {
   saveBal(); dispBal();
   document.getElementById('btn-spin').disabled = true;
 
-  // Pick a random landing slot
+  // Pick a random landing slot and compute target angle so that
+  // slice landSlot aligns with the pointer (-PI/2 = top of canvas).
   const landSlot = Math.floor(Math.random() * N);
-  const targetAngle = wheelAngle + (Math.PI * 2) * (5 + Math.random() * 4)
-    + (landSlot * SLICE - (((-wheelAngle) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2));
+  const slotCenter = -Math.PI / 2 - landSlot * SLICE;
+  const extraRots = (5 + Math.floor(Math.random() * 5)) * Math.PI * 2;
+  // targetAngle must satisfy: targetAngle ≡ slotCenter (mod 2PI) and be > wheelAngle + extraRots
+  const targetAngle = wheelAngle + extraRots
+    + ((slotCenter - wheelAngle - extraRots) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
 
   spinning = true;
   spinLanded = false;

@@ -244,7 +244,8 @@ function cashOut(){
 
 function doDead(){
   if(gs==='dead'||gs==='idle')return;
-  gs='dead'; deathTimer=1.8; deathAlpha=1; shakeT=0.4;
+  gs='dead'; deathTimer=0.9; deathAlpha=1; shakeT=0.4;
+  cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0; // snap back to start immediately
   showIdle(); setStatus('Splat! Lost $'+bet.toLocaleString(),'lose');
 }
 
@@ -426,8 +427,8 @@ function tick(ts){
   }
   if(gs==='dead'){
     deathTimer=Math.max(0,deathTimer-dt);
-    deathAlpha=deathTimer/1.8; shakeT=Math.max(0,shakeT-dt);
-    if(deathTimer<=0){ gs='idle'; deathAlpha=0; cx=laneX(0); cxA.t=cxA.dur=1; }
+    deathAlpha=deathTimer/0.9; shakeT=Math.max(0,shakeT-dt);
+    if(deathTimer<=0){ gs='idle'; deathAlpha=0; }
   }
   if(winFlash>0) winFlash=Math.max(0,winFlash-dt*1.5);
   ctx.save();

@@ -151,7 +151,7 @@
     if (document.getElementById('__rys-acct')) return;
     var btn = document.createElement('div');
     btn.id = '__rys-acct';
-    btn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9997;font-family:Inter,system-ui,sans-serif;font-size:12px;';
+    btn.style.cssText = 'position:fixed;top:8px;right:14px;z-index:9997;font-family:Inter,system-ui,sans-serif;font-size:12px;';
     var u = window.RYS.user();
     if (u) {
       btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'
