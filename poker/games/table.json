@@ -47,7 +47,19 @@
     null,
     null
   ],
-  "queue": [],
+  "queue": [
+    {
+      "name": "ryan",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-05-28T03:52:22.580Z"
+    }
+  ],
   "handNum": 1,
   "dealer": 1,
   "phase": "preflop",
@@ -118,5 +130,5 @@
       "amount": 20
     }
   ],
-  "updatedAt": "2026-05-28T03:52:18.961Z"
+  "updatedAt": "2026-05-28T03:52:22.580Z"
 }
