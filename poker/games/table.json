@@ -45,6 +45,17 @@
       "inHand": false,
       "lastAction": "",
       "joinedAt": "2026-05-28T03:47:04.834Z"
+    },
+    {
+      "name": "bghgbh",
+      "chips": 1000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-05-28T03:49:04.105Z"
     }
   ],
   "handNum": 1,
@@ -117,5 +128,5 @@
       "amount": 0
     }
   ],
-  "updatedAt": "2026-05-28T03:47:04.834Z"
+  "updatedAt": "2026-05-28T03:49:04.105Z"
 }
