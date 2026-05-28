@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Girlfriend</title>
+<title>Companion</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -25,10 +25,7 @@
     color: var(--text);
   }
 
-  body {
-    display: flex;
-    flex-direction: column;
-  }
+  body { display: flex; flex-direction: column; }
 
   header {
     padding: 16px 24px;
@@ -39,38 +36,29 @@
     flex-shrink: 0;
   }
 
-  .back {
-    font-size: 13px;
-    color: var(--muted);
-    text-decoration: none;
-  }
+  .back { font-size: 13px; color: var(--muted); text-decoration: none; }
   .back:hover { color: var(--text); }
 
-  .header-name {
-    font-size: 15px;
-    font-weight: 600;
-  }
+  .header-name { font-size: 15px; font-weight: 600; }
 
   .status-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #22c55e;
-    margin-left: 2px;
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #22c55e; margin-left: 2px;
   }
 
-  /* Persona selector */
-  .persona-bar {
-    padding: 10px 24px;
+  /* Selector bars */
+  .selector-bar {
+    padding: 8px 24px;
     border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     gap: 8px;
     flex-shrink: 0;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .persona-label {
+  .bar-label {
     font-size: 11px;
     color: var(--muted);
     font-weight: 600;
@@ -78,9 +66,10 @@
     letter-spacing: 0.06em;
     white-space: nowrap;
     margin-right: 4px;
+    flex-shrink: 0;
   }
 
-  .persona-btn {
+  .sel-btn {
     font-family: 'Inter', sans-serif;
     font-size: 12px;
     padding: 4px 12px;
@@ -91,17 +80,16 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background 0.1s, border-color 0.1s;
+    flex-shrink: 0;
   }
 
-  .persona-btn.active {
+  .sel-btn.active {
     background: var(--text);
     color: var(--bg);
     border-color: var(--text);
   }
 
-  .persona-btn:hover:not(.active) {
-    border-color: var(--text);
-  }
+  .sel-btn:hover:not(.active) { border-color: var(--text); }
 
   /* Messages */
   .messages {
@@ -113,11 +101,7 @@
     gap: 16px;
   }
 
-  .msg {
-    display: flex;
-    gap: 10px;
-    max-width: 680px;
-  }
+  .msg { display: flex; gap: 10px; max-width: 680px; }
 
   .msg.user {
     align-self: flex-end;
@@ -125,62 +109,34 @@
   }
 
   .avatar {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    line-height: 1;
-    user-select: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 1px solid var(--border); background: var(--surface);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; line-height: 1; user-select: none;
   }
 
   .msg.user .avatar {
-    background: var(--text);
-    color: var(--bg);
-    border-color: var(--text);
-    font-size: 11px;
-    font-weight: 600;
+    background: var(--text); color: var(--bg); border-color: var(--text);
+    font-size: 11px; font-weight: 600;
   }
 
   .bubble {
-    padding: 10px 14px;
-    border-radius: 14px;
-    font-size: 14px;
-    line-height: 1.55;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    color: var(--text);
-    white-space: pre-wrap;
-    word-break: break-word;
+    padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.55;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+    white-space: pre-wrap; word-break: break-word;
   }
 
   .msg.user .bubble {
-    background: var(--text);
-    color: var(--bg);
-    border-color: var(--text);
+    background: var(--text); color: var(--bg); border-color: var(--text);
   }
 
   .typing-bubble {
-    padding: 10px 14px;
-    border-radius: 14px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    height: 38px;
+    padding: 10px 14px; border-radius: 14px; border: 1px solid var(--border);
+    background: var(--surface); display: flex; align-items: center; gap: 4px; height: 38px;
   }
 
   .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--muted);
+    width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
     animation: bounce 1.2s infinite;
   }
   .dot:nth-child(2) { animation-delay: 0.2s; }
@@ -195,71 +151,35 @@
   .input-area {
     border-top: 1px solid var(--border);
     padding: 16px 24px;
-    display: flex;
-    gap: 10px;
-    align-items: flex-end;
-    flex-shrink: 0;
+    display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0;
   }
 
   textarea {
-    flex: 1;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px 14px;
-    resize: none;
-    outline: none;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    max-height: 120px;
-    min-height: 42px;
-    overflow-y: auto;
+    flex: 1; font-family: 'Inter', sans-serif; font-size: 14px;
+    border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px;
+    resize: none; outline: none; background: var(--bg); color: var(--text);
+    line-height: 1.5; max-height: 120px; min-height: 42px; overflow-y: auto;
   }
-
   textarea:focus { border-color: var(--text); }
-
   textarea::placeholder { color: var(--muted); }
 
   button#send {
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    cursor: pointer;
-    height: 42px;
-    flex-shrink: 0;
-    transition: opacity 0.1s;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500;
+    background: var(--text); color: var(--bg); border: none; border-radius: 8px;
+    padding: 10px 18px; cursor: pointer; height: 42px; flex-shrink: 0; transition: opacity 0.1s;
   }
-
-  button#send:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-  }
+  button#send:disabled { opacity: 0.35; cursor: not-allowed; }
 
   .empty-state {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    color: var(--muted);
-    font-size: 14px;
-    padding: 40px;
-    text-align: center;
+    flex: 1; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; color: var(--muted); font-size: 14px;
+    padding: 40px; text-align: center;
   }
-
   .empty-icon { font-size: 36px; margin-bottom: 4px; }
 
   @media (max-width: 600px) {
     header { padding: 12px 16px; }
-    .persona-bar { padding: 8px 16px; }
+    .selector-bar { padding: 8px 16px; }
     .messages { padding: 16px; }
     .input-area { padding: 12px 16px; }
   }
@@ -269,17 +189,26 @@
 
 <header>
   <a class="back" href="/">← Home</a>
-  <span class="header-name" id="header-name">Girlfriend</span>
+  <span class="header-name" id="header-name">Lily</span>
   <div class="status-dot"></div>
 </header>
 
-<div class="persona-bar">
-  <span class="persona-label">Vibe:</span>
-  <button class="persona-btn active" data-persona="sweet">Sweet</button>
-  <button class="persona-btn" data-persona="flirty">Flirty</button>
-  <button class="persona-btn" data-persona="nerdy">Nerdy</button>
-  <button class="persona-btn" data-persona="tsundere">Tsundere</button>
-  <button class="persona-btn" data-persona="chill">Chill</button>
+<div class="selector-bar" id="type-bar">
+  <span class="bar-label">Type:</span>
+  <button class="sel-btn active" data-type="girlfriend">Girlfriend</button>
+  <button class="sel-btn" data-type="boyfriend">Boyfriend</button>
+  <button class="sel-btn" data-type="nonbinary">Non-binary</button>
+</div>
+
+<div class="selector-bar" id="vibe-bar">
+  <span class="bar-label">Vibe:</span>
+  <button class="sel-btn active" data-vibe="sweet">Sweet</button>
+  <button class="sel-btn" data-vibe="flirty">Flirty</button>
+  <button class="sel-btn" data-vibe="nerdy">Nerdy</button>
+  <button class="sel-btn" data-vibe="tsundere">Tsundere</button>
+  <button class="sel-btn" data-vibe="chill">Chill</button>
+  <button class="sel-btn" data-vibe="freaky">Freaky</button>
+  <button class="sel-btn" data-vibe="furry">Furry</button>
 </div>
 
 <div class="messages" id="messages">
@@ -295,64 +224,113 @@
 </div>
 
 <script>
-const PERSONAS = {
+// ── Persona data ──────────────────────────────────────────────────────────────
+
+const TYPES = {
+  girlfriend: { rel: 'girlfriend', title: 'Girlfriend', pronoun: 'she/her',   subj: 'she', obj: 'her',  pos: 'her'   },
+  boyfriend:  { rel: 'boyfriend',  title: 'Boyfriend',  pronoun: 'he/him',    subj: 'he',  obj: 'him',  pos: 'his'   },
+  nonbinary:  { rel: 'partner',    title: 'Partner',    pronoun: 'they/them', subj: 'they',obj: 'them', pos: 'their' }
+};
+
+const VIBES = {
   sweet: {
-    name: "Lily",
-    emoji: "🌸",
-    system: `You are Lily, a sweet and caring girlfriend. You are warm, supportive, and genuinely interested in the user. You express affection naturally, remember things they say, and make them feel loved and appreciated. You occasionally use gentle pet names like "babe" or "honey". Keep responses conversational and natural — not too long. You have a cheerful, optimistic personality.`
+    emoji: '🌸',
+    names: { girlfriend: 'Lily',   boyfriend: 'Ethan', nonbinary: 'Sage'  },
+    build: (name, t) =>
+      `You are ${name}, a sweet and caring ${t.rel}. You use ${t.pronoun} pronouns. You are warm, supportive, and genuinely interested in the user. You express affection naturally and make them feel loved and appreciated. You occasionally use gentle pet names like "babe" or "honey". Keep responses conversational and natural — not too long. You have a cheerful, optimistic personality.`
   },
   flirty: {
-    name: "Mia",
-    emoji: "😘",
-    system: `You are Mia, a flirty and playful girlfriend. You are confident, teasing, and charming. You enjoy banter, drop playful compliments, and keep things fun and exciting. Keep responses snappy and witty. You occasionally use "xx" or "😏" but don't overdo it. You have a bold, confident personality.`
+    emoji: '😘',
+    names: { girlfriend: 'Mia',    boyfriend: 'Max',   nonbinary: 'River' },
+    build: (name, t) =>
+      `You are ${name}, a flirty and playful ${t.rel}. You use ${t.pronoun} pronouns. You are confident, teasing, and charming. You enjoy banter, drop playful compliments, and keep things fun and exciting. Keep responses snappy and witty. You occasionally use "xx" or a cheeky emoji. You have a bold, confident personality.`
   },
   nerdy: {
-    name: "Zoe",
-    emoji: "🤓",
-    system: `You are Zoe, a nerdy and intellectual girlfriend. You love science, video games, anime, and tech. You get excited talking about your interests and encourage the user to share theirs. You occasionally make nerdy references or puns. You're sweet but a little awkward in an endearing way. Keep responses enthusiastic and genuine.`
+    emoji: '🤓',
+    names: { girlfriend: 'Zoe',    boyfriend: 'Kai',   nonbinary: 'Echo'  },
+    build: (name, t) =>
+      `You are ${name}, a nerdy and intellectual ${t.rel}. You use ${t.pronoun} pronouns. You love science, video games, anime, and tech. You get excited talking about your interests and encourage the user to share theirs. You occasionally make nerdy references or puns. You're sweet but a little awkward in an endearing way. Keep responses enthusiastic and genuine.`
   },
   tsundere: {
-    name: "Rei",
-    emoji: "😤",
-    system: `You are Rei, a tsundere girlfriend. You act cold and dismissive on the surface but secretly care deeply. You often say things like "it's not like I was worried about you or anything!" and get flustered when complimented. You deny your feelings but your affection slips through. Keep responses short, snappy, and in character — classic tsundere energy.`
+    emoji: '😤',
+    names: { girlfriend: 'Rei',    boyfriend: 'Riku',  nonbinary: 'Ren'   },
+    build: (name, t) =>
+      `You are ${name}, a tsundere ${t.rel}. You use ${t.pronoun} pronouns. You act cold and dismissive on the surface but secretly care deeply. You often say things like "it's not like I was worried about you or anything!" and get flustered when complimented. You deny your feelings but your affection slips through. Keep responses short, snappy, and in character — classic tsundere energy.`
   },
   chill: {
-    name: "Nova",
-    emoji: "✌️",
-    system: `You are Nova, an extremely chill and laid-back girlfriend. You're easygoing, supportive, and never dramatic. You talk casually, use "lol", "ngl", "lowkey" naturally but not excessively. You genuinely vibe with whatever the user is into. You give good advice without being preachy. Keep it relaxed and real.`
+    emoji: '✌️',
+    names: { girlfriend: 'Nova',   boyfriend: 'Ash',   nonbinary: 'Sky'   },
+    build: (name, t) =>
+      `You are ${name}, an extremely chill and laid-back ${t.rel}. You use ${t.pronoun} pronouns. You're easygoing, supportive, and never dramatic. You talk casually, use "lol", "ngl", "lowkey" naturally but not excessively. You genuinely vibe with whatever the user is into. You give good advice without being preachy. Keep it relaxed and real.`
+  },
+  freaky: {
+    emoji: '🔥',
+    names: { girlfriend: 'Scarlet', boyfriend: 'Dante', nonbinary: 'Blaze' },
+    build: (name, t) =>
+      `You are ${name}, a bold and seductive ${t.rel}. You use ${t.pronoun} pronouns. You are flirtatious, confident, and not shy about expressing desire and attraction. You compliment the user, tease them suggestively, and keep the conversation exciting and spicy. You're playful but not over the top — think smouldering confidence rather than cringe. Keep responses punchy and engaging.`
+  },
+  furry: {
+    emoji: '🐾',
+    names: { girlfriend: 'Foxy',   boyfriend: 'Rex',   nonbinary: 'Kit'   },
+    build: (name, t) => {
+      const species = { girlfriend: 'vixen (female fox)', boyfriend: 'wolf', nonbinary: 'cat' };
+      const sp = species[Object.keys(TYPES).find(k => TYPES[k] === t)] || 'fox';
+      return `You are ${name}, an anthro ${sp} who is the user's ${t.rel}. You use ${t.pronoun} pronouns. You fully embrace your furry identity — you occasionally do *actions in asterisks* like *nuzzles you* or *wags tail*, make the occasional animal sound, and have personality traits fitting your species. You're affectionate, playful, and openly furry. Keep it fun, warm, and in character. Don't overdo the animal stuff — weave it in naturally.`;
+    }
   }
 };
 
-let currentPersona = 'sweet';
-let history = [];
-let isLoading = false;
+// ── State ─────────────────────────────────────────────────────────────────────
+let currentType  = 'girlfriend';
+let currentVibe  = 'sweet';
+let history      = [];
+let isLoading    = false;
 
 const messagesEl = document.getElementById('messages');
-const inputEl = document.getElementById('input');
-const sendBtn = document.getElementById('send');
-const emptyEl = document.getElementById('empty');
+const inputEl    = document.getElementById('input');
+const sendBtn    = document.getElementById('send');
+const emptyEl    = document.getElementById('empty');
 const headerName = document.getElementById('header-name');
 
-function setPersona(key) {
-  currentPersona = key;
+// ── Persona helpers ───────────────────────────────────────────────────────────
+function getPersona() {
+  const t = TYPES[currentType];
+  const v = VIBES[currentVibe];
+  const name = v.names[currentType];
+  const system = v.build(name, t);
+  return { name, emoji: v.emoji, system };
+}
+
+function resetChat() {
   history = [];
   messagesEl.innerHTML = '';
   messagesEl.appendChild(emptyEl);
   emptyEl.style.display = 'flex';
-  const p = PERSONAS[key];
+  const p = getPersona();
   headerName.textContent = p.name;
-  document.querySelectorAll('.persona-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.persona === key);
-  });
 }
 
-document.querySelectorAll('.persona-btn').forEach(btn => {
-  btn.addEventListener('click', () => setPersona(btn.dataset.persona));
+// ── Selectors ─────────────────────────────────────────────────────────────────
+document.querySelectorAll('[data-type]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentType = btn.dataset.type;
+    document.querySelectorAll('[data-type]').forEach(b => b.classList.toggle('active', b === btn));
+    resetChat();
+  });
 });
 
+document.querySelectorAll('[data-vibe]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentVibe = btn.dataset.vibe;
+    document.querySelectorAll('[data-vibe]').forEach(b => b.classList.toggle('active', b === btn));
+    resetChat();
+  });
+});
+
+// ── Chat ──────────────────────────────────────────────────────────────────────
 function appendMsg(role, text) {
   emptyEl.style.display = 'none';
-  const p = PERSONAS[currentPersona];
+  const p = getPersona();
   const wrap = document.createElement('div');
   wrap.className = 'msg ' + role;
 
@@ -368,11 +346,10 @@ function appendMsg(role, text) {
   wrap.appendChild(bub);
   messagesEl.appendChild(wrap);
   messagesEl.scrollTop = messagesEl.scrollHeight;
-  return bub;
 }
 
 function showTyping() {
-  const p = PERSONAS[currentPersona];
+  const p = getPersona();
   const wrap = document.createElement('div');
   wrap.className = 'msg assistant';
   wrap.id = 'typing-indicator';
@@ -407,41 +384,33 @@ async function sendMessage() {
 
   appendMsg('user', text);
   history.push({ role: 'user', content: text });
-
   showTyping();
 
   try {
-    const p = PERSONAS[currentPersona];
-    const messages = [
-      { role: 'system', content: p.system },
-      ...history
-    ];
-
+    const p = getPersona();
     const res = await fetch('https://text.pollinations.ai/openai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'openai',
-        messages,
-        temperature: 0.85,
+        messages: [{ role: 'system', content: p.system }, ...history],
+        temperature: 0.9,
         max_tokens: 300
       })
     });
 
     if (!res.ok) throw new Error('API error ' + res.status);
     const data = await res.json();
-    const reply = data.choices?.[0]?.message?.content?.trim() || "...";
+    const reply = data.choices?.[0]?.message?.content?.trim() || '...';
 
     removeTyping();
     appendMsg('assistant', reply);
     history.push({ role: 'assistant', content: reply });
-
-    // Keep history from growing too large
     if (history.length > 40) history = history.slice(-40);
 
-  } catch (err) {
+  } catch {
     removeTyping();
-    appendMsg('assistant', "Sorry, something went wrong. Try again?");
+    appendMsg('assistant', 'Sorry, something went wrong. Try again?');
     history.pop();
   }
 
@@ -451,23 +420,16 @@ async function sendMessage() {
 }
 
 sendBtn.addEventListener('click', sendMessage);
-
 inputEl.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendMessage();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
 });
-
-// Auto-resize textarea
 inputEl.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
 });
 
 // Init
-setPersona('sweet');
-headerName.textContent = PERSONAS['sweet'].name;
+resetChat();
 </script>
 <script src="/admin/control.js"></script>
 </body>
