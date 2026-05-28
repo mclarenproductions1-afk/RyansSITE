@@ -89,20 +89,20 @@ canvas { display:block; width:100%; height:100%; }
   <div class="sp"></div>
   <div class="status" id="status">Place a bet and hit Start</div>
   <button class="btn btn-start" id="btn-start"  onclick="startGame()">Start Game</button>
-  <button class="btn btn-hop"   id="btn-hop"    onclick="hop()"     style="display:none">HOP →</button>
-  <button class="btn btn-co"    id="btn-co"     onclick="cashOut()" style="display:none" disabled>Cash Out</button>
+  <button class="btn btn-hop"   id="btn-hop"    onclick="hop()"      style="display:none">HOP →</button>
+  <button class="btn btn-co"    id="btn-co"     onclick="cashOut()"  style="display:none" disabled>Cash Out</button>
 </div>
 <script>
 'use strict';
 
+// ── Config ────────────────────────────────────────────────────
 const DIFF = {
-  easy:      { n:1, spd:0.38, mults:[1.10,1.22,1.36,1.52,1.70,1.91,2.14,2.40] },
-  medium:    { n:1, spd:0.65, mults:[1.25,1.56,1.95,2.44,3.05,3.81,4.76,5.95] },
-  hard:      { n:2, spd:1.00, mults:[1.50,2.25,3.38,5.06,7.59,11.4,17.1,25.6] },
-  daredevil: { n:2, spd:1.75, mults:[2.00,4.00,8.00,16.0,32.0,64.0,128.,256.] },
+  easy:      { spd:0.36, safeProb:0.50, multStep:1.12, n:1 },
+  medium:    { spd:0.62, safeProb:0.35, multStep:1.40, n:1 },
+  hard:      { spd:0.98, safeProb:0.20, multStep:1.70, n:2 },
+  daredevil: { spd:1.70, safeProb:0.06, multStep:2.10, n:2 },
 };
-
-const LANE_DEF = [
+const LANE_DEFS = [
   {col:'#e03535',acc:'#a01818',type:'car'},
   {col:'#1d8cf8',acc:'#0e5cbf',type:'sedan'},
   {col:'#f5c842',acc:'#b89010',type:'bus'},
@@ -112,36 +112,27 @@ const LANE_DEF = [
   {col:'#f72585',acc:'#a00050',type:'sedan'},
   {col:'#06d6a0',acc:'#037a5a',type:'truck'},
 ];
-// Aspect = height / width — cars are longer than they are wide
 const CAR_ASPECT = {car:2.1, sedan:2.3, bus:1.7, suv:2.0, van:1.8, truck:2.6};
+const NV   = 9;   // lanes generated ahead in view
+const SAFE = 88;  // left safe-zone width px
+const BLOCK_TOP = 0.30; // safe-zone top barrier (fraction of CH)
+const BLOCK_BOT = 0.70; // safe-zone bottom barrier
 
-const NL   = 8;
-const SAFE = 88;
-
+// ── Canvas ────────────────────────────────────────────────────
 const canvas = document.getElementById('canvas');
 const ctx    = canvas.getContext('2d');
 let CW=0, CH=0;
-
-function resize() {
-  const w = canvas.parentElement;
-  CW = w.clientWidth; CH = w.clientHeight;
+function resize(){
+  CW = canvas.parentElement.clientWidth;
+  CH = canvas.parentElement.clientHeight;
   canvas.width=CW; canvas.height=CH;
 }
-function LW()     { return (CW-SAFE)/NL; }
-function laneX(n) { return n===0 ? SAFE/2 : SAFE+(n-1)*LW()+LW()/2; }
-function carDims(c){ const lw=LW(),m=lw*0.16; const w=lw-m*2; return {w,h:w*(CAR_ASPECT[c.type]||2.0),m}; }
+function LW(){ return (CW-SAFE)/NV; }
 
-let gs='idle', lane=0, bal, bet, diff='daredevil', cars=[];
-let cx, cyArc=0, landFlash=0;
-let cxA={from:0,to:0,t:1,dur:1};
-let deathTimer=0, deathAlpha=0, shakeT=0, winFlash=0;
-let lastTs=0;
-
-function $id(id){ return document.getElementById(id); }
+// ── Helpers ───────────────────────────────────────────────────
+function $id(i){ return document.getElementById(i); }
 function easeOut(t){ return 1-(1-t)*(1-t); }
 function lerp(a,b,t){ return a+(b-a)*t; }
-function isAnimating(){ return cxA.t < cxA.dur; }
-
 function rrect(x,y,w,h,r){
   r=Math.min(r,w/2,h/2);
   ctx.beginPath();
@@ -149,66 +140,147 @@ function rrect(x,y,w,h,r){
   ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r);
   ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
 }
+function carDims(type){
+  const lw=LW(), m=lw*0.16, w=lw-m*2;
+  return {w, h:w*(CAR_ASPECT[type]||2.0), m};
+}
 
+// ── Balance ───────────────────────────────────────────────────
+let bal;
 function loadBal(){ bal=parseInt(localStorage.getItem('rys-bal')||'1000',10); if(!bal||bal<1)bal=1000; }
 function saveBal(){ localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal); }
 function dispBal(){ $id('bal-disp').textContent='$'+bal.toLocaleString(); }
 
-function setDiff(d){
-  if(gs==='playing')return;
-  diff=d;
-  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('on',b.dataset.d===d));
-  buildCars();
+// ── Infinite lane store ───────────────────────────────────────
+// laneStore[absIdx] = { safe, col, acc, type, dir, cars:[] }
+let laneStore = [];
+let storeMax  = -1;
+
+function genOneLane(absIdx){
+  const cfg = DIFF[diff];
+  const def = LANE_DEFS[absIdx % LANE_DEFS.length];
+  const dir = absIdx%2===0 ? -1 : 1;
+  const safe = Math.random() < cfg.safeProb;
+  const cars = [];
+  for(let j=0;j<cfg.n;j++){
+    const spd = cfg.spd * (0.78+Math.random()*0.44) * (1 + absIdx*0.018);
+    // Safe lanes: park cars in top/bottom zones away from crossing point
+    const startY = safe
+      ? (j===0 ? Math.random()*CH*BLOCK_TOP*0.85
+               : CH*BLOCK_BOT + Math.random()*CH*(1-BLOCK_BOT)*0.85)
+      : (CH/cfg.n)*j + Math.random()*(CH/cfg.n)*0.65;
+    cars.push({
+      ai: absIdx,   // absolute index
+      dir: safe ? (j===0?1:-1) : dir,  // safe cars bounce within their zone
+      y: startY,
+      spd,
+      type: def.type, col: def.col, acc: def.acc,
+      safe
+    });
+  }
+  return {safe, col:def.col, acc:def.acc, type:def.type, dir, cars};
 }
 
-function buildCars(){
-  cars=[];
-  const cfg=DIFF[diff];
-  for(let ln=1;ln<=NL;ln++){
-    const def=LANE_DEF[ln-1];
-    const dir=ln%2===0?1:-1;
-    const laneSpeedMult=1+(ln-1)*0.06;
-    for(let j=0;j<cfg.n;j++){
-      const spd=cfg.spd*laneSpeedMult*(0.80+Math.random()*0.40);
-      const slot=CH/cfg.n;
-      const startY=slot*j+Math.random()*slot*0.7;
-      cars.push({lane:ln,dir,y:startY,spd,col:def.col,acc:def.acc,type:def.type});
+function ensureLanes(upTo){
+  while(storeMax<upTo){
+    storeMax++;
+    laneStore[storeMax]=genOneLane(storeMax);
+  }
+}
+
+function resetStore(){
+  laneStore=[]; storeMax=-1;
+  ensureLanes(NV+4);
+}
+
+// ── Camera ────────────────────────────────────────────────────
+let camX=0; // pixels scrolled left (increases as chicken advances)
+
+function updateCam(dt){
+  if(absLane<=0){ camX=lerp(camX,0,1-Math.exp(-dt*10)); return; }
+  // Keep chicken at ~65% of road width
+  const roadW = CW-SAFE;
+  let target = (absLane-1)*LW()+LW()*0.5 - roadW*0.65;
+  if(target<0) target=0;
+  camX = lerp(camX, target, 1-Math.exp(-dt*7));
+}
+
+// Screen x of lane absIdx left edge
+function laneLeft(absIdx){ return SAFE+(absIdx-1)*LW()-camX; }
+function laneCX(absIdx){ return laneLeft(absIdx)+LW()/2; }
+
+// Screen x of chicken
+function chickSX(){
+  if(absLane===0) return SAFE/2;
+  return laneCX(absLane);
+}
+
+// ── Game state ────────────────────────────────────────────────
+let gs='idle', bet, diff='daredevil';
+let absLane=0, hops=0;
+let cyArc=0, landFlash=0;
+let arcT=0, arcDur=0.18, arcActive=false;
+let deathTimer=0, deathAlpha=0, shakeT=0, winFlash=0;
+let lastTs=0;
+
+function isHopping(){ return arcActive; }
+
+function getMult(n){ return Math.pow(DIFF[diff].multStep, n); }
+
+// ── Car movement ──────────────────────────────────────────────
+function moveCars(dt){
+  const topLimit  = CH*BLOCK_TOP;
+  const botLimit  = CH*BLOCK_BOT;
+  // Only move cars in or near visible range
+  const firstVis = Math.max(0, Math.floor(camX/LW()));
+  const lastVis  = firstVis + NV + 2;
+  for(let ai=firstVis; ai<=Math.min(storeMax, lastVis); ai++){
+    const ld = laneStore[ai];
+    if(!ld) continue;
+    for(const c of ld.cars){
+      if(c.safe){
+        // Bounce in top or bottom zone
+        c.y += c.spd * c.dir * CH * dt;
+        if(c.dir===1 && c.y > topLimit - carDims(c.type).h*0.2){
+          c.dir=-1; c.y=topLimit-carDims(c.type).h*0.2;
+        }
+        if(c.dir===-1 && c.y+carDims(c.type).h < botLimit){
+          if(c.y < 0){ c.y=0; c.dir=1; }
+        }
+        // Bottom zone cars
+        if(c.y>=CH*BLOCK_BOT){
+          c.y += c.spd*c.dir*CH*dt;
+          if(c.dir===-1 && c.y < CH*BLOCK_BOT){ c.dir=1; c.y=CH*BLOCK_BOT; }
+          if(c.dir===1  && c.y+carDims(c.type).h > CH+8){ c.y=CH*BLOCK_BOT; }
+        }
+      } else {
+        c.y += c.spd * ld.dir * CH * dt;
+        const {h} = carDims(c.type);
+        if(ld.dir===1  && c.y > CH+h+8) c.y=-h-8;
+        if(ld.dir===-1 && c.y < -h-8)   c.y=CH+h+8;
+      }
     }
   }
 }
 
-function moveCars(dt){
-  for(const c of cars){
-    c.y+=c.spd*c.dir*CH*dt;
-    const {h}=carDims(c);
-    if(c.dir===1  && c.y>CH+h+8) c.y=-h-8;
-    if(c.dir===-1 && c.y<-h-8)   c.y=CH+h+8;
-  }
-}
-
-function checkHit(laneNum){
-  const MY=CH/2, HB=CH*0.07;
-  for(const c of cars){
-    if(c.lane!==laneNum)continue;
-    const {h}=carDims(c);
+function checkHit(){
+  if(absLane<=0 || isHopping()) return false;
+  const ld = laneStore[absLane];
+  if(!ld||ld.safe) return false;
+  const MY=CH/2, HB=CH*0.075;
+  for(const c of ld.cars){
+    const {h}=carDims(c.type);
     if(c.y<MY+HB && c.y+h>MY-HB) return true;
   }
   return false;
 }
 
-function animHop(toX,dur){
-  cxA.from=cx; cxA.to=toX; cxA.t=0; cxA.dur=dur;
-}
-
-function updateChicken(dt){
-  if(cxA.t<cxA.dur){
-    cxA.t=Math.min(cxA.dur,cxA.t+dt);
-    const p=cxA.t/cxA.dur;
-    cx=lerp(cxA.from,cxA.to,easeOut(p));
-    cyArc=-Math.sin(p*Math.PI)*CH*0.10;
-  } else {
-    cx=cxA.to; cyArc=0;
-  }
+// ── Diff / start ──────────────────────────────────────────────
+function setDiff(d){
+  if(gs==='playing')return;
+  diff=d;
+  document.querySelectorAll('.diff-btn').forEach(b=>b.classList.toggle('on',b.dataset.d===d));
+  resetStore();
 }
 
 function startGame(){
@@ -216,48 +288,40 @@ function startGame(){
   bet=Math.max(1,Math.min(bal,inp));
   if(bal<1){setStatus('No balance!');return;}
   bal-=bet; saveBal(); dispBal();
-  lane=0; deathTimer=0; deathAlpha=0; shakeT=0; winFlash=0; landFlash=0;
-  buildCars();
-  cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0;
+  absLane=0; hops=0; camX=0;
+  deathTimer=0; deathAlpha=0; shakeT=0; winFlash=0; landFlash=0;
+  arcActive=false; cyArc=0;
+  resetStore();
   gs='playing'; showPlay(); updMult(); setStatus('');
 }
 
 function hop(){
-  if(gs!=='playing'||isAnimating())return;
-  const next=lane+1;
-  if(next>NL){
-    animHop(CW-20,0.22); lane=NL+1;
-    setTimeout(doWin,320); return;
-  }
-  lane=next; animHop(laneX(next),0.20); landFlash=0.3; updMult();
+  if(gs!=='playing'||isHopping())return;
+  absLane++;
+  hops++;
+  ensureLanes(absLane+NV+4);
+  landFlash=0.35;
+  arcT=0; arcActive=true;
+  updMult();
 }
 
 function cashOut(){
-  if(gs!=='playing'||lane===0||isAnimating())return;
-  const m=DIFF[diff].mults[lane-1];
+  if(gs!=='playing'||absLane===0||isHopping())return;
+  const m=getMult(hops);
   const win=Math.floor(bet*m);
   bal+=win; saveBal(); dispBal();
   gs='idle';
-  animHop(laneX(0),0.28);
-  setTimeout(()=>{cx=laneX(0);cxA.t=cxA.dur=1;},380);
+  absLane=0; camX=0;
   showIdle(); setStatus('Cashed out at '+m.toFixed(2)+'× · +$'+win.toLocaleString(),'win');
 }
 
 function doDead(){
   if(gs==='dead'||gs==='idle')return;
-  gs='dead'; deathTimer=1.8; deathAlpha=1; shakeT=0.4;
+  gs='dead'; deathTimer=1.8; deathAlpha=1; shakeT=0.42;
   showIdle(); setStatus('Splat! Lost $'+bet.toLocaleString(),'lose');
 }
 
-function doWin(){
-  const m=DIFF[diff].mults[NL-1];
-  const win=Math.floor(bet*m);
-  bal+=win; saveBal(); dispBal();
-  gs='idle'; winFlash=1;
-  setTimeout(()=>{cx=laneX(0);cxA.t=cxA.dur=1;},600);
-  showIdle(); setStatus('You made it! +$'+win.toLocaleString()+' at '+m.toFixed(2)+'×','win');
-}
-
+// ── UI helpers ────────────────────────────────────────────────
 function showIdle(){
   $id('g-bet').style.display=''; $id('g-mult').style.display='none';
   $id('g-diff').style.display=''; $id('btn-start').style.display='';
@@ -273,10 +337,13 @@ function showPlay(){
   $id('btn-co').disabled=true;
 }
 function updMult(){
-  const mults=DIFF[diff].mults;
-  if(lane===0){$id('mult-val').textContent='—';$id('mult-sub').textContent='Hop to earn!';$id('btn-co').disabled=true;return;}
-  if(lane>NL)return;
-  const m=mults[lane-1];
+  if(absLane===0){
+    $id('mult-val').textContent='—';
+    $id('mult-sub').textContent='Hop to earn!';
+    $id('btn-co').disabled=true;
+    return;
+  }
+  const m=getMult(hops);
   $id('mult-val').textContent=m.toFixed(2)+'×';
   $id('mult-sub').textContent='Cash out: $'+Math.floor(bet*m).toLocaleString();
   $id('btn-co').disabled=false;
@@ -285,140 +352,186 @@ function setStatus(txt,cls){ const el=$id('status'); el.textContent=txt; el.clas
 function adjBet(f){ const i=$id('bet-inp'); i.value=Math.max(1,Math.min(bal,Math.floor((parseFloat(i.value)||10)*f))); }
 function maxBet(){ $id('bet-inp').value=bal; }
 
-// ── Drawing ──────────────────────────────────────────────────────────────────
+// ── Drawing ───────────────────────────────────────────────────
 function drawCar(c){
-  const lw=LW();
-  const {w:carW,h:carH,m:margin}=carDims(c);
-  const carX=SAFE+(c.lane-1)*lw+margin, carY=c.y;
-  const r=Math.min(6,carW*.10);
+  const sx = laneLeft(c.ai);
+  if(sx+LW()<SAFE||sx>CW) return; // clip
+  const {w,h,m}=carDims(c.type);
+  const cx=sx+m, cy=c.y, r=Math.min(6,w*.10);
 
   ctx.shadowColor='rgba(0,0,0,0.50)'; ctx.shadowBlur=10; ctx.shadowOffsetY=4;
-  ctx.fillStyle=c.col; rrect(carX,carY,carW,carH,r); ctx.fill();
+  ctx.fillStyle=c.col; rrect(cx,cy,w,h,r); ctx.fill();
   ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
 
-  // Cabin/roof (middle 50% of car height, inset sides)
-  const cPad=carW*.14, cTop=carH*.22, cH=carH*.50;
-  ctx.fillStyle=c.acc; rrect(carX+cPad,carY+cTop,carW-cPad*2,cH,r*.6); ctx.fill();
+  const cPad=w*.14, cTop=h*.22, cH=h*.50;
+  const ld=laneStore[c.ai];
+  ctx.fillStyle=c.acc; rrect(cx+cPad,cy+cTop,w-cPad*2,cH,r*.6); ctx.fill();
 
-  // Windshield (glass strip at front of cabin)
-  const wsW=(carW-cPad*2)*.88, wsH=Math.max(4,cH*.18);
-  const wsX=carX+cPad+(carW-cPad*2-wsW)/2;
+  const wsW=(w-cPad*2)*.88, wsH=Math.max(4,cH*.18), wsX=cx+cPad+(w-cPad*2-wsW)/2;
   ctx.fillStyle='rgba(160,215,255,0.32)';
-  if(c.dir===1) rrect(wsX,carY+cTop+cH-wsH,wsW,wsH,2);
-  else          rrect(wsX,carY+cTop,wsW,wsH,2);
+  const fwd = ld ? ld.dir : c.dir;
+  if(fwd===1) rrect(wsX,cy+cTop+cH-wsH,wsW,wsH,2);
+  else        rrect(wsX,cy+cTop,wsW,wsH,2);
   ctx.fill();
 
-  // Rear window
   const rwH=Math.max(3,cH*.12);
   ctx.fillStyle='rgba(120,180,255,0.20)';
-  if(c.dir===1) rrect(wsX,carY+cTop,wsW,rwH,2);
-  else          rrect(wsX,carY+cTop+cH-rwH,wsW,rwH,2);
+  if(fwd===1) rrect(wsX,cy+cTop,wsW,rwH,2);
+  else        rrect(wsX,cy+cTop+cH-rwH,wsW,rwH,2);
   ctx.fill();
 
-  // Headlights
-  const hlW=carW*.28, hlH=Math.max(3,carH*.024);
+  const hlW=w*.28, hlH=Math.max(3,h*.024);
   ctx.fillStyle='#fffde8';
-  if(c.dir===1){ ctx.fillRect(carX+4,carY+carH-hlH,hlW,hlH); ctx.fillRect(carX+carW-4-hlW,carY+carH-hlH,hlW,hlH); }
-  else         { ctx.fillRect(carX+4,carY,hlW,hlH); ctx.fillRect(carX+carW-4-hlW,carY,hlW,hlH); }
+  if(fwd===1){ ctx.fillRect(cx+4,cy+h-hlH,hlW,hlH); ctx.fillRect(cx+w-4-hlW,cy+h-hlH,hlW,hlH); }
+  else       { ctx.fillRect(cx+4,cy,hlW,hlH); ctx.fillRect(cx+w-4-hlW,cy,hlW,hlH); }
 
-  // Taillights
-  const tlW=carW*.22, tlH=Math.max(3,carH*.020);
+  const tlW=w*.22, tlH=Math.max(3,h*.020);
   ctx.fillStyle='#ff2020';
-  if(c.dir===1){ ctx.fillRect(carX+4,carY,tlW,tlH); ctx.fillRect(carX+carW-4-tlW,carY,tlW,tlH); }
-  else         { ctx.fillRect(carX+4,carY+carH-tlH,tlW,tlH); ctx.fillRect(carX+carW-4-tlW,carY+carH-tlH,tlW,tlH); }
+  if(fwd===1){ ctx.fillRect(cx+4,cy,tlW,tlH); ctx.fillRect(cx+w-4-tlW,cy,tlW,tlH); }
+  else       { ctx.fillRect(cx+4,cy+h-tlH,tlW,tlH); ctx.fillRect(cx+w-4-tlW,cy+h-tlH,tlW,tlH); }
 
-  // Wheels (protruding slightly from sides)
-  const wW=Math.max(3,carW*.09), wH=Math.max(7,carH*.11), wr=2;
+  const wW=Math.max(3,w*.09), wH=Math.max(7,h*.11);
   ctx.fillStyle='#080b1c';
-  ctx.fillRect(carX-wW+2,carY+carH*.14,wW,wH);
-  ctx.fillRect(carX+carW-2,carY+carH*.14,wW,wH);
-  ctx.fillRect(carX-wW+2,carY+carH*.70,wW,wH);
-  ctx.fillRect(carX+carW-2,carY+carH*.70,wW,wH);
-  // Wheel highlight
-  ctx.fillStyle='rgba(255,255,255,0.08)';
-  ctx.fillRect(carX-wW+2,carY+carH*.14,wW,wH*.4);
-  ctx.fillRect(carX+carW-2,carY+carH*.14,wW,wH*.4);
-  ctx.fillRect(carX-wW+2,carY+carH*.70,wW,wH*.4);
-  ctx.fillRect(carX+carW-2,carY+carH*.70,wW,wH*.4);
+  ctx.fillRect(cx-wW+2,cy+h*.14,wW,wH); ctx.fillRect(cx+w-2,cy+h*.14,wW,wH);
+  ctx.fillRect(cx-wW+2,cy+h*.70,wW,wH); ctx.fillRect(cx+w-2,cy+h*.70,wW,wH);
+  ctx.fillStyle='rgba(255,255,255,0.07)';
+  ctx.fillRect(cx-wW+2,cy+h*.14,wW,wH*.4); ctx.fillRect(cx+w-2,cy+h*.14,wW,wH*.4);
+  ctx.fillRect(cx-wW+2,cy+h*.70,wW,wH*.4); ctx.fillRect(cx+w-2,cy+h*.70,wW,wH*.4);
+}
+
+function drawRoadblock(absIdx){
+  const sx = laneLeft(absIdx);
+  if(sx+LW()<SAFE||sx>CW) return;
+  const lw = LW();
+  const bW = lw*0.82, bH = Math.max(8,CH*0.022);
+  const bX = sx+(lw-bW)/2;
+  const stripes = 5;
+  const sw = bW/stripes;
+
+  [CH*BLOCK_TOP, CH*BLOCK_BOT].forEach(by=>{
+    // Striped barricade
+    for(let s=0;s<stripes;s++){
+      ctx.fillStyle = s%2===0 ? '#f5c842' : '#fff';
+      ctx.fillRect(bX+s*sw, by-bH/2, sw, bH);
+    }
+    ctx.strokeStyle='rgba(0,0,0,0.45)'; ctx.lineWidth=1;
+    ctx.strokeRect(bX, by-bH/2, bW, bH);
+    // Posts
+    const pw=Math.max(3,lw*.04), ph=Math.max(18,CH*.06);
+    ctx.fillStyle='#7a8494';
+    ctx.fillRect(bX+lw*.06-pw/2, by-ph/2, pw, ph);
+    ctx.fillRect(bX+bW-lw*.06-pw/2, by-ph/2, pw, ph);
+  });
+
+  // Flashing SAFE label
+  const alpha = 0.55+0.35*Math.sin(Date.now()/400);
+  ctx.globalAlpha=alpha;
+  ctx.font=`bold ${Math.max(9,Math.min(13,lw*.11))}px Inter,sans-serif`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle='#f5c842';
+  ctx.fillText('SAFE', sx+lw/2, CH/2);
+  ctx.globalAlpha=1;
 }
 
 function drawRoad(){
   const lw=LW();
-  for(let i=0;i<NL;i++){
-    ctx.fillStyle=i%2===0?'#131640':'#101338';
-    ctx.fillRect(SAFE+i*lw,0,lw,CH);
+  const firstVis = Math.max(0, Math.floor(camX/lw)-1);
+  const lastVis  = firstVis+NV+2;
+
+  for(let ai=firstVis;ai<=lastVis;ai++){
+    const sx=laneLeft(ai);
+    if(sx>CW||sx+lw<SAFE) continue;
+    ctx.fillStyle=ai%2===0?'#131640':'#101338';
+    ctx.fillRect(sx,0,lw,CH);
   }
+
   // Active lane glow
-  if(gs==='playing'&&lane>=1&&lane<=NL){
-    const gx=SAFE+(lane-1)*lw;
-    const g=ctx.createLinearGradient(gx,0,gx+lw,0);
-    g.addColorStop(0,'rgba(30,203,79,0)'); g.addColorStop(.5,'rgba(30,203,79,0.09)'); g.addColorStop(1,'rgba(30,203,79,0)');
-    ctx.fillStyle=g; ctx.fillRect(gx,0,lw,CH);
+  if(gs==='playing'&&absLane>0){
+    const sx=laneLeft(absLane);
+    if(sx>SAFE-lw&&sx<CW){
+      const g=ctx.createLinearGradient(sx,0,sx+lw,0);
+      g.addColorStop(0,'rgba(30,203,79,0)');
+      g.addColorStop(.5,'rgba(30,203,79,0.09)');
+      g.addColorStop(1,'rgba(30,203,79,0)');
+      ctx.fillStyle=g; ctx.fillRect(sx,0,lw,CH);
+    }
   }
-  // Manhole covers
-  for(let i=0;i<NL;i++){
-    const mx=SAFE+i*lw+lw/2,r=Math.min(lw,CH)*.14;
-    ctx.beginPath(); ctx.arc(mx,CH/2,r,0,Math.PI*2);
-    ctx.fillStyle='rgba(255,255,255,0.016)'; ctx.fill();
-    ctx.strokeStyle='rgba(255,255,255,0.028)'; ctx.lineWidth=1; ctx.stroke();
-    ctx.strokeStyle='rgba(255,255,255,0.022)';
-    ctx.beginPath(); ctx.moveTo(mx-r,CH/2); ctx.lineTo(mx+r,CH/2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(mx,CH/2-r); ctx.lineTo(mx,CH/2+r); ctx.stroke();
-  }
+
   // Dashed dividers
-  ctx.setLineDash([CH*.045,CH*.032]); ctx.strokeStyle='rgba(255,255,255,0.09)'; ctx.lineWidth=1;
-  for(let i=0;i<=NL;i++){ const x=SAFE+i*lw; ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CH); ctx.stroke(); }
+  ctx.setLineDash([CH*.04,CH*.03]); ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=1;
+  for(let ai=firstVis;ai<=lastVis+1;ai++){
+    const x=laneLeft(ai);
+    if(x<SAFE-lw||x>CW) continue;
+    ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CH); ctx.stroke();
+  }
   ctx.setLineDash([]);
-  // Arrows
+
+  // Direction arrows
   const afs=Math.max(9,CH*.042);
   ctx.font='bold '+afs+'px Inter,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
-  ctx.fillStyle='rgba(255,255,255,0.055)';
-  for(let i=0;i<NL;i++){
-    const ax=SAFE+i*lw+lw/2,ar=i%2===0?'▲':'▼';
-    ctx.fillText(ar,ax,CH*.09); ctx.fillText(ar,ax,CH*.91);
+  ctx.fillStyle='rgba(255,255,255,0.05)';
+  for(let ai=firstVis;ai<=lastVis;ai++){
+    const ld=laneStore[ai]; if(!ld) continue;
+    const sx=laneLeft(ai); if(sx+lw<SAFE||sx>CW) continue;
+    const ar=ld.dir===1?'▼':'▲';
+    ctx.fillText(ar,sx+lw/2,CH*.09); ctx.fillText(ar,sx+lw/2,CH*.91);
   }
 }
 
 function drawGrass(){
   ctx.fillStyle='#1a5c30'; ctx.fillRect(0,0,SAFE,CH);
-  ctx.fillStyle='rgba(255,255,255,0.035)';
+  ctx.fillStyle='rgba(255,255,255,0.03)';
   for(let y=0;y<CH;y+=CH*.1) ctx.fillRect(0,y,SAFE-10,CH*.05);
   ctx.fillStyle='#4a5568'; ctx.fillRect(SAFE-10,0,10,CH);
   ctx.fillStyle='rgba(255,255,255,0.15)'; ctx.fillRect(SAFE-10,0,1.5,CH);
-  // Bushes
-  [[SAFE*.40,CH*.28,14,'#2d6a4f'],[SAFE*.32,CH*.34,10,'#245a40'],[SAFE*.50,CH*.33,11,'#267a4a']].forEach(([x,y,r,c])=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); });
-  // Hydrant
+  [[SAFE*.40,CH*.28,14,'#2d6a4f'],[SAFE*.32,CH*.34,10,'#245a40'],[SAFE*.50,CH*.33,11,'#267a4a']].forEach(([x,y,r,c])=>{
+    ctx.fillStyle=c; ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+  });
   const hx=SAFE*.44,hy=CH*.68;
   ctx.fillStyle='#e63946'; rrect(hx-5,hy-14,10,14,2); ctx.fill();
   ctx.fillStyle='#c01020'; rrect(hx-7,hy-17,14,5,1); ctx.fill(); ctx.fillRect(hx-3,hy,6,5);
 }
 
 function drawMultipliers(){
-  const lw=LW(), mults=DIFF[diff].mults;
-  const fs=Math.max(9,Math.min(14,lw*.125));
+  const lw=LW();
+  const firstVis=Math.max(1,Math.floor(camX/lw));
+  const lastVis=firstVis+NV+1;
+  const fs=Math.max(9,Math.min(14,lw*.115));
   ctx.textAlign='center'; ctx.textBaseline='bottom';
-  for(let ln=1;ln<=NL;ln++){
-    const mx=SAFE+(ln-1)*lw+lw/2;
-    const passed=gs==='playing'&&lane>ln, active=gs==='playing'&&lane===ln;
-    ctx.font=(active?'700 ':'600 ')+fs+'px Inter,sans-serif';
-    ctx.fillStyle=active?'#ffffff':passed?'rgba(30,203,79,0.55)':'rgba(90,104,150,0.8)';
-    ctx.fillText(mults[ln-1].toFixed(2)+'×',mx,CH-CH*.025);
+  for(let ai=firstVis;ai<=lastVis;ai++){
+    const sx=laneLeft(ai); if(sx+lw<SAFE||sx>CW) continue;
+    const ld=laneStore[ai];
+    if(ld&&ld.safe) continue; // skip safe lanes (no mult shown)
+    const passed=gs==='playing'&&absLane>ai;
+    const active=gs==='playing'&&absLane===ai;
+    const futureDiff = ai - absLane; // 0=current, positive=ahead
+    if(futureDiff<0 && !passed) continue;
+    ctx.font=(active?'700 ':'500 ')+fs+'px Inter,sans-serif';
+    if(passed){
+      ctx.fillStyle='rgba(30,203,79,0.5)';
+      ctx.fillText('✓',sx+lw/2,CH-CH*.022);
+    } else {
+      const m=getMult(hops+Math.max(0,futureDiff));
+      ctx.fillStyle=active?'#fff':'rgba(90,104,150,0.8)';
+      ctx.fillText(m.toFixed(2)+'×',sx+lw/2,CH-CH*.022);
+    }
   }
 }
 
 function drawChicken(){
-  const MY=CH/2, chickY=MY+cyArc;
-  const sz=Math.round(Math.min(LW(),CH)*.30);
+  const sx=chickSX();
+  const sy=CH/2+cyArc;
+  const sz=Math.round(Math.min(LW(),CH)*.28);
   ctx.save();
   if(gs==='dead') ctx.globalAlpha=Math.max(0,deathAlpha);
   if(landFlash>0){
-    ctx.globalAlpha=Math.min(1,landFlash);
-    ctx.beginPath(); ctx.arc(cx,MY,sz*.7,0,Math.PI*2);
+    ctx.globalAlpha=(gs==='dead'?Math.max(0,deathAlpha):1)*Math.min(1,landFlash);
+    ctx.beginPath(); ctx.arc(sx,CH/2,sz*.65,0,Math.PI*2);
     ctx.fillStyle='rgba(255,255,255,0.12)'; ctx.fill();
     ctx.globalAlpha=gs==='dead'?Math.max(0,deathAlpha):1;
   }
-  const sc=1+landFlash*.15;
-  ctx.translate(cx,chickY); ctx.scale(sc,sc);
+  const sc=1+landFlash*.12;
+  ctx.translate(sx,sy); ctx.scale(sc,sc);
   ctx.font=sz+'px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
   ctx.fillText(gs==='dead'&&deathAlpha>0.5?'💥':'🐔',0,0);
   ctx.restore();
@@ -426,31 +539,59 @@ function drawChicken(){
 
 function drawScene(){
   ctx.fillStyle='#0a0c20'; ctx.fillRect(0,0,CW,CH);
-  drawRoad(); drawGrass();
-  for(const c of cars) drawCar(c);
-  drawMultipliers(); drawChicken();
+  drawRoad();
+
+  // Roadblocks (safe lanes)
+  const firstVis=Math.max(0,Math.floor(camX/LW())-1);
+  for(let ai=firstVis;ai<=firstVis+NV+2&&ai<=storeMax;ai++){
+    if(laneStore[ai]&&laneStore[ai].safe) drawRoadblock(ai);
+  }
+
+  // Cars
+  for(let ai=firstVis;ai<=firstVis+NV+2&&ai<=storeMax;ai++){
+    const ld=laneStore[ai]; if(!ld) continue;
+    for(const c of ld.cars) drawCar(c);
+  }
+
+  drawGrass();
+  drawMultipliers();
+  drawChicken();
+
   if(winFlash>0){ ctx.fillStyle='rgba(30,203,79,'+(winFlash*.18)+')'; ctx.fillRect(0,0,CW,CH); }
   if(shakeT>0){   ctx.fillStyle='rgba(239,68,68,'+(shakeT*.28)+')';  ctx.fillRect(0,0,CW,CH); }
 }
 
+// ── Main loop ─────────────────────────────────────────────────
 function tick(ts){
   const dt=Math.min((ts-lastTs)/1000,0.05); lastTs=ts;
-  moveCars(dt);
-  updateChicken(dt);
-  if(landFlash>0) landFlash=Math.max(0,landFlash-dt*4);
-  // Continuous collision while sitting in lane
-  if(gs==='playing'&&!isAnimating()&&lane>=1&&lane<=NL){
-    if(checkHit(lane)) doDead();
+
+  // Arc animation
+  if(arcActive){
+    arcT=Math.min(arcDur,arcT+dt);
+    cyArc=-Math.sin((arcT/arcDur)*Math.PI)*CH*0.09;
+    if(arcT>=arcDur){ arcActive=false; cyArc=0; }
   }
+
+  moveCars(dt);
+  updateCam(dt);
+  if(landFlash>0) landFlash=Math.max(0,landFlash-dt*4);
+
+  // Collision while sitting in a lane (not during hop)
+  if(gs==='playing'&&!arcActive&&absLane>0){
+    if(checkHit()) doDead();
+  }
+
   if(gs==='dead'){
     deathTimer=Math.max(0,deathTimer-dt);
     deathAlpha=deathTimer/1.8; shakeT=Math.max(0,shakeT-dt);
-    if(deathTimer<=0){ gs='idle'; deathAlpha=0; cx=laneX(0); cxA.t=cxA.dur=1; }
+    if(deathTimer<=0){ gs='idle'; deathAlpha=0; absLane=0; camX=0; }
   }
   if(winFlash>0) winFlash=Math.max(0,winFlash-dt*1.5);
+
   ctx.save();
-  if(shakeT>0){ const m=shakeT*7; ctx.translate((Math.random()-.5)*m,(Math.random()-.5)*m); }
-  drawScene(); ctx.restore();
+  if(shakeT>0){ const m=shakeT*6; ctx.translate((Math.random()-.5)*m,(Math.random()-.5)*m); }
+  drawScene();
+  ctx.restore();
   requestAnimationFrame(tick);
 }
 
@@ -463,11 +604,10 @@ document.addEventListener('keydown',e=>{
   }
   if(e.code==='KeyC'&&gs==='playing') cashOut();
 });
-window.addEventListener('resize',()=>{ resize(); if(gs==='idle'){cx=laneX(0);} buildCars(); });
+window.addEventListener('resize',()=>{ resize(); resetStore(); });
 
-resize(); loadBal(); buildCars();
-cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0;
-gs='idle'; deathAlpha=0; deathTimer=0; shakeT=0;
+resize(); loadBal(); resetStore();
+gs='idle'; deathAlpha=0; deathTimer=0; shakeT=0; camX=0; absLane=0;
 dispBal(); showIdle();
 requestAnimationFrame(ts=>{ lastTs=ts; requestAnimationFrame(tick); });
 </script>
