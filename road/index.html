@@ -17,7 +17,7 @@ header { padding:12px 20px; border-bottom:1px solid var(--border); display:flex;
 .title { font-size:14px; font-weight:600; }
 .kbd { font-size:11px; color:var(--muted); margin-left:auto; }
 .kbd kbd { display:inline-block; padding:1px 5px; border:1px solid rgba(255,255,255,0.12); border-radius:3px; font-size:10px; font-family:inherit; color:var(--muted); margin:0 1px; }
-#canvas-wrap { flex:1; min-height:0; max-height:480px; overflow:hidden; cursor:pointer; }
+#canvas-wrap { flex:1; min-height:0; max-height:calc(100vh - 130px); overflow:hidden; cursor:pointer; }
 canvas { display:block; width:100%; height:100%; }
 .ctrl { flex-shrink:0; background:var(--panel); border-top:1px solid var(--border); padding:14px 20px; display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
 .cg { display:flex; flex-direction:column; gap:4px; }
@@ -112,7 +112,8 @@ const LANE_DEF = [
   {col:'#f72585',acc:'#a00050',type:'sedan'},
   {col:'#06d6a0',acc:'#037a5a',type:'truck'},
 ];
-const CAR_H_FRAC = {car:0.190,sedan:0.215,bus:0.305,suv:0.235,van:0.260,truck:0.280};
+// Aspect = height / width — cars are longer than they are wide
+const CAR_ASPECT = {car:2.1, sedan:2.3, bus:1.7, suv:2.0, van:1.8, truck:2.6};
 
 const NL   = 8;
 const SAFE = 88;
@@ -128,6 +129,7 @@ function resize() {
 }
 function LW()     { return (CW-SAFE)/NL; }
 function laneX(n) { return n===0 ? SAFE/2 : SAFE+(n-1)*LW()+LW()/2; }
+function carDims(c){ const lw=LW(),m=lw*0.16; const w=lw-m*2; return {w,h:w*(CAR_ASPECT[c.type]||2.0),m}; }
 
 let gs='idle', lane=0, bal, bet, diff='daredevil', cars=[];
 let cx, cyArc=0, landFlash=0;
@@ -148,8 +150,8 @@ function rrect(x,y,w,h,r){
   ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
 }
 
-function loadBal(){ bal=window.RYS?window.RYS.bal():1000; if(!bal||bal<1)bal=1000; }
-function saveBal(){ if(window.RYS)window.RYS.setBal(bal); }
+function loadBal(){ bal=parseInt(localStorage.getItem('rys-bal')||'1000',10); if(!bal||bal<1)bal=1000; }
+function saveBal(){ localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal); }
 function dispBal(){ $id('bal-disp').textContent='$'+bal.toLocaleString(); }
 
 function setDiff(d){
@@ -165,13 +167,12 @@ function buildCars(){
   for(let ln=1;ln<=NL;ln++){
     const def=LANE_DEF[ln-1];
     const dir=ln%2===0?1:-1;
-    const hFrac=CAR_H_FRAC[def.type];
     const laneSpeedMult=1+(ln-1)*0.06;
     for(let j=0;j<cfg.n;j++){
       const spd=cfg.spd*laneSpeedMult*(0.80+Math.random()*0.40);
       const slot=CH/cfg.n;
       const startY=slot*j+Math.random()*slot*0.7;
-      cars.push({lane:ln,dir,hFrac,y:startY,spd,col:def.col,acc:def.acc,type:def.type});
+      cars.push({lane:ln,dir,y:startY,spd,col:def.col,acc:def.acc,type:def.type});
     }
   }
 }
@@ -179,7 +180,7 @@ function buildCars(){
 function moveCars(dt){
   for(const c of cars){
     c.y+=c.spd*c.dir*CH*dt;
-    const h=c.hFrac*CH;
+    const {h}=carDims(c);
     if(c.dir===1  && c.y>CH+h+8) c.y=-h-8;
     if(c.dir===-1 && c.y<-h-8)   c.y=CH+h+8;
   }
@@ -189,7 +190,7 @@ function checkHit(laneNum){
   const MY=CH/2, HB=CH*0.07;
   for(const c of cars){
     if(c.lane!==laneNum)continue;
-    const h=c.hFrac*CH;
+    const {h}=carDims(c);
     if(c.y<MY+HB && c.y+h>MY-HB) return true;
   }
   return false;
@@ -286,42 +287,59 @@ function maxBet(){ $id('bet-inp').value=bal; }
 
 // ── Drawing ──────────────────────────────────────────────────────────────────
 function drawCar(c){
-  const lw=LW(), margin=lw*0.14;
-  const carX=SAFE+(c.lane-1)*lw+margin, carW=lw-margin*2;
-  const carH=c.hFrac*CH, carY=c.y;
+  const lw=LW();
+  const {w:carW,h:carH,m:margin}=carDims(c);
+  const carX=SAFE+(c.lane-1)*lw+margin, carY=c.y;
+  const r=Math.min(6,carW*.10);
 
-  ctx.shadowColor='rgba(0,0,0,0.45)'; ctx.shadowBlur=8; ctx.shadowOffsetY=3;
-  ctx.fillStyle=c.col; rrect(carX,carY,carW,carH,8); ctx.fill();
+  ctx.shadowColor='rgba(0,0,0,0.50)'; ctx.shadowBlur=10; ctx.shadowOffsetY=4;
+  ctx.fillStyle=c.col; rrect(carX,carY,carW,carH,r); ctx.fill();
   ctx.shadowColor='transparent'; ctx.shadowBlur=0; ctx.shadowOffsetY=0;
 
-  // Roof
-  const rPad=carW*.15,rTop=carH*.19,rH=carH*.62;
-  ctx.fillStyle=c.acc; rrect(carX+rPad,carY+rTop,carW-rPad*2,rH,5); ctx.fill();
+  // Cabin/roof (middle 50% of car height, inset sides)
+  const cPad=carW*.14, cTop=carH*.22, cH=carH*.50;
+  ctx.fillStyle=c.acc; rrect(carX+cPad,carY+cTop,carW-cPad*2,cH,r*.6); ctx.fill();
 
-  // Windshield
-  const wsW=(carW-rPad*2)*.82,wsH=rH*.20,wsX=carX+rPad+(carW-rPad*2-wsW)/2;
-  ctx.fillStyle='rgba(160,215,255,0.28)';
-  if(c.dir===1) rrect(wsX,carY+rTop+rH-wsH,wsW,wsH,3);
-  else          rrect(wsX,carY+rTop,wsW,wsH,3);
+  // Windshield (glass strip at front of cabin)
+  const wsW=(carW-cPad*2)*.88, wsH=Math.max(4,cH*.18);
+  const wsX=carX+cPad+(carW-cPad*2-wsW)/2;
+  ctx.fillStyle='rgba(160,215,255,0.32)';
+  if(c.dir===1) rrect(wsX,carY+cTop+cH-wsH,wsW,wsH,2);
+  else          rrect(wsX,carY+cTop,wsW,wsH,2);
+  ctx.fill();
+
+  // Rear window
+  const rwH=Math.max(3,cH*.12);
+  ctx.fillStyle='rgba(120,180,255,0.20)';
+  if(c.dir===1) rrect(wsX,carY+cTop,wsW,rwH,2);
+  else          rrect(wsX,carY+cTop+cH-rwH,wsW,rwH,2);
   ctx.fill();
 
   // Headlights
-  const hlW=carW*.24,hlH=4;
-  ctx.fillStyle='#fffdda';
-  if(c.dir===1){ ctx.fillRect(carX+5,carY+carH-3,hlW,hlH); ctx.fillRect(carX+carW-5-hlW,carY+carH-3,hlW,hlH); }
-  else         { ctx.fillRect(carX+5,carY-1,hlW,hlH); ctx.fillRect(carX+carW-5-hlW,carY-1,hlW,hlH); }
+  const hlW=carW*.28, hlH=Math.max(3,carH*.024);
+  ctx.fillStyle='#fffde8';
+  if(c.dir===1){ ctx.fillRect(carX+4,carY+carH-hlH,hlW,hlH); ctx.fillRect(carX+carW-4-hlW,carY+carH-hlH,hlW,hlH); }
+  else         { ctx.fillRect(carX+4,carY,hlW,hlH); ctx.fillRect(carX+carW-4-hlW,carY,hlW,hlH); }
 
   // Taillights
-  const tlW=carW*.20,tlH=3;
-  ctx.fillStyle='#ff1e1e';
-  if(c.dir===1){ ctx.fillRect(carX+5,carY-1,tlW,tlH); ctx.fillRect(carX+carW-5-tlW,carY-1,tlW,tlH); }
-  else         { ctx.fillRect(carX+5,carY+carH-2,tlW,tlH); ctx.fillRect(carX+carW-5-tlW,carY+carH-2,tlW,tlH); }
+  const tlW=carW*.22, tlH=Math.max(3,carH*.020);
+  ctx.fillStyle='#ff2020';
+  if(c.dir===1){ ctx.fillRect(carX+4,carY,tlW,tlH); ctx.fillRect(carX+carW-4-tlW,carY,tlW,tlH); }
+  else         { ctx.fillRect(carX+4,carY+carH-tlH,tlW,tlH); ctx.fillRect(carX+carW-4-tlW,carY+carH-tlH,tlW,tlH); }
 
-  // Wheels
-  const wW=Math.max(4,carW*.075),wH=Math.max(8,carH*.13);
-  ctx.fillStyle='#070a18';
-  ctx.fillRect(carX-wW+2,carY+carH*.12,wW,wH); ctx.fillRect(carX+carW-2,carY+carH*.12,wW,wH);
-  ctx.fillRect(carX-wW+2,carY+carH*.72,wW,wH); ctx.fillRect(carX+carW-2,carY+carH*.72,wW,wH);
+  // Wheels (protruding slightly from sides)
+  const wW=Math.max(3,carW*.09), wH=Math.max(7,carH*.11), wr=2;
+  ctx.fillStyle='#080b1c';
+  ctx.fillRect(carX-wW+2,carY+carH*.14,wW,wH);
+  ctx.fillRect(carX+carW-2,carY+carH*.14,wW,wH);
+  ctx.fillRect(carX-wW+2,carY+carH*.70,wW,wH);
+  ctx.fillRect(carX+carW-2,carY+carH*.70,wW,wH);
+  // Wheel highlight
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  ctx.fillRect(carX-wW+2,carY+carH*.14,wW,wH*.4);
+  ctx.fillRect(carX+carW-2,carY+carH*.14,wW,wH*.4);
+  ctx.fillRect(carX-wW+2,carY+carH*.70,wW,wH*.4);
+  ctx.fillRect(carX+carW-2,carY+carH*.70,wW,wH*.4);
 }
 
 function drawRoad(){

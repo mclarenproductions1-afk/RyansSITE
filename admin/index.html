@@ -440,7 +440,15 @@ async function loadUsers() {
     tbody.innerHTML = rows.map((u, i) => `
       <tr style="border-top:${i===0?'none':'1px solid var(--border)'}">
         <td style="padding:12px 20px;font-weight:600">${escRow(u.username||'—')}</td>
-        <td style="padding:12px 20px;text-align:right;font-variant-numeric:tabular-nums">${u.balance != null ? '$'+u.balance : '—'}</td>
+        <td style="padding:12px 20px;text-align:right;font-variant-numeric:tabular-nums">
+          <span id="bal-display-${escRow(u.username)}" style="cursor:pointer;text-decoration:underline dotted;color:inherit" title="Click to edit" onclick="startEditBal('${escRow(u.username)}',${u.balance||0})">${u.balance != null ? '$'+u.balance : '—'}</span>
+          <span id="bal-edit-${escRow(u.username)}" style="display:none;align-items:center;gap:4px">
+            <input type="number" id="bal-inp-${escRow(u.username)}" value="${u.balance||0}" style="width:80px;padding:3px 6px;border:1px solid var(--border);border-radius:3px;font-size:12px;font-family:inherit" onkeydown="if(event.key==='Enter')saveBal('${escRow(u.username)}');if(event.key==='Escape')cancelEditBal('${escRow(u.username)}')">
+            <button onclick="saveBal('${escRow(u.username)}')" style="font-size:11px;padding:3px 8px;border-radius:3px;background:var(--text);color:var(--bg);border:none;cursor:pointer">Save</button>
+            <button onclick="cancelEditBal('${escRow(u.username)}')" style="font-size:11px;padding:3px 8px;border-radius:3px;background:none;border:1px solid var(--border);cursor:pointer">✕</button>
+          </span>
+          <span id="bal-fb-${escRow(u.username)}" style="font-size:11px;color:var(--muted);margin-left:4px"></span>
+        </td>
         <td style="padding:12px 20px;color:var(--muted)">${timeAgo(u.lastActive)}</td>
         <td style="padding:12px 20px;color:var(--muted);font-size:12px;font-family:monospace">${escRow(u.lastPage||'—')}</td>
       </tr>`).join('');
@@ -451,6 +459,58 @@ async function loadUsers() {
 
 function escRow(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Balance editing ─────────────────────────────────────────────
+function startEditBal(username, currentBal) {
+  document.getElementById('bal-display-' + username).style.display = 'none';
+  const editEl = document.getElementById('bal-edit-' + username);
+  editEl.style.display = 'inline-flex';
+  const inp = document.getElementById('bal-inp-' + username);
+  inp.value = currentBal;
+  inp.focus(); inp.select();
+}
+
+function cancelEditBal(username) {
+  document.getElementById('bal-display-' + username).style.display = '';
+  document.getElementById('bal-edit-' + username).style.display = 'none';
+  document.getElementById('bal-fb-' + username).textContent = '';
+}
+
+async function saveBal(username) {
+  const inp = document.getElementById('bal-inp-' + username);
+  const newBal = parseInt(inp.value, 10);
+  if (isNaN(newBal) || newBal < 0) { inp.focus(); return; }
+  const fb = document.getElementById('bal-fb-' + username);
+  fb.textContent = 'Saving…';
+  try {
+    const filePath = AUTH_API + 'users/' + encodeURIComponent(username) + '.json';
+    const r = await fetch(filePath + '?_=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    const data = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    data.balance = newBal;
+    const body = {
+      message: 'admin: set balance for ' + username + ' to ' + newBal,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
+      sha: j.sha, branch: 'main'
+    };
+    const w = await fetch(AUTH_API + 'users/' + encodeURIComponent(username) + '.json', {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!w.ok) throw new Error(w.status);
+    document.getElementById('bal-display-' + username).textContent = '$' + newBal;
+    cancelEditBal(username);
+    fb.textContent = '✓';
+    setTimeout(() => { fb.textContent = ''; }, 2000);
+  } catch(e) {
+    fb.textContent = 'Error: ' + e.message;
+  }
 }
 </script>
 </body>

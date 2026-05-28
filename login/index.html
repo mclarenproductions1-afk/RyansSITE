@@ -138,12 +138,15 @@ window.signIn = async function() {
     if (!res) { err.textContent = 'User not found.'; return; }
     var h = await sha256hex(p);
     if (res.data.passwordHash !== h) { err.textContent = 'Wrong password.'; return; }
-    // Save session
+    // Save session — use whichever balance is higher (local guest progress vs server)
+    var localBal = parseInt(localStorage.getItem(BAL) || '0', 10);
+    var serverBal = res.data.balance || 1000;
+    var finalBal = Math.max(localBal, serverBal);
     localStorage.setItem(SESS, JSON.stringify({ u: u, h: h, exp: Date.now() + 7*24*3600*1000 }));
-    localStorage.setItem(BAL, String(res.data.balance || 1000));
-    // Update lastActive async (don't block)
+    localStorage.setItem(BAL, String(finalBal));
+    // Update lastActive (and balance if local was higher) async
     ghPut('auth/users/'+encodeURIComponent(u)+'.json',
-      Object.assign({}, res.data, { lastActive: Date.now(), lastPage: '/' }),
+      Object.assign({}, res.data, { lastActive: Date.now(), lastPage: '/', balance: finalBal }),
       res.sha, 'auth: login ' + u);
     var next = new URLSearchParams(location.search).get('next') || '/';
     location.replace(next);
@@ -176,7 +179,9 @@ window.register = async function() {
 
     var h = await sha256hex(p);
     var now = Date.now();
-    var userObj = { username: u, passwordHash: h, created: now, lastActive: now, lastPage: '/', balance: 1000 };
+    var localBal = parseInt(localStorage.getItem(BAL) || '0', 10);
+    var startBal = Math.max(localBal, 1000);
+    var userObj = { username: u, passwordHash: h, created: now, lastActive: now, lastPage: '/', balance: startBal };
 
     // Write user file
     var wr = await ghPut('auth/users/'+encodeURIComponent(u)+'.json', userObj, null, 'auth: register '+u);
@@ -196,7 +201,7 @@ window.register = async function() {
 
     // Auto sign in
     localStorage.setItem(SESS, JSON.stringify({ u: u, h: h, exp: now + 7*24*3600*1000 }));
-    localStorage.setItem(BAL, '1000');
+    localStorage.setItem(BAL, String(startBal));
     ok.textContent = 'Account created! Redirecting…';
     setTimeout(function(){
       var next = new URLSearchParams(location.search).get('next') || '/';

@@ -386,7 +386,18 @@ input[type="text"]:focus { border-color: var(--text); }
     <div class="card">
       <h1>Poker</h1>
       <p class="sub">Texas Hold'em — up to 6 players. One shared table, no room codes. Join mid-game and you'll be seated next hand.</p>
+      <div id="join-bal-bar" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border:1px solid var(--border);border-radius:4px;margin-bottom:12px;font-size:13px">
+        <span style="color:var(--muted)">Your balance</span>
+        <span id="join-bal-val" style="font-weight:600">$—</span>
+      </div>
       <input id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="off" />
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="position:relative;flex:1">
+          <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none">$</span>
+          <input id="inp-buyin" type="number" min="100" step="100" value="1000" style="width:100%;padding:9px 10px 9px 22px;border:1px solid var(--border);border-radius:4px;font-size:0.88rem;font-family:inherit;color:var(--text);background:var(--bg);outline:none;transition:border-color 0.15s" onfocus="this.style.borderColor='var(--text)'" onblur="this.style.borderColor='var(--border)'" />
+        </div>
+        <span style="font-size:12px;color:var(--muted);white-space:nowrap">Buy-in</span>
+      </div>
       <button id="btn-join" class="btn" style="width:100%">Join Table</button>
       <div id="join-error" class="error-msg"></div>
     </div>
@@ -493,7 +504,16 @@ const CONFIG = {
 };
 
 const GAME_FILE = "poker/games/table.json";
-const STARTING_CHIPS = 1000;
+let STARTING_CHIPS = 1000; // overridden by buy-in input
+
+// Balance helpers — shared localStorage key with road/slots
+function pokerGetBal() { return parseInt(localStorage.getItem('rys-bal') || '1000', 10); }
+function pokerSetBal(n) {
+  localStorage.setItem('rys-bal', String(Math.max(0, n)));
+  if (window.RYS) window.RYS.setBal(Math.max(0, n));
+}
+function pokerDeductBal(amount) { pokerSetBal(pokerGetBal() - amount); }
+function pokerReturnChips(chips) { if (chips > 0) pokerSetBal(pokerGetBal() + chips); }
 const SMALL_BLIND = 10;
 const BIG_BLIND = 20;
 const MAX_PLAYERS = 6;
@@ -503,6 +523,7 @@ const MAX_PLAYERS = 6;
    ═══════════════════════════════════════════════════════ */
 let myName       = "";
 let mySlot       = -1;
+let myBuyIn      = 0;
 let gameFileSHA  = null;
 let gameState    = null;
 let pollTimer    = null;
@@ -1568,6 +1589,13 @@ async function onJoin() {
   const name = document.getElementById('inp-name').value.trim();
   if (!name) { showJoinError('Enter your name first.'); return; }
 
+  // Read buy-in amount and validate against balance
+  const buyInInput = parseInt(document.getElementById('inp-buyin').value, 10) || 1000;
+  const currentBal = pokerGetBal();
+  if (buyInInput < 100) { showJoinError('Minimum buy-in is $100.'); return; }
+  if (buyInInput > currentBal) { showJoinError('Not enough balance. You have $' + currentBal.toLocaleString() + '.'); return; }
+  STARTING_CHIPS = buyInInput;
+
   showJoinError('');
   document.getElementById('btn-join').disabled = true;
 
@@ -1579,7 +1607,8 @@ async function onJoin() {
       const state = freshTableState();
       state.players[0] = { name, chips: STARTING_CHIPS, bet: 0, hand: [], folded: false, allIn: false, inHand: false, lastAction: '', joinedAt: new Date().toISOString() };
       const sha = await createGameFile(state);
-      myName = name; mySlot = 0;
+      pokerDeductBal(STARTING_CHIPS);
+      myName = name; mySlot = 0; myBuyIn = STARTING_CHIPS;
       gameFileSHA = sha; gameState = state;
       showScreen('lobby'); renderLobby(); startPolling();
       return;
@@ -1636,7 +1665,8 @@ async function onJoin() {
         } else throw err;
       }
       if (mySlot < 0) mySlot = state.players.indexOf(newPlayer);
-      myName = name;
+      pokerDeductBal(STARTING_CHIPS);
+      myName = name; myBuyIn = STARTING_CHIPS;
       gameFileSHA = sha; gameState = state;
       showScreen('lobby'); renderLobby(); startPolling();
     } else {
@@ -1661,7 +1691,8 @@ async function onJoin() {
           sha = await saveGame(state, retry.sha);
         } else throw err;
       }
-      myName = name; mySlot = -1;
+      pokerDeductBal(STARTING_CHIPS);
+      myName = name; mySlot = -1; myBuyIn = STARTING_CHIPS;
       gameFileSHA = sha; gameState = state;
       showToast('Joined queue — you\'ll be seated next hand');
       showScreen('game'); renderGame(); startPolling();
@@ -1704,22 +1735,25 @@ async function onStartGame() {
 async function onLeave() {
   const slot = mySlot;
   const name = myName;
+  const buyIn = myBuyIn;
   // Reset local state immediately so UI is responsive
-  mySlot = -1; myName = '';
+  mySlot = -1; myName = ''; myBuyIn = 0;
   gameState = null; gameFileSHA = null;
   showingRaise = false;
   stopPolling();
   showScreen('join');
 
-  if (slot < 0) return;
+  if (slot < 0) { if (buyIn > 0) pokerReturnChips(buyIn); return; }
   // Try up to 3 times to remove ourselves from the state (retry on SHA conflict)
+  let returnedChips = 0;
   for (let attempt = 0; attempt < 3; attempt++) {
     try {
       const fresh = await fetchGame();
-      if (!fresh || fresh === 'notfound') break;
+      if (!fresh || fresh === 'notfound') { pokerReturnChips(buyIn); break; }
       let state = JSON.parse(JSON.stringify(fresh.state));
       // Remove from players or queue regardless of game phase
       if (state.players[slot] && state.players[slot].name === name) {
+        returnedChips = (state.players[slot].chips || 0) + (state.players[slot].bet || 0);
         state.players[slot] = null;
         // If we were host (slot 0), promote next player
         if (slot === 0) {
@@ -1731,9 +1765,13 @@ async function onLeave() {
         }
       }
       // Also remove from queue
-      if (state.queue) state.queue = state.queue.filter(q => q.name !== name);
+      if (state.queue) {
+        const qi = state.queue.findIndex(q => q.name === name);
+        if (qi >= 0) { returnedChips = state.queue[qi].chips || buyIn; state.queue.splice(qi, 1); }
+      }
       state.updatedAt = new Date().toISOString();
       await saveGame(state, fresh.sha);
+      pokerReturnChips(returnedChips || buyIn);
       break; // success
     } catch (e) {
       if (e.message !== 'conflict') break; // don't retry non-conflict errors
@@ -1744,22 +1782,25 @@ async function onLeave() {
 async function onCashOut() {
   document.getElementById('result-overlay').classList.remove('show');
   stopPolling();
-  // Remove player from state
+  // Return chips to balance and remove player from state
   if (mySlot >= 0) {
     try {
       const fresh = await fetchGame();
       if (fresh && fresh !== 'notfound') {
         let state = JSON.parse(JSON.stringify(fresh.state));
         if (state.players[mySlot]) {
+          const chips = (state.players[mySlot].chips || 0) + (state.players[mySlot].bet || 0);
+          pokerReturnChips(chips);
           state.players[mySlot] = null;
           state.updatedAt = new Date().toISOString();
           await saveGame(state, fresh.sha).catch(() => {});
         }
       }
-    } catch (e) { /* silent */ }
+    } catch (e) { pokerReturnChips(myBuyIn); }
   }
-  mySlot = -1; myName = '';
-  gameState = null; gameFileSHA = null;  showScreen('join');
+  mySlot = -1; myName = ''; myBuyIn = 0;
+  gameState = null; gameFileSHA = null; showScreen('join');
+  updateJoinBalDisplay();
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1818,6 +1859,15 @@ async function onReset() {
 /* ═══════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════ */
+function updateJoinBalDisplay() {
+  const bal = pokerGetBal();
+  const el = document.getElementById('join-bal-val');
+  if (el) el.textContent = '$' + bal.toLocaleString();
+  // Cap buy-in to current balance
+  const inp = document.getElementById('inp-buyin');
+  if (inp) { inp.max = bal; if (parseInt(inp.value) > bal) inp.value = bal; }
+}
+
 function init() {
   document.getElementById('btn-join').addEventListener('click', onJoin);
   document.getElementById('btn-start').addEventListener('click', onStartGame);
@@ -1833,11 +1883,30 @@ function init() {
     if (e.key === 'Enter') onJoin();
   });
 
+  // Pre-fill name from RYS account if logged in
+  if (window.RYS && window.RYS.user()) {
+    const inp = document.getElementById('inp-name');
+    if (inp && !inp.value) inp.value = window.RYS.user();
+  }
+
+  updateJoinBalDisplay();
   window.addEventListener('beforeunload', () => stopPolling());
 }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
 <script src="/admin/control.js"></script>
+<script>
+// Re-run balance display after control.js loads (RYS now available)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateJoinBalDisplay);
+} else {
+  updateJoinBalDisplay();
+  if (window.RYS && window.RYS.user()) {
+    const inp = document.getElementById('inp-name');
+    if (inp && !inp.value) inp.value = window.RYS.user();
+  }
+}
+</script>
 </body>
 </html>
