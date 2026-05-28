@@ -10,16 +10,6 @@
     "createdAt": "2026-03-30"
   },
   {
-    "id": "332a2c46-7521-4164-b5a5-00a54a9ffec2",
-    "title": "Baroque Composition + Essay + Research + Annotated Scores",
-    "subject": "Music II",
-    "type": "test",
-    "dueDate": "2026-05-05",
-    "notes": "",
-    "completed": true,
-    "createdAt": "2026-03-31"
-  },
-  {
     "id": "2a119922-7965-4103-be29-b80b44611906",
     "title": "Gravity and vector analysis",
     "subject": "Physics",
