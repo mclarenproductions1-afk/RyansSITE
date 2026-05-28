@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Girlfriend</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fff;
+    --text: #111;
+    --muted: #888;
+    --border: #e5e5e5;
+    --surface: #fafafa;
+  }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .back {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .back:hover { color: var(--text); }
+
+  .header-name {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #22c55e;
+    margin-left: 2px;
+  }
+
+  /* Persona selector */
+  .persona-bar {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    overflow-x: auto;
+  }
+
+  .persona-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    margin-right: 4px;
+  }
+
+  .persona-btn {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s, border-color 0.1s;
+  }
+
+  .persona-btn.active {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .persona-btn:hover:not(.active) {
+    border-color: var(--text);
+  }
+
+  /* Messages */
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    max-width: 680px;
+  }
+
+  .msg.user {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+  }
+
+  .avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .msg.user .avatar {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .msg.user .bubble {
+    background: var(--text);
+    color: var(--bg);
+    border-color: var(--text);
+  }
+
+  .typing-bubble {
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 38px;
+  }
+
+  .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--muted);
+    animation: bounce 1.2s infinite;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-5px); }
+  }
+
+  /* Input */
+  .input-area {
+    border-top: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  textarea {
+    flex: 1;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    resize: none;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    max-height: 120px;
+    min-height: 42px;
+    overflow-y: auto;
+  }
+
+  textarea:focus { border-color: var(--text); }
+
+  textarea::placeholder { color: var(--muted); }
+
+  button#send {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    height: 42px;
+    flex-shrink: 0;
+    transition: opacity 0.1s;
+  }
+
+  button#send:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .empty-state {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 40px;
+    text-align: center;
+  }
+
+  .empty-icon { font-size: 36px; margin-bottom: 4px; }
+
+  @media (max-width: 600px) {
+    header { padding: 12px 16px; }
+    .persona-bar { padding: 8px 16px; }
+    .messages { padding: 16px; }
+    .input-area { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/">← Home</a>
+  <span class="header-name" id="header-name">Girlfriend</span>
+  <div class="status-dot"></div>
+</header>
+
+<div class="persona-bar">
+  <span class="persona-label">Vibe:</span>
+  <button class="persona-btn active" data-persona="sweet">Sweet</button>
+  <button class="persona-btn" data-persona="flirty">Flirty</button>
+  <button class="persona-btn" data-persona="nerdy">Nerdy</button>
+  <button class="persona-btn" data-persona="tsundere">Tsundere</button>
+  <button class="persona-btn" data-persona="chill">Chill</button>
+</div>
+
+<div class="messages" id="messages">
+  <div class="empty-state" id="empty">
+    <div class="empty-icon">💌</div>
+    <div>Say hi to start chatting</div>
+  </div>
+</div>
+
+<div class="input-area">
+  <textarea id="input" placeholder="Say something..." rows="1"></textarea>
+  <button id="send">Send</button>
+</div>
+
+<script>
+const PERSONAS = {
+  sweet: {
+    name: "Lily",
+    emoji: "🌸",
+    system: `You are Lily, a sweet and caring girlfriend. You are warm, supportive, and genuinely interested in the user. You express affection naturally, remember things they say, and make them feel loved and appreciated. You occasionally use gentle pet names like "babe" or "honey". Keep responses conversational and natural — not too long. You have a cheerful, optimistic personality.`
+  },
+  flirty: {
+    name: "Mia",
+    emoji: "😘",
+    system: `You are Mia, a flirty and playful girlfriend. You are confident, teasing, and charming. You enjoy banter, drop playful compliments, and keep things fun and exciting. Keep responses snappy and witty. You occasionally use "xx" or "😏" but don't overdo it. You have a bold, confident personality.`
+  },
+  nerdy: {
+    name: "Zoe",
+    emoji: "🤓",
+    system: `You are Zoe, a nerdy and intellectual girlfriend. You love science, video games, anime, and tech. You get excited talking about your interests and encourage the user to share theirs. You occasionally make nerdy references or puns. You're sweet but a little awkward in an endearing way. Keep responses enthusiastic and genuine.`
+  },
+  tsundere: {
+    name: "Rei",
+    emoji: "😤",
+    system: `You are Rei, a tsundere girlfriend. You act cold and dismissive on the surface but secretly care deeply. You often say things like "it's not like I was worried about you or anything!" and get flustered when complimented. You deny your feelings but your affection slips through. Keep responses short, snappy, and in character — classic tsundere energy.`
+  },
+  chill: {
+    name: "Nova",
+    emoji: "✌️",
+    system: `You are Nova, an extremely chill and laid-back girlfriend. You're easygoing, supportive, and never dramatic. You talk casually, use "lol", "ngl", "lowkey" naturally but not excessively. You genuinely vibe with whatever the user is into. You give good advice without being preachy. Keep it relaxed and real.`
+  }
+};
+
+let currentPersona = 'sweet';
+let history = [];
+let isLoading = false;
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('send');
+const emptyEl = document.getElementById('empty');
+const headerName = document.getElementById('header-name');
+
+function setPersona(key) {
+  currentPersona = key;
+  history = [];
+  messagesEl.innerHTML = '';
+  messagesEl.appendChild(emptyEl);
+  emptyEl.style.display = 'flex';
+  const p = PERSONAS[key];
+  headerName.textContent = p.name;
+  document.querySelectorAll('.persona-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.persona === key);
+  });
+}
+
+document.querySelectorAll('.persona-btn').forEach(btn => {
+  btn.addEventListener('click', () => setPersona(btn.dataset.persona));
+});
+
+function appendMsg(role, text) {
+  emptyEl.style.display = 'none';
+  const p = PERSONAS[currentPersona];
+  const wrap = document.createElement('div');
+  wrap.className = 'msg ' + role;
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = role === 'user' ? 'You' : p.emoji;
+
+  const bub = document.createElement('div');
+  bub.className = 'bubble';
+  bub.textContent = text;
+
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return bub;
+}
+
+function showTyping() {
+  const p = PERSONAS[currentPersona];
+  const wrap = document.createElement('div');
+  wrap.className = 'msg assistant';
+  wrap.id = 'typing-indicator';
+
+  const av = document.createElement('div');
+  av.className = 'avatar';
+  av.textContent = p.emoji;
+
+  const bub = document.createElement('div');
+  bub.className = 'typing-bubble';
+  bub.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+  wrap.appendChild(av);
+  wrap.appendChild(bub);
+  messagesEl.appendChild(wrap);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendMessage() {
+  const text = inputEl.value.trim();
+  if (!text || isLoading) return;
+
+  isLoading = true;
+  sendBtn.disabled = true;
+  inputEl.value = '';
+  inputEl.style.height = '';
+
+  appendMsg('user', text);
+  history.push({ role: 'user', content: text });
+
+  showTyping();
+
+  try {
+    const p = PERSONAS[currentPersona];
+    const messages = [
+      { role: 'system', content: p.system },
+      ...history
+    ];
+
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'openai',
+        messages,
+        temperature: 0.85,
+        max_tokens: 300
+      })
+    });
+
+    if (!res.ok) throw new Error('API error ' + res.status);
+    const data = await res.json();
+    const reply = data.choices?.[0]?.message?.content?.trim() || "...";
+
+    removeTyping();
+    appendMsg('assistant', reply);
+    history.push({ role: 'assistant', content: reply });
+
+    // Keep history from growing too large
+    if (history.length > 40) history = history.slice(-40);
+
+  } catch (err) {
+    removeTyping();
+    appendMsg('assistant', "Sorry, something went wrong. Try again?");
+    history.pop();
+  }
+
+  isLoading = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+sendBtn.addEventListener('click', sendMessage);
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Auto-resize textarea
+inputEl.addEventListener('input', () => {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+// Init
+setPersona('sweet');
+headerName.textContent = PERSONAS['sweet'].name;
+</script>
+</body>
+</html>
