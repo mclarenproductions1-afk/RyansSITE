@@ -6,8 +6,8 @@
     "type": "error"
   },
   "maintenance": {
-    "enabled": true,
+    "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-28T06:59:38.085Z"
+  "updated_at": "2026-05-28T07:00:51.334Z"
 }
