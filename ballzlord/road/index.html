@@ -4,110 +4,255 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mission Uncrossable</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --bg:#fff; --text:#111; --muted:#888; --border:#e5e5e5; --surface:#fafafa; }
-html, body { height:100%; font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); }
-body { display:flex; flex-direction:column; }
+
+:root {
+  --bg:     #0a0c1e;
+  --panel:  #10122a;
+  --card:   #161932;
+  --border: rgba(255,255,255,0.07);
+  --text:   #fff;
+  --muted:  #5a6490;
+  --green:  #1ecb4f;
+  --yellow: #f5c842;
+  --purple: #6c5dd3;
+  --red:    #ef4444;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
 header {
-  padding:16px 24px; border-bottom:1px solid var(--border);
-  display:flex; align-items:center; gap:12px; flex-shrink:0;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  background: var(--panel);
 }
-.back { font-size:13px; color:var(--muted); text-decoration:none; }
-.back:hover { color:var(--text); }
-.title { font-size:15px; font-weight:600; }
-.subtitle { font-size:12px; color:var(--muted); margin-left:auto; }
+.back { font-size: 13px; color: var(--muted); text-decoration: none; transition: color 0.1s; }
+.back:hover { color: var(--text); }
+.title { font-size: 14px; font-weight: 600; }
+.hint  { font-size: 12px; color: var(--muted); margin-left: auto; }
 
-main {
-  flex:1; display:flex; flex-direction:column; align-items:center;
-  padding:24px 16px 48px; gap:16px; overflow-y:auto;
-}
-
-.game-wrap {
-  display:flex; gap:16px; align-items:flex-start;
-  width:100%; max-width:820px;
-}
-
+/* Canvas fills the middle */
 #canvas-wrap {
-  flex:1; min-width:0; position:relative;
-  border-radius:8px; overflow:hidden;
-  box-shadow:0 2px 20px rgba(0,0,0,0.18);
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
 }
-canvas { display:block; width:100%; height:auto; cursor:pointer; user-select:none; }
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 
-/* Panel */
-.panel {
-  width:190px; flex-shrink:0; display:flex; flex-direction:column; gap:10px;
+/* ── Controls panel ─────────────────────────────────────── */
+.ctrl-panel {
+  flex-shrink: 0;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
-.card {
-  border:1px solid var(--border); border-radius:6px; padding:14px;
-  background:var(--bg);
-}
-.card-label {
-  font-size:10px; font-weight:600; text-transform:uppercase;
-  letter-spacing:0.08em; color:var(--muted); margin-bottom:6px;
-}
-.card-value { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
-.card-sub { font-size:12px; color:var(--muted); margin-top:1px; }
 
-input[type=number] {
-  width:100%; padding:8px 10px; border:1px solid var(--border);
-  border-radius:4px; font-size:14px; font-family:inherit;
-  font-weight:500; outline:none; color:var(--text); background:var(--bg);
+.ctrl-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
 }
-input[type=number]:focus { border-color:var(--text); }
-input[type=number]:disabled { background:var(--surface); color:var(--muted); }
 
-.bet-row { display:flex; gap:5px; margin-top:7px; }
-.btn-small {
-  flex:1; font-family:'Inter',sans-serif; font-size:11px; font-weight:500;
-  padding:5px 2px; border:1px solid var(--border); border-radius:4px;
-  background:var(--surface); color:var(--text); cursor:pointer;
+.ctrl-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
 }
-.btn-small:hover { border-color:var(--text); }
 
-.btn {
-  width:100%; font-family:'Inter',sans-serif; font-weight:600;
-  border:none; border-radius:6px; cursor:pointer;
-  transition:opacity 0.1s, transform 0.08s;
+/* Balance */
+.bal-val {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
-.btn:active { transform:scale(0.97); }
-.btn:disabled { opacity:0.3; cursor:not-allowed; transform:none !important; }
-.btn-start { font-size:13px; padding:10px; margin-top:10px; background:#111; color:#fff; }
-.btn-hop {
-  font-size:18px; padding:14px 10px; margin-top:2px;
-  background:#111; color:#fff; letter-spacing:0.02em;
+
+/* Bet input */
+.bet-wrap {
+  display: flex;
+  align-items: stretch;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 40px;
 }
-.btn-cashout { font-size:13px; padding:10px; margin-top:8px; background:#22c55e; color:#fff; }
+.bet-prefix {
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: var(--muted);
+  border-right: 1px solid var(--border);
+}
+#bet-inp {
+  width: 90px;
+  padding: 0 10px;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: inherit;
+}
+#bet-inp::-webkit-inner-spin-button { display: none; }
+.bet-adj {
+  display: flex;
+  border-left: 1px solid var(--border);
+}
+.bet-adj button {
+  width: 36px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.1s, background 0.1s;
+}
+.bet-adj button:last-child { border-right: none; }
+.bet-adj button:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+.bet-adj button:disabled { opacity: 0.3; cursor: not-allowed; }
 
-.mult-big { font-size:30px; font-weight:700; letter-spacing:-1px; color:#22c55e; }
-.profit-line { font-size:12px; color:#22c55e; margin-top:2px; min-height:16px; }
+/* Multiplier (during play, replaces bet) */
+.mult-val {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green);
+  letter-spacing: -0.5px;
+  line-height: 1;
+}
+.mult-sub {
+  font-size: 11px;
+  color: var(--green);
+  opacity: 0.8;
+}
 
+/* Difficulty */
+.diff-wrap {
+  display: flex;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 40px;
+}
+.diff-btn {
+  padding: 0 14px;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: color 0.12s, background 0.12s;
+  white-space: nowrap;
+}
+.diff-btn:last-child { border-right: none; }
+.diff-btn:hover { color: var(--text); }
+.diff-btn.active { background: var(--purple); color: #fff; }
+
+/* Spacer */
+.spacer { flex: 1; }
+
+/* Status text */
 .status {
-  font-size:12px; color:var(--muted); text-align:center;
-  min-height:20px; line-height:1.5; padding:0 4px;
+  font-size: 13px;
+  color: var(--muted);
+  max-width: 220px;
+  text-align: right;
 }
-.status.win  { color:#22c55e; font-weight:600; }
-.status.lose { color:#ef4444; font-weight:600; }
+.status.win  { color: var(--green); font-weight: 600; }
+.status.lose { color: var(--red);   font-weight: 600; }
 
-.lane-list { display:flex; flex-direction:column; gap:3px; margin-top:4px; }
-.lane-row {
-  display:flex; justify-content:space-between; align-items:center;
-  font-size:11px; padding:2px 0;
+/* Action buttons */
+.btn-start {
+  height: 40px;
+  padding: 0 28px;
+  background: var(--yellow);
+  color: #111;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.1s, transform 0.08s;
 }
-.lane-row .ln { color:var(--muted); }
-.lane-row .mx { font-weight:600; color:var(--muted); }
-.lane-row.active .mx { color:#22c55e; }
-.lane-row.passed .mx { color:#22c55e; opacity:0.4; }
+.btn-start:hover { opacity: 0.9; }
+.btn-start:active { transform: scale(0.97); }
+.btn-start:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
 
-@media (max-width:640px) {
-  .game-wrap { flex-direction:column; align-items:center; }
-  .panel { width:100%; flex-direction:row; flex-wrap:wrap; gap:8px; }
-  .panel > * { flex:1 1 140px; }
+.btn-hop {
+  height: 40px;
+  padding: 0 28px;
+  background: var(--purple);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.1s, transform 0.08s;
+}
+.btn-hop:hover { opacity: 0.85; }
+.btn-hop:active { transform: scale(0.97); }
+.btn-hop:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+.btn-co {
+  height: 40px;
+  padding: 0 24px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: opacity 0.1s, transform 0.08s;
+}
+.btn-co:hover { opacity: 0.85; }
+.btn-co:active { transform: scale(0.97); }
+.btn-co:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+@media (max-width: 720px) {
+  .ctrl-panel { flex-wrap: wrap; gap: 10px; padding: 10px 16px; }
+  .hint { display: none; }
+  .diff-btn { padding: 0 8px; font-size: 12px; }
+  .status { display: none; }
 }
 </style>
 </head>
@@ -116,260 +261,281 @@ input[type=number]:disabled { background:var(--surface); color:var(--muted); }
 <header>
   <a class="back" href="/">← Home</a>
   <span class="title">Mission Uncrossable</span>
-  <span class="subtitle">Space / tap canvas to hop</span>
+  <span class="hint">Space / click to hop · C to cash out</span>
 </header>
 
-<main>
-  <div class="game-wrap">
+<div id="canvas-wrap">
+  <canvas id="canvas"></canvas>
+</div>
 
-    <div id="canvas-wrap">
-      <canvas id="canvas" width="620" height="580"></canvas>
-    </div>
+<div class="ctrl-panel">
 
-    <div class="panel">
+  <!-- Balance -->
+  <div class="ctrl-group">
+    <div class="ctrl-label">Balance</div>
+    <div class="bal-val" id="bal-disp">$1,000</div>
+  </div>
 
-      <!-- Balance -->
-      <div class="card">
-        <div class="card-label">Balance</div>
-        <div class="card-value" id="bal">1,000</div>
-        <div class="card-sub">coins</div>
+  <!-- Bet (idle) -->
+  <div class="ctrl-group" id="bet-group">
+    <div class="ctrl-label">Bet Amount</div>
+    <div class="bet-wrap">
+      <span class="bet-prefix">$</span>
+      <input id="bet-inp" type="number" min="1" max="999999" value="10">
+      <div class="bet-adj">
+        <button onclick="adjBet(0.5)">½</button>
+        <button onclick="adjBet(2)">2×</button>
+        <button onclick="maxBet()">Max</button>
       </div>
-
-      <!-- Bet (idle) -->
-      <div class="card" id="bet-card">
-        <div class="card-label">Bet</div>
-        <input type="number" id="bet-inp" value="10" min="1" max="99999" step="1">
-        <div class="bet-row">
-          <button class="btn-small" onclick="adjBet(0.5)">½</button>
-          <button class="btn-small" onclick="adjBet(2)">2×</button>
-          <button class="btn-small" onclick="maxBet()">Max</button>
-        </div>
-        <button class="btn btn-start" id="start-btn">Start</button>
-      </div>
-
-      <!-- Live controls (playing) -->
-      <div class="card" id="play-card" style="display:none">
-        <div class="card-label">Multiplier</div>
-        <div class="mult-big" id="mult-disp">—</div>
-        <div class="profit-line" id="profit-disp"></div>
-        <button class="btn btn-hop" id="hop-btn">HOP! 🐔</button>
-        <button class="btn btn-cashout" id="co-btn" disabled>Cash Out</button>
-      </div>
-
-      <!-- Multiplier table -->
-      <div class="card">
-        <div class="card-label">Lane Payouts</div>
-        <div class="lane-list" id="lane-list"></div>
-      </div>
-
-      <!-- Status -->
-      <div class="status" id="status"></div>
-
     </div>
   </div>
-</main>
+
+  <!-- Live mult (playing) -->
+  <div class="ctrl-group" id="mult-group" style="display:none">
+    <div class="ctrl-label">Multiplier</div>
+    <div class="mult-val" id="mult-disp">—</div>
+    <div class="mult-sub" id="profit-disp"></div>
+  </div>
+
+  <!-- Difficulty -->
+  <div class="ctrl-group" id="diff-group">
+    <div class="ctrl-label">Difficulty</div>
+    <div class="diff-wrap">
+      <button class="diff-btn" data-d="easy"      onclick="setDiff('easy')">Easy</button>
+      <button class="diff-btn" data-d="medium"    onclick="setDiff('medium')">Medium</button>
+      <button class="diff-btn" data-d="hard"      onclick="setDiff('hard')">Hard</button>
+      <button class="diff-btn active" data-d="daredevil" onclick="setDiff('daredevil')">Daredevil</button>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <div class="status" id="status">Place a bet and hit Start Game</div>
+
+  <!-- Start (idle) -->
+  <button class="btn-start" id="start-btn" onclick="startGame()">Start Game</button>
+
+  <!-- Hop + Cashout (playing) -->
+  <button class="btn-hop"  id="hop-btn"   onclick="hop()"     style="display:none">HOP! 🐔</button>
+  <button class="btn-co"   id="co-btn"    onclick="cashOut()" style="display:none" disabled>Cash Out</button>
+
+</div>
 
 <script>
-// ── Constants ────────────────────────────────────────────────────────────────
-const CW = 620, CH = 580;
-const NL = 8;
-const ZH = CH / (NL + 2);           // zone height ~52.7px
-const RW = CW - 96;                  // road width (right 96px = mult sidebar)
-const CX = RW / 2;                   // chicken x (centre of road)
-const CR = 13;                       // collision half-width
+// ── Config ─────────────────────────────────────────────────────────────────────
+const NL    = 8;
+const SAFE  = 88;   // left safe zone (green/sidewalk) px in internal coords
+const MULTS = [1.20, 1.60, 2.20, 3.20, 5.00, 8.00, 14.00, 25.00];
 
-const MULTS = [1.30, 1.70, 2.30, 3.20, 4.80, 7.50, 13.00, 25.00];
+const DIFF_CFG = {
+  easy:      { n: 1, spd: 1.0 },
+  medium:    { n: 1, spd: 1.7 },
+  hard:      { n: 2, spd: 2.6 },
+  daredevil: { n: 2, spd: 4.2 },
+};
 
-const LCFG = [          // lane 1 (easiest) → lane 8 (hardest)
-  { n:2, spd:1.8, dir: 1, col:'#c0392b' },
-  { n:2, spd:2.4, dir:-1, col:'#2471a3' },
-  { n:3, spd:3.1, dir: 1, col:'#d68910' },
-  { n:3, spd:3.9, dir:-1, col:'#1e8449' },
-  { n:3, spd:5.0, dir: 1, col:'#7d3c98' },
-  { n:4, spd:6.2, dir:-1, col:'#c0392b' },
-  { n:4, spd:7.8, dir: 1, col:'#117a65' },
-  { n:5, spd:10., dir:-1, col:'#784212' },
+const CAR_DEFS = [
+  { col: '#d63031', roof: '#b02222', type: 'sedan' },
+  { col: '#2980b9', roof: '#1a5f8a', type: 'sedan' },
+  { col: '#f5c842', roof: '#c8a230', type: 'bus'   },
+  { col: '#e67e22', roof: '#c05e10', type: 'suv'   },
+  { col: '#27ae60', roof: '#1a7a44', type: 'sedan' },
+  { col: '#8e44ad', roof: '#6a2d8a', type: 'suv'   },
+  { col: '#16a085', roof: '#0e6b58', type: 'sedan' },
+  { col: '#c0392b', roof: '#922b21', type: 'bus'   },
 ];
 
-// ── State ────────────────────────────────────────────────────────────────────
+// Canvas
 const canvas = document.getElementById('canvas');
 const ctx    = canvas.getContext('2d');
+let   CW, CH, LW; // set on resize
 
-let bal, bet, gs, lane, cars;
-let cyFrom, cyTo, cyT, cyDur; // chicken Y animation
-let cy;                        // current chicken Y (rendered)
+function resize() {
+  const wrap = document.getElementById('canvas-wrap');
+  CW = wrap.clientWidth;
+  CH = wrap.clientHeight;
+  canvas.width  = CW;
+  canvas.height = CH;
+  LW = (CW - SAFE) / NL;
+}
+
+// ── State ──────────────────────────────────────────────────────────────────────
+let bal, bet, gs = 'idle', lane, cars, diff = 'daredevil';
+let cxFrom, cxTo, cxT, cxDur;
+let cx;
 let deathAlpha, deathTimer;
 let lastTs = 0;
+let shakeT = 0; // screen shake after death
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-const zTop    = z  => z * ZH;
-const zCtr    = z  => z * ZH + ZH / 2;
-const lZone   = n  => NL + 1 - n;      // lane→zone index (0=top finish, NL+1=bottom start)
-const lTop    = n  => zTop(lZone(n));
-const lCtr    = n  => zCtr(lZone(n));
-const startCY = () => zCtr(NL + 1);
-const finishCY= () => zCtr(0);
-const laneY   = n  => (n === 0 ? startCY() : n > NL ? finishCY() : lCtr(n));
+// ── Helpers ────────────────────────────────────────────────────────────────────
+function laneX(n) {
+  if (n === 0) return SAFE / 2;
+  return SAFE + LW * (n - 1) + LW / 2;
+}
+function isAnimating() { return cxT < cxDur; }
+function ease(t)       { return 1 - (1-t)*(1-t); }
 
-function easeOut(t) { return 1 - (1 - t) * (1 - t); }
-
-// ── Balance ──────────────────────────────────────────────────────────────────
+// ── Balance ────────────────────────────────────────────────────────────────────
 function loadBal() {
   bal = window.RYS ? window.RYS.bal() : 1000;
   if (isNaN(bal) || bal < 1) bal = 1000;
 }
 function saveBal() { if (window.RYS) window.RYS.setBal(bal); }
-function dispBal() { document.getElementById('bal').textContent = bal.toLocaleString(); }
+function dispBal() {
+  document.getElementById('bal-disp').textContent = '$' + bal.toLocaleString();
+}
 
-// ── Cars ─────────────────────────────────────────────────────────────────────
+// ── Difficulty ─────────────────────────────────────────────────────────────────
+function setDiff(d) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.d === d));
+}
+
+// ── Cars ───────────────────────────────────────────────────────────────────────
 function initCars() {
   cars = [];
-  LCFG.forEach((c, i) => {
-    const ln = i + 1;
-    for (let j = 0; j < c.n; j++) {
-      const w = 55 + (Math.random() * 30 | 0);
-      const gap = RW / c.n;
+  const { n, spd } = DIFF_CFG[diff];
+  for (let ln = 1; ln <= NL; ln++) {
+    const def = CAR_DEFS[(ln - 1) % CAR_DEFS.length];
+    const dir = ln % 2 === 0 ? 1 : -1;
+    const isLong = def.type === 'bus';
+    for (let j = 0; j < n; j++) {
+      const carH = isLong ? CH * 0.22 : CH * 0.16;
+      const gap  = CH / n;
       cars.push({
-        lane: ln, x: gap * j + Math.random() * gap * 0.5,
-        w, spd: c.spd * (0.88 + Math.random() * 0.24),
-        dir: c.dir, col: c.col
+        lane: ln, dir,
+        y:    gap * j + Math.random() * gap * 0.7,
+        h:    carH,
+        spd:  spd * (0.82 + Math.random() * 0.36),
+        col:  def.col,
+        roof: def.roof,
+        type: def.type,
       });
     }
-  });
+  }
 }
 
 function moveCars(dt) {
   for (const c of cars) {
-    c.x += c.spd * c.dir * dt * 60;
-    if (c.dir === 1  && c.x >  RW + 40)   c.x = -c.w - 40;
-    if (c.dir === -1 && c.x < -c.w - 40)  c.x = RW + 40;
+    c.y += c.spd * c.dir * CH * dt;
+    if (c.dir ===  1 && c.y >  CH + c.h + 10) c.y = -c.h - 10;
+    if (c.dir === -1 && c.y < -c.h - 10)      c.y =  CH + c.h + 10;
   }
 }
 
-// ── Collision ────────────────────────────────────────────────────────────────
+// ── Collision ──────────────────────────────────────────────────────────────────
 function hit(targetLane) {
-  const L = CX - CR - 8, R = CX + CR + 8;
-  for (const c of cars)
-    if (c.lane === targetLane && c.x < R && c.x + c.w > L) return true;
+  const mid = CH / 2;
+  const cr  = CH * 0.065; // chicken radius (vertical)
+  for (const c of cars) {
+    if (c.lane !== targetLane) continue;
+    if (c.y < mid + cr && c.y + c.h > mid - cr) return true;
+  }
   return false;
 }
 
-// ── Chicken animation ────────────────────────────────────────────────────────
-function animChicken(to, dur) {
-  cyFrom = cy; cyTo = to; cyT = 0; cyDur = dur;
-}
-function isAnimating() { return cyT < cyDur; }
-
-// ── Actions ──────────────────────────────────────────────────────────────────
+// ── Actions ────────────────────────────────────────────────────────────────────
 function startGame() {
   bet = Math.max(1, Math.min(bal, parseInt(document.getElementById('bet-inp').value, 10) || 10));
-  if (bal <= 0) { setStatus('No coins! Refresh to reset balance.', ''); return; }
+  if (bal < 1) { setStatus('No balance!', ''); return; }
   bal -= bet; saveBal(); dispBal();
   lane = 0;
-  cy = startCY(); cyFrom = cy; cyTo = cy; cyT = cyDur = 1;
-  deathAlpha = 0; deathTimer = 0;
+  cx = laneX(0); cxFrom = cx; cxTo = cx; cxT = cxDur = 1;
+  deathAlpha = 0; deathTimer = 0; shakeT = 0;
   initCars();
   gs = 'playing';
   showPlay();
   updMult();
-  setStatus('Time your hops — click, tap, or press Space!', '');
+  setStatus('Click, tap, or Space to hop!', '');
 }
 
 function hop() {
   if (gs !== 'playing' || isAnimating()) return;
   const next = lane + 1;
   if (next > NL) {
-    // Made it!
-    animChicken(finishCY(), 0.35);
+    animX(laneX(NL) + LW * 0.6, 0.22);
     lane = NL + 1;
-    setTimeout(doWin, 400);
+    setTimeout(doWin, 320);
     return;
   }
   if (hit(next)) {
     lane = next;
-    animChicken(laneY(next), 0.18);
-    setTimeout(doDead, 250);
+    animX(laneX(next), 0.12);
+    setTimeout(doDead, 180);
     return;
   }
   lane = next;
-  animChicken(laneY(next), 0.22);
+  animX(laneX(next), 0.18);
   updMult();
 }
 
 function cashOut() {
   if (gs !== 'playing' || lane === 0 || isAnimating()) return;
-  const m = MULTS[lane - 1];
+  const m   = MULTS[lane - 1];
   const win = Math.floor(bet * m);
   bal += win; saveBal(); dispBal();
   gs = 'idle';
   showIdle();
-  setStatus(`💰 Cashed out ${win} coins at ${m.toFixed(2)}×`, 'win');
+  setStatus('Cashed out at ' + m.toFixed(2) + '× · +$' + win.toLocaleString(), 'win');
 }
 
 function doDead() {
-  gs = 'dead'; deathAlpha = 1;
+  gs = 'dead'; deathAlpha = 1; deathTimer = 1.6; shakeT = 0.3;
   showIdle();
-  setStatus(`Splat! Lost ${bet} coins.`, 'lose');
-  deathTimer = 1.2;
+  setStatus('Splat! Lost $' + bet.toLocaleString(), 'lose');
 }
 
 function doWin() {
-  const m = MULTS[NL - 1];
+  const m   = MULTS[NL - 1];
   const win = Math.floor(bet * m);
   bal += win; saveBal(); dispBal();
   gs = 'idle';
   showIdle();
-  setStatus(`🏆 All lanes crossed! Won ${win} coins at ${m.toFixed(2)}×`, 'win');
+  setStatus('You made it! +$' + win.toLocaleString() + ' at ' + m.toFixed(2) + '×', 'win');
 }
 
-// ── UI ───────────────────────────────────────────────────────────────────────
+function animX(to, dur) {
+  cxFrom = cx; cxTo = to; cxT = 0; cxDur = dur;
+}
+
+// ── UI ─────────────────────────────────────────────────────────────────────────
 function showIdle() {
-  document.getElementById('bet-card').style.display  = '';
-  document.getElementById('play-card').style.display = 'none';
+  document.getElementById('bet-group').style.display  = '';
+  document.getElementById('mult-group').style.display = 'none';
+  document.getElementById('diff-group').style.display = '';
+  document.getElementById('start-btn').style.display  = '';
+  document.getElementById('hop-btn').style.display    = 'none';
+  document.getElementById('co-btn').style.display     = 'none';
+  document.querySelectorAll('.bet-adj button,.diff-btn').forEach(b => b.disabled = false);
   document.getElementById('bet-inp').disabled = false;
   dispBal();
 }
+
 function showPlay() {
-  document.getElementById('bet-card').style.display  = 'none';
-  document.getElementById('play-card').style.display = '';
-  document.getElementById('co-btn').disabled = true;
+  document.getElementById('bet-group').style.display  = 'none';
+  document.getElementById('mult-group').style.display = '';
+  document.getElementById('diff-group').style.display = 'none';
+  document.getElementById('start-btn').style.display  = 'none';
+  document.getElementById('hop-btn').style.display    = '';
+  document.getElementById('co-btn').style.display     = '';
+  document.getElementById('co-btn').disabled          = true;
 }
+
 function updMult() {
-  const m  = document.getElementById('mult-disp');
-  const p  = document.getElementById('profit-disp');
-  const co = document.getElementById('co-btn');
-  if (lane === 0) { m.textContent = '—'; p.textContent = ''; co.disabled = true; return; }
-  const mult = MULTS[lane - 1];
-  m.textContent = mult.toFixed(2) + '×';
-  p.textContent = '+' + Math.floor(bet * mult) + ' coins';
-  co.disabled = false;
+  const md = document.getElementById('mult-disp');
+  const pd = document.getElementById('profit-disp');
+  if (lane === 0) { md.textContent = '—'; pd.textContent = ''; return; }
+  const m = MULTS[lane - 1];
+  md.textContent = m.toFixed(2) + '×';
+  pd.textContent = 'Cash out: $' + Math.floor(bet * m).toLocaleString();
+  document.getElementById('co-btn').disabled = false;
 }
+
 function setStatus(txt, cls) {
   const el = document.getElementById('status');
   el.textContent = txt;
-  el.className = 'status ' + (cls || '');
-}
-
-function buildLaneList() {
-  const ul = document.getElementById('lane-list');
-  ul.innerHTML = '';
-  for (let n = NL; n >= 1; n--) {
-    const row = document.createElement('div');
-    row.className = 'lane-row';
-    row.id = 'lr' + n;
-    row.innerHTML = `<span class="ln">Lane ${n}</span><span class="mx">${MULTS[n-1].toFixed(2)}×</span>`;
-    ul.appendChild(row);
-  }
-}
-
-function updLaneList() {
-  for (let n = 1; n <= NL; n++) {
-    const row = document.getElementById('lr' + n);
-    if (!row) continue;
-    row.className = 'lane-row'
-      + (gs === 'playing' && lane === n ? ' active' : '')
-      + (gs === 'playing' && lane > n  ? ' passed' : '');
-  }
+  el.className   = 'status' + (cls ? ' ' + cls : '');
 }
 
 function adjBet(f) {
@@ -378,175 +544,274 @@ function adjBet(f) {
 }
 function maxBet() { document.getElementById('bet-inp').value = bal; }
 
-// ── Drawing ──────────────────────────────────────────────────────────────────
-function rr(x, y, w, h, r) {
+// ── Drawing ────────────────────────────────────────────────────────────────────
+function rrect(x, y, w, h, r) {
+  r = Math.min(r, w/2, h/2);
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.arcTo(x + w, y, x + w, y + r, r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-  ctx.lineTo(x + r, y + h);
-  ctx.arcTo(x, y + h, x, y + h - r, r);
-  ctx.lineTo(x, y + r);
-  ctx.arcTo(x, y, x + r, y, r);
+  ctx.moveTo(x+r, y);
+  ctx.lineTo(x+w-r, y);
+  ctx.arcTo(x+w, y, x+w, y+r, r);
+  ctx.lineTo(x+w, y+h-r);
+  ctx.arcTo(x+w, y+h, x+w-r, y+h, r);
+  ctx.lineTo(x+r, y+h);
+  ctx.arcTo(x, y+h, x, y+h-r, r);
+  ctx.lineTo(x, y+r);
+  ctx.arcTo(x, y, x+r, y, r);
   ctx.closePath();
 }
 
-function drawBoard() {
-  // Background
-  ctx.fillStyle = '#111';
-  ctx.fillRect(0, 0, CW, CH);
+function drawCar(c) {
+  const margin = LW * 0.12;
+  const carX   = SAFE + (c.lane - 1) * LW + margin;
+  const carW   = LW - margin * 2;
+  const carY   = c.y;
+  const carH   = c.h;
 
-  // Safe zones
-  ctx.fillStyle = '#0b2e0f';
-  ctx.fillRect(0, zTop(0),      RW, ZH); // finish
-  ctx.fillRect(0, zTop(NL + 1), RW, ZH); // start
+  // Body
+  ctx.fillStyle = c.col;
+  rrect(carX, carY, carW, carH, 7);
+  ctx.fill();
 
-  // Lanes
-  for (let n = 1; n <= NL; n++) {
-    ctx.fillStyle = n % 2 === 0 ? '#1c1c1c' : '#181818';
-    ctx.fillRect(0, lTop(n), RW, ZH);
+  // Roof panel (slightly darker, inset)
+  ctx.fillStyle = c.roof;
+  const ri = carW * 0.18, rt = carH * 0.2;
+  rrect(carX + ri, carY + rt, carW - ri*2, carH - rt*2, 4);
+  ctx.fill();
+
+  // Windshield
+  const ww = carW * 0.65, wh = carH * 0.18;
+  const wx = carX + (carW - ww) / 2;
+  ctx.fillStyle = 'rgba(160,210,255,0.22)';
+  if (c.dir === 1) {
+    rrect(wx, carY + 6, ww, wh, 3);
+  } else {
+    rrect(wx, carY + carH - 6 - wh, ww, wh, 3);
+  }
+  ctx.fill();
+
+  // Headlights
+  const hlW = carW * 0.2, hlH = 5;
+  const hlX = carX + (carW - hlW * 2 - 4) / 2;
+  ctx.fillStyle = '#fffbe6';
+  if (c.dir === 1) {
+    ctx.fillRect(hlX,           carY + carH - 4, hlW, hlH);
+    ctx.fillRect(hlX + hlW + 4, carY + carH - 4, hlW, hlH);
+  } else {
+    ctx.fillRect(hlX,           carY - 1, hlW, hlH);
+    ctx.fillRect(hlX + hlW + 4, carY - 1, hlW, hlH);
   }
 
-  // Lane dividers (dashed)
-  ctx.setLineDash([10, 7]);
-  ctx.strokeStyle = '#2a2a2a';
-  ctx.lineWidth = 1;
-  for (let n = 1; n <= NL; n++) {
-    const y = lTop(n) + ZH;
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(RW, y); ctx.stroke();
+  // Taillights
+  ctx.fillStyle = '#ff3333';
+  const tlW = carW * 0.18, tlH = 4;
+  const tlX = carX + (carW - tlW * 2 - 4) / 2;
+  if (c.dir === 1) {
+    ctx.fillRect(tlX,           carY - 1, tlW, tlH);
+    ctx.fillRect(tlX + tlW + 4, carY - 1, tlW, tlH);
+  } else {
+    ctx.fillRect(tlX,           carY + carH - 3, tlW, tlH);
+    ctx.fillRect(tlX + tlW + 4, carY + carH - 3, tlW, tlH);
+  }
+
+  // Wheels
+  ctx.fillStyle = '#0a0c1e';
+  const whl = 6, whh = 10;
+  ctx.fillRect(carX - 2,          carY + carH * 0.18, whl, whh);
+  ctx.fillRect(carX + carW - 4,   carY + carH * 0.18, whl, whh);
+  ctx.fillRect(carX - 2,          carY + carH * 0.64, whl, whh);
+  ctx.fillRect(carX + carW - 4,   carY + carH * 0.64, whl, whh);
+}
+
+function drawScene() {
+  // ── Background ──
+  ctx.fillStyle = '#0a0c1e';
+  ctx.fillRect(0, 0, CW, CH);
+
+  // ── Road lanes ──
+  for (let i = 0; i < NL; i++) {
+    ctx.fillStyle = i % 2 === 0 ? '#141736' : '#111430';
+    ctx.fillRect(SAFE + i * LW, 0, LW, CH);
+  }
+
+  // ── Active lane highlight ──
+  if (gs === 'playing' && lane > 0 && lane <= NL) {
+    ctx.fillStyle = 'rgba(30,203,79,0.07)';
+    ctx.fillRect(SAFE + (lane-1)*LW, 0, LW, CH);
+  }
+
+  // ── Manhole covers ──
+  for (let i = 0; i < NL; i++) {
+    const mx = SAFE + i * LW + LW / 2;
+    const r  = Math.min(LW, CH) * 0.18;
+    ctx.beginPath();
+    ctx.arc(mx, CH / 2, r, 0, Math.PI * 2);
+    ctx.fillStyle   = 'rgba(255,255,255,0.025)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth   = 1;
+    ctx.stroke();
+    // Cross lines on manhole
+    ctx.strokeStyle = 'rgba(255,255,255,0.035)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(mx-r,CH/2); ctx.lineTo(mx+r,CH/2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(mx,CH/2-r); ctx.lineTo(mx,CH/2+r); ctx.stroke();
+  }
+
+  // ── Lane dividers (dashed vertical) ──
+  ctx.setLineDash([CH * 0.04, CH * 0.03]);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.lineWidth   = 1;
+  for (let i = 1; i < NL; i++) {
+    const x = SAFE + i * LW;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, CH); ctx.stroke();
   }
   ctx.setLineDash([]);
 
-  // Zone labels
-  ctx.font = 'bold 12px Inter, sans-serif';
-  ctx.textAlign = 'center';
+  // ── Left safe zone (grass/sidewalk) ──
+  ctx.fillStyle = '#1a5c30';
+  ctx.fillRect(0, 0, SAFE, CH);
+  // Sidewalk edge
+  ctx.fillStyle = '#4a5568';
+  ctx.fillRect(SAFE - 10, 0, 10, CH);
+  // Curb highlight
+  ctx.fillStyle = '#6b7280';
+  ctx.fillRect(SAFE - 10, 0, 2, CH);
+  // Grass texture stripes
+  for (let y = 0; y < CH; y += CH * 0.08) {
+    ctx.fillStyle = 'rgba(255,255,255,0.04)';
+    ctx.fillRect(0, y, SAFE - 10, CH * 0.04);
+  }
+  // Fire hydrant
+  const hx = SAFE - 28, hy = CH / 2 + CH * 0.15;
+  ctx.fillStyle = '#e63946';
+  ctx.fillRect(hx - 5, hy - 14, 10, 14);
+  ctx.fillStyle = '#c1121f';
+  ctx.fillRect(hx - 7, hy - 17, 14, 5);
+  ctx.fillRect(hx - 3, hy, 6, 5);
+
+  // Bush
+  const bx = SAFE - 30, by = CH / 2 - CH * 0.22;
+  ctx.fillStyle = '#2d6a4f';
+  ctx.beginPath(); ctx.arc(bx, by, 12, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#40916c';
+  ctx.beginPath(); ctx.arc(bx-6, by+4, 8, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(bx+6, by+3, 9, 0, Math.PI*2); ctx.fill();
+
+  // ── Cars ──
+  for (const c of cars) drawCar(c);
+
+  // ── Multiplier labels in each lane ──
+  ctx.textAlign    = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#22c55e';
-  ctx.fillText('FINISH', RW / 2, zCtr(0));
-  ctx.fillStyle = '#22c55e';
-  ctx.fillText('START',  RW / 2, zCtr(NL + 1));
-
-  // Traffic direction arrows
-  ctx.font = '10px Inter, sans-serif';
-  ctx.fillStyle = '#2a2a2a';
-  for (let n = 1; n <= NL; n++) {
-    const cy2 = lCtr(n);
-    if (LCFG[n - 1].dir === 1) {
-      ctx.textAlign = 'left';  ctx.fillText('→→', 6, cy2);
-    } else {
-      ctx.textAlign = 'right'; ctx.fillText('←←', RW - 6, cy2);
-    }
+  for (let ln = 1; ln <= NL; ln++) {
+    const lx     = SAFE + (ln - 1) * LW + LW / 2;
+    const passed = gs === 'playing' && lane >= ln;
+    const active = gs === 'playing' && lane === ln;
+    const fontSize = Math.max(10, Math.min(13, LW * 0.12));
+    ctx.font      = (active ? '700 ' : '600 ') + fontSize + 'px Inter, sans-serif';
+    ctx.fillStyle = active ? '#fff' : passed ? 'rgba(30,203,79,0.7)' : 'rgba(90,104,144,0.8)';
+    ctx.fillText(MULTS[ln-1].toFixed(2) + '×', lx, CH - CH * 0.07);
   }
 
-  // Cars
-  const carH = ZH * 0.6 | 0;
-  for (const c of cars) {
-    const carY = lTop(c.lane) + (ZH - carH) / 2;
-    ctx.fillStyle = c.col;
-    rr(c.x, carY, c.w, carH, 5);
-    ctx.fill();
-    // Windshield
-    ctx.fillStyle = 'rgba(0,0,0,0.28)';
-    const ww = c.w * 0.52, wx = c.x + (c.w - ww) / 2;
-    rr(wx, carY + 5, ww, carH - 10, 3);
-    ctx.fill();
-    // Headlights
-    ctx.fillStyle = '#ffe082';
-    const hx = c.dir === 1 ? c.x + c.w - 4 : c.x + 1;
-    ctx.fillRect(hx, carY + 5, 3, 5);
-    ctx.fillRect(hx, carY + carH - 10, 3, 5);
+  // ── Direction arrows per lane ──
+  ctx.font      = '11px Inter, sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.06)';
+  for (let ln = 1; ln <= NL; ln++) {
+    const lx  = SAFE + (ln - 1) * LW + LW / 2;
+    const dir = ln % 2 === 0 ? '↓' : '↑';
+    ctx.fillText(dir, lx, CH * 0.12);
+    ctx.fillText(dir, lx, CH * 0.88);
   }
 
-  // Chicken
-  const chSize = Math.round(ZH * 0.62);
+  // ── Chicken ──
+  const chickenSize = Math.round(Math.min(LW, CH) * 0.22);
   ctx.save();
-  ctx.font = chSize + 'px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
   if (gs === 'dead') ctx.globalAlpha = Math.max(0, deathAlpha);
-  ctx.fillText('🐔', CX, cy);
+  ctx.font         = chickenSize + 'px serif';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🐔', cx, CH / 2);
   ctx.restore();
 
-  // Multiplier sidebar
-  const sx = RW, sw = CW - RW;
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(sx, 0, sw, CH);
-  ctx.strokeStyle = '#1e1e1e';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, CH); ctx.stroke();
+  // ── Finish line glow (right side) ──
+  const grad = ctx.createLinearGradient(CW - 60, 0, CW, 0);
+  grad.addColorStop(0, 'rgba(30,203,79,0)');
+  grad.addColorStop(1, 'rgba(30,203,79,0.06)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(CW - 60, 0, 60, CH);
 
-  ctx.font = '9px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillStyle = '#444';
-  ctx.fillText('MULT', sx + sw / 2, 6);
-
-  // Finish mult in sidebar
-  ctx.font = 'bold 11px Inter, sans-serif';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = gs === 'playing' && lane > NL ? '#22c55e' : '#444';
-  ctx.fillText('25×', sx + sw / 2, zCtr(0));
-
-  for (let n = 1; n <= NL; n++) {
-    const active = gs === 'playing' && lane >= n;
-    ctx.fillStyle = active ? '#22c55e' : '#333';
-    ctx.font = (active ? 'bold ' : '') + '10px Inter, sans-serif';
-    ctx.fillText(MULTS[n - 1].toFixed(2) + '×', sx + sw / 2, lCtr(n));
-  }
+  // ── Road border (right edge) ──
+  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+  ctx.lineWidth   = 1;
+  ctx.beginPath(); ctx.moveTo(SAFE, 0); ctx.lineTo(SAFE, CH); ctx.stroke();
 }
 
-// ── Game loop ────────────────────────────────────────────────────────────────
+// ── Game loop ──────────────────────────────────────────────────────────────────
 function tick(ts) {
   const dt = Math.min((ts - lastTs) / 1000, 0.05);
   lastTs = ts;
 
   if (gs === 'playing' || gs === 'dead') moveCars(dt);
 
-  // Animate chicken Y
-  if (cyT < cyDur) {
-    cyT = Math.min(cyDur, cyT + dt);
-    cy = cyFrom + (cyTo - cyFrom) * easeOut(cyT / cyDur);
+  // Chicken X animation
+  if (cxT < cxDur) {
+    cxT = Math.min(cxDur, cxT + dt);
+    cx  = cxFrom + (cxTo - cxFrom) * ease(cxT / cxDur);
   } else {
-    cy = cyTo;
+    cx = cxTo;
   }
 
-  // Death fade
+  // Death fade + reset
   if (gs === 'dead' && deathTimer > 0) {
     deathTimer -= dt;
-    deathAlpha = Math.max(0, deathTimer / 1.2);
-    if (deathTimer <= 0) { gs = 'idle'; deathAlpha = 0; cy = startCY(); }
+    deathAlpha  = Math.max(0, deathTimer / 1.6);
+    shakeT      = Math.max(0, shakeT - dt);
+    if (deathTimer <= 0) { gs = 'idle'; deathAlpha = 0; cx = laneX(0); }
   }
 
-  updLaneList();
-  drawBoard();
+  // Screen shake
+  ctx.save();
+  if (shakeT > 0) {
+    const mag = shakeT * 5;
+    ctx.translate(
+      (Math.random() - 0.5) * mag,
+      (Math.random() - 0.5) * mag
+    );
+  }
+
+  drawScene();
+  ctx.restore();
+
   requestAnimationFrame(tick);
 }
 
-// ── Events ───────────────────────────────────────────────────────────────────
-document.getElementById('start-btn').addEventListener('click', startGame);
-document.getElementById('hop-btn').addEventListener('click', hop);
-document.getElementById('co-btn').addEventListener('click', cashOut);
-
+// ── Events ─────────────────────────────────────────────────────────────────────
 canvas.addEventListener('click', () => { if (gs === 'playing') hop(); });
-canvas.addEventListener('touchstart', e => { e.preventDefault(); if (gs === 'playing') hop(); }, { passive: false });
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (gs === 'playing') hop();
+}, { passive: false });
 
 document.addEventListener('keydown', e => {
-  if ((e.code === 'Space' || e.code === 'ArrowUp') && gs === 'playing') {
+  if ((e.code === 'Space' || e.code === 'ArrowRight') && gs === 'playing') {
     e.preventDefault(); hop();
   }
   if (e.code === 'KeyC' && gs === 'playing') cashOut();
 });
 
-// ── Boot ─────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  resize();
+  if (!CW) return;
+  if (gs === 'idle') cx = laneX(0);
+});
+
+// ── Boot ───────────────────────────────────────────────────────────────────────
+resize();
 loadBal();
-buildLaneList();
 initCars();
-cy = startCY(); cyFrom = cy; cyTo = cy; cyT = cyDur = 1;
-gs = 'idle'; deathAlpha = 0; deathTimer = 0;
+cx = laneX(0); cxFrom = cx; cxTo = cx; cxT = cxDur = 1;
+gs = 'idle'; deathAlpha = 0; deathTimer = 0; shakeT = 0;
 dispBal(); showIdle();
-setStatus('Place a bet and hit Start to play.', '');
 requestAnimationFrame(ts => { lastTs = ts; requestAnimationFrame(tick); });
 </script>
 <script src="/admin/control.js"></script>
