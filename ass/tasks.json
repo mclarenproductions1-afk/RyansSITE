@@ -20,26 +20,6 @@
     "createdAt": "2026-03-31"
   },
   {
-    "id": "0db8bd2e-4f91-470a-aa56-10f3c9d22f2f",
-    "title": "Open Book Exam",
-    "subject": "Extension Maths",
-    "type": "test",
-    "dueDate": "2026-05-04",
-    "notes": "",
-    "completed": true,
-    "createdAt": "2026-04-01"
-  },
-  {
-    "id": "dba8e035-4981-4937-ac3e-ef82c883832f",
-    "title": "Creative Writing and Reflection Task",
-    "subject": "Extension English",
-    "type": "assignment",
-    "dueDate": "2026-04-30",
-    "notes": "",
-    "completed": true,
-    "createdAt": "2026-04-01"
-  },
-  {
     "id": "2a119922-7965-4103-be29-b80b44611906",
     "title": "Gravity and vector analysis",
     "subject": "Physics",
