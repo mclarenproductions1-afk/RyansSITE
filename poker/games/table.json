@@ -15,20 +15,7 @@
       "lastAction": "Fold",
       "joinedAt": "2026-05-28T03:50:28.338Z"
     },
-    {
-      "name": "ryan",
-      "chips": 980,
-      "bet": 20,
-      "hand": [
-        "As",
-        "Jh"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Call",
-      "joinedAt": "2026-05-28T03:50:27.748Z"
-    },
+    null,
     {
       "name": "roy",
       "chips": 990,
@@ -131,5 +118,5 @@
       "amount": 20
     }
   ],
-  "updatedAt": "2026-05-28T03:52:05.262Z"
+  "updatedAt": "2026-05-28T03:52:18.961Z"
 }
