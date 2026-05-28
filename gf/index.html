@@ -185,11 +185,50 @@
   }
   .empty-icon { font-size: 36px; margin-bottom: 4px; }
 
+  /* Content area — chat + avatar side by side */
+  .content-area { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+
+  /* Avatar sidebar */
+  .avatar-sidebar {
+    width: 120px; flex-shrink: 0;
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 12px 10px; gap: 6px; overflow: hidden;
+  }
+  .av-sidebar-title {
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px;
+    white-space: nowrap;
+  }
+  .av-slot {
+    position: relative; width: 100%; aspect-ratio: 16/9;
+    border: 1px solid var(--border); border-radius: 5px;
+    background: var(--surface); overflow: hidden; flex-shrink: 0;
+  }
+  .av-slot-img { width: 100%; height: 100%; background-repeat: no-repeat; display: none; }
+  .av-slot-empty {
+    width: 100%; height: 100%; display: flex;
+    align-items: center; justify-content: center;
+    font-size: 14px; opacity: 0.25;
+  }
+  .av-shop-link {
+    display: block; text-align: center; font-size: 10px; font-weight: 600;
+    color: var(--muted); text-decoration: none; margin-top: 4px;
+    padding: 5px 0; border: 1px solid var(--border); border-radius: 4px;
+    transition: color 0.1s, border-color 0.1s;
+  }
+  .av-shop-link:hover { color: var(--text); border-color: var(--text); }
+
+  /* Chat column takes remaining space */
+  .chat-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
   @media (max-width: 600px) {
     header { padding: 12px 16px; }
     .selector-bar { padding: 8px 16px; }
     .messages { padding: 16px; }
     .input-area { padding: 12px 16px; }
+    .avatar-sidebar { width: 80px; padding: 8px 6px; }
+    .av-sidebar-title { display: none; }
   }
 </style>
 </head>
@@ -226,16 +265,48 @@
     style="font-family:'Inter',sans-serif;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--border);outline:none;background:var(--bg);color:var(--text);width:220px">
 </div>
 
-<div class="messages" id="messages">
-  <div class="empty-state" id="empty">
-    <div class="empty-icon">💌</div>
-    <div>Say hi to start chatting</div>
-  </div>
-</div>
+<div class="content-area">
 
-<div class="input-area">
-  <textarea id="input" placeholder="Say something..." rows="1"></textarea>
-  <button id="send">Send</button>
+  <!-- Avatar sidebar -->
+  <div class="avatar-sidebar" id="av-sidebar">
+    <div class="av-sidebar-title">Outfit</div>
+    <div class="av-slot" id="avs-headwear">
+      <div class="av-slot-img" id="avsi-headwear"></div>
+      <div class="av-slot-empty" id="avse-headwear">🎩</div>
+    </div>
+    <div class="av-slot" id="avs-glasses">
+      <div class="av-slot-img" id="avsi-glasses"></div>
+      <div class="av-slot-empty" id="avse-glasses">👓</div>
+    </div>
+    <div class="av-slot" id="avs-shirts">
+      <div class="av-slot-img" id="avsi-shirts"></div>
+      <div class="av-slot-empty" id="avse-shirts">👕</div>
+    </div>
+    <div class="av-slot" id="avs-pants">
+      <div class="av-slot-img" id="avsi-pants"></div>
+      <div class="av-slot-empty" id="avse-pants">👖</div>
+    </div>
+    <div class="av-slot" id="avs-shoes">
+      <div class="av-slot-img" id="avsi-shoes"></div>
+      <div class="av-slot-empty" id="avse-shoes">👟</div>
+    </div>
+    <a class="av-shop-link" href="/gf/shop">Shop →</a>
+  </div>
+
+  <!-- Chat column -->
+  <div class="chat-col">
+    <div class="messages" id="messages">
+      <div class="empty-state" id="empty">
+        <div class="empty-icon">💌</div>
+        <div>Say hi to start chatting</div>
+      </div>
+    </div>
+    <div class="input-area">
+      <textarea id="input" placeholder="Say something..." rows="1"></textarea>
+      <button id="send">Send</button>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -302,6 +373,47 @@ const emptyEl     = document.getElementById('empty');
 const headerName  = document.getElementById('header-name');
 const nameInput   = document.getElementById('custom-name');
 
+// ── Wardrobe / avatar sidebar ─────────────────────────────────────────────────
+const SHEETS = {
+  headwear: { file: '/gf/assests/headware.png', cols: 4, rows: 4 },
+  glasses:  { file: '/gf/assests/glasses.png',  cols: 4, rows: 4 },
+  shirts:   { file: '/gf/assests/shirts.png',   cols: 6, rows: 4 },
+  pants:    { file: '/gf/assests/pants.png',     cols: 6, rows: 4 },
+  shoes:    { file: '/gf/assests/shoes.png',     cols: 6, rows: 4 },
+};
+
+function spriteStyle(cat, row, col) {
+  const s = SHEETS[cat];
+  if (!s) return '';
+  const xPct = s.cols > 1 ? (col / (s.cols - 1) * 100).toFixed(4) : 0;
+  const yPct = s.rows > 1 ? (row / (s.rows - 1) * 100).toFixed(4) : 0;
+  return `background-image:url('${s.file}');background-size:${s.cols*100}% ${s.rows*100}%;background-position:${xPct}% ${yPct}%;`;
+}
+
+function renderAvatarSidebar() {
+  const categories = ['headwear','glasses','shirts','pants','shoes'];
+  let equipped = {};
+  try { equipped = JSON.parse(localStorage.getItem('rys-equipped') || '{}'); } catch(_) {}
+  categories.forEach(cat => {
+    const id = equipped[cat];
+    const imgEl   = document.getElementById('avsi-' + cat);
+    const emptyEl = document.getElementById('avse-' + cat);
+    if (!imgEl) return;
+    if (id) {
+      const parts = id.split('_');
+      const col = parseInt(parts.pop(), 10);
+      const row = parseInt(parts.pop(), 10);
+      imgEl.style.cssText = spriteStyle(cat, row, col);
+      imgEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+    } else {
+      imgEl.style.cssText = '';
+      imgEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'flex';
+    }
+  });
+}
+
 // ── Wardrobe item names ───────────────────────────────────────────────────────
 const ITEM_NAMES = {
   headwear: ['Baseball Cap','Witch Hat','Crown','Beanie','Cowboy Hat','Bunny Ears','Cat Ears','Top Hat','Flower Crown','Halo','Devil Horns','Viking Helmet','Graduation Cap','Santa Hat','Pirate Hat','Bow'],
@@ -340,7 +452,7 @@ function getPersona() {
   let system = v.build(t);
   if (currentName) system += ` The user has named you ${currentName} — use this name naturally when referring to yourself.`;
   const outfit = getEquippedDescription();
-  if (outfit) system += ` The user has dressed you in: ${outfit}. Mention your outfit naturally in conversation when it feels relevant — comment on it if asked or bring it up occasionally.`;
+  if (outfit) system += ` The user has bought you an outfit and dressed you in: ${outfit}. This is important — in your very first message, excitedly acknowledge what you're wearing and thank them for buying it. Throughout the conversation, reference specific items from your outfit regularly and naturally — how they look, how they feel, whether you love them. Make it clear you're aware of and love what they got you.`;
   return { emoji: v.emoji, system };
 }
 
@@ -532,6 +644,7 @@ nameInput.addEventListener('input', () => {
 
 // Init
 resetChat();
+renderAvatarSidebar();
 </script>
 <script src="/admin/control.js"></script>
 </body>
