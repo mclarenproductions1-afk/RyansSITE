@@ -1,5 +1,5 @@
 {
-  "status": "active",
+  "status": "showdown",
   "players": [
     {
       "name": "bigballs67",
@@ -16,23 +16,10 @@
       "joinedAt": "2026-05-28T03:50:28.338Z"
     },
     null,
-    {
-      "name": "roy",
-      "chips": 990,
-      "bet": 10,
-      "hand": [
-        "9h",
-        "3c"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "SB",
-      "joinedAt": "2026-05-28T03:50:36.984Z"
-    },
+    null,
     {
       "name": "Parma sean",
-      "chips": 980,
+      "chips": 1030,
       "bet": 20,
       "hand": [
         "Kc",
@@ -41,7 +28,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
+      "lastAction": "Wins!",
       "joinedAt": "2026-05-28T03:50:50.396Z"
     },
     null,
@@ -62,7 +49,7 @@
   ],
   "handNum": 1,
   "dealer": 1,
-  "phase": "preflop",
+  "phase": "showdown",
   "deck": [
     "3s",
     "6h",
@@ -110,11 +97,11 @@
     "8s"
   ],
   "communityCards": [],
-  "pot": 50,
+  "pot": 0,
   "sidePots": [],
   "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 2,
+  "currentTurn": -1,
   "turnStartedAt": "2026-05-28T03:52:05.262Z",
   "lastAggressor": 3,
   "roundStartPlayer": 3,
@@ -128,7 +115,19 @@
       "slot": 1,
       "action": "call",
       "amount": 20
+    },
+    {
+      "slot": 2,
+      "action": "fold",
+      "amount": 0
     }
   ],
-  "updatedAt": "2026-05-28T03:52:22.580Z"
+  "updatedAt": "2026-05-28T03:53:07.076Z",
+  "lastWinners": [
+    {
+      "slot": 3,
+      "hand": "All others folded",
+      "amount": 50
+    }
+  ]
 }
