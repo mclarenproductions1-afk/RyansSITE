@@ -46,6 +46,14 @@
     background: #22c55e; margin-left: 2px;
   }
 
+  .wardrobe-link {
+    margin-left: auto; font-size: 12px; font-weight: 500;
+    color: var(--muted); text-decoration: none;
+    border: 1px solid var(--border); border-radius: 20px;
+    padding: 4px 12px; transition: border-color 0.12s, color 0.12s;
+  }
+  .wardrobe-link:hover { color: var(--text); border-color: var(--text); }
+
   /* Selector bars */
   .selector-bar {
     padding: 8px 24px;
@@ -191,6 +199,7 @@
   <a class="back" href="/">← Home</a>
   <span class="header-name" id="header-name">Girlfriend</span>
   <div class="status-dot"></div>
+  <a class="wardrobe-link" href="/gf/shop">Wardrobe →</a>
 </header>
 
 <div class="selector-bar" id="type-bar">
@@ -293,12 +302,45 @@ const emptyEl     = document.getElementById('empty');
 const headerName  = document.getElementById('header-name');
 const nameInput   = document.getElementById('custom-name');
 
+// ── Wardrobe item names ───────────────────────────────────────────────────────
+const ITEM_NAMES = {
+  headwear: ['Baseball Cap','Witch Hat','Crown','Beanie','Cowboy Hat','Bunny Ears','Cat Ears','Top Hat','Flower Crown','Halo','Devil Horns','Viking Helmet','Graduation Cap','Santa Hat','Pirate Hat','Bow'],
+  glasses:  ['Round Glasses','Sunglasses','Heart Glasses','Star Glasses','Binoculars','Monocle','Cat-Eye Glasses','Thick Frames','Small Ovals','Visor','Ski Goggles','3D Glasses','Bedazzled Glasses','Reading Glasses','Cracked Glasses','Futuristic Visor'],
+  shirts:   ['White Tee','Sailor Shirt','Hoodie','Crop Top','Black Crop','Red Tee','Flannel','Green Sweater','Off-Shoulder','Varsity Jacket','Yellow Sweater','Turtleneck','Dress Shirt','Tank Top','Christmas Sweater','Leather Jacket','Pink Hoodie','Orange Hoodie','Denim Jacket','Polo','Kimono','Beige Hoodie','Red Hoodie','Graphic Tee'],
+  pants:    ['Blue Jeans','Mini Skirt','Plaid Skirt','Khaki Shorts','Skinny Jeans','Shorts','Sweatpants','Pleated Skirt','Leggings','Flowy Skirt','Red Shorts','Brown Shorts','Cargo Pants','Black Leggings','Pink Tutu','Orange Shorts','Overalls','Denim Shorts','Dark Jeans','Light Jeans','Yoga Pants','Bermuda Shorts','Wide Leg Pants','Linen Pants'],
+  shoes:    ['Sneakers','Heels','Combat Boots','Flip Flops','Rainbow Flops','Loafers','Knee Boots','Converse','Platforms','Ballet Flats','Nude Flats','Ankle Boots','Ugg Boots','Roller Skates','Sandals','Oxford Shoes','Mary Janes','Slip-Ons','Rain Boots','Cowboy Boots','Western Boots','Chelsea Boots','Blue Sneakers','Bunny Slippers'],
+};
+const SHEET_COLS = { headwear: 4, glasses: 4, shirts: 6, pants: 6, shoes: 6 };
+
+function itemNameFromId(id) {
+  const parts = id.split('_');
+  // id format: {cat}_{row}_{col} but cat may be multi-word key
+  // category is everything except last two parts
+  const col = parseInt(parts.pop(), 10);
+  const row = parseInt(parts.pop(), 10);
+  const cat = parts.join('_');
+  const names = ITEM_NAMES[cat];
+  const cols  = SHEET_COLS[cat] || 4;
+  if (!names) return null;
+  return names[row * cols + col] || null;
+}
+
+function getEquippedDescription() {
+  try {
+    const eq = JSON.parse(localStorage.getItem('rys-equipped') || '{}');
+    const worn = Object.values(eq).filter(Boolean).map(itemNameFromId).filter(Boolean);
+    return worn.length ? worn.join(', ') : null;
+  } catch(_) { return null; }
+}
+
 // ── Persona helpers ───────────────────────────────────────────────────────────
 function getPersona() {
   const t = TYPES[currentType];
   const v = VIBES[currentVibe];
   let system = v.build(t);
   if (currentName) system += ` The user has named you ${currentName} — use this name naturally when referring to yourself.`;
+  const outfit = getEquippedDescription();
+  if (outfit) system += ` The user has dressed you in: ${outfit}. Mention your outfit naturally in conversation when it feels relevant — comment on it if asked or bring it up occasionally.`;
   return { emoji: v.emoji, system };
 }
 

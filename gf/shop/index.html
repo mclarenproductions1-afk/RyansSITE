@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wardrobe — Companion</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --bg:#fff; --text:#111; --muted:#888; --border:#e5e5e5; --surface:#fafafa; --accent:#111; }
+html, body { height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+body { display: flex; flex-direction: column; }
+
+/* Header */
+header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+}
+.back { font-size: 13px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--text); }
+.header-title { font-size: 15px; font-weight: 600; }
+.bal-chip {
+  margin-left: auto;
+  font-size: 12px; font-weight: 600;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px; color: var(--text);
+}
+
+/* Main layout */
+.layout { flex: 1; min-height: 0; display: flex; }
+
+/* Avatar panel */
+.avatar-panel {
+  width: 240px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  padding: 20px 16px; gap: 4px; overflow: hidden;
+}
+.avatar-title {
+  font-size: 10px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px;
+}
+.avatar-slots { display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: center; }
+.avatar-slot {
+  position: relative; width: 100%; aspect-ratio: 16/9;
+  border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); overflow: hidden;
+}
+.avatar-slot-label {
+  position: absolute; top: 4px; left: 6px;
+  font-size: 9px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em; z-index: 1;
+}
+.avatar-slot-img {
+  width: 100%; height: 100%;
+  background-repeat: no-repeat;
+  background-color: transparent;
+}
+.avatar-slot-empty {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; opacity: 0.2;
+}
+.avatar-slot .unequip-btn {
+  position: absolute; top: 4px; right: 6px;
+  font-size: 9px; color: var(--muted); background: none;
+  border: none; cursor: pointer; font-family: inherit;
+  padding: 0; display: none;
+}
+.avatar-slot:hover .unequip-btn { display: block; }
+
+/* Shop panel */
+.shop-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+/* Tab bar */
+.tab-bar {
+  padding: 12px 16px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 2px; flex-shrink: 0;
+}
+.tab-btn {
+  font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+  padding: 7px 14px; border: none; background: none; cursor: pointer;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: color 0.12s;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--text); font-weight: 600; }
+
+/* Item grid */
+.grid-wrap { flex: 1; overflow-y: auto; padding: 16px; }
+.item-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+.item-card {
+  border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; background: var(--bg);
+  transition: border-color 0.12s, box-shadow 0.12s;
+  cursor: default;
+}
+.item-card:hover { border-color: #bbb; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.item-card.owned { border-color: #111; }
+.item-card.equipped { border-color: #111; background: #fafafa; }
+
+.item-sprite {
+  width: 100%; aspect-ratio: 16/9;
+  background-repeat: no-repeat;
+  background-color: #f5f5f5;
+}
+.item-info { padding: 8px 10px; }
+.item-name {
+  font-size: 11px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  margin-bottom: 6px;
+}
+.item-bottom { display: flex; align-items: center; gap: 6px; }
+.item-price {
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  display: flex; align-items: center; gap: 3px;
+}
+.excl-badge {
+  font-size: 9px; background: #111; color: #fff;
+  border-radius: 3px; padding: 1px 4px; font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.item-btn {
+  margin-left: auto; font-family: 'Inter', sans-serif;
+  font-size: 10px; font-weight: 600; border-radius: 4px;
+  padding: 4px 8px; cursor: pointer; border: none;
+  transition: opacity 0.1s;
+  white-space: nowrap;
+}
+.item-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-buy { background: #111; color: #fff; }
+.btn-buy:hover:not(:disabled) { opacity: 0.8; }
+.btn-equip { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+.btn-equip:hover:not(:disabled) { background: #111; color: #fff; border-color: #111; }
+.btn-equipped { background: #111; color: #fff; }
+
+/* Confirm modal */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  display: none;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 10px; padding: 28px 24px;
+  max-width: 320px; width: 90%; text-align: center;
+}
+.modal-sprite {
+  width: 100%; aspect-ratio: 16/9; border-radius: 6px;
+  background-repeat: no-repeat; background-color: #f5f5f5;
+  margin-bottom: 16px;
+}
+.modal-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.modal-price { font-size: 14px; color: var(--muted); margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 8px; }
+.modal-actions button {
+  flex: 1; padding: 10px; border-radius: 6px;
+  font-family: 'Inter', sans-serif; font-size: 13px;
+  font-weight: 600; cursor: pointer; border: 1px solid var(--border);
+}
+.modal-confirm { background: #111; color: #fff; border-color: #111; }
+.modal-cancel { background: var(--bg); color: var(--text); }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: #111; color: #fff; border-radius: 6px;
+  padding: 10px 18px; font-size: 13px; font-weight: 500;
+  z-index: 2000; opacity: 0; transition: opacity 0.2s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+@media (max-width: 600px) {
+  .avatar-panel { width: 140px; padding: 12px 10px; }
+  .avatar-title { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="/gf">← Chat</a>
+  <span class="header-title">Wardrobe</span>
+  <div class="bal-chip">Balance: <span id="hdr-bal">—</span></div>
+</header>
+
+<div class="layout">
+
+  <!-- Avatar panel -->
+  <div class="avatar-panel">
+    <div class="avatar-title">Your Look</div>
+    <div class="avatar-slots">
+      <div class="avatar-slot" id="slot-headwear">
+        <span class="avatar-slot-label">Hat</span>
+        <button class="unequip-btn" onclick="unequip('headwear')">✕ remove</button>
+        <div class="avatar-slot-img" id="slot-img-headwear"></div>
+        <div class="avatar-slot-empty" id="slot-empty-headwear">🎩</div>
+      </div>
+      <div class="avatar-slot" id="slot-glasses">
+        <span class="avatar-slot-label">Glasses</span>
+        <button class="unequip-btn" onclick="unequip('glasses')">✕ remove</button>
+        <div class="avatar-slot-img" id="slot-img-glasses"></div>
+        <div class="avatar-slot-empty" id="slot-empty-glasses">👓</div>
+      </div>
+      <div class="avatar-slot" id="slot-shirts">
+        <span class="avatar-slot-label">Top</span>
+        <button class="unequip-btn" onclick="unequip('shirts')">✕ remove</button>
+        <div class="avatar-slot-img" id="slot-img-shirts"></div>
+        <div class="avatar-slot-empty" id="slot-empty-shirts">👕</div>
+      </div>
+      <div class="avatar-slot" id="slot-pants">
+        <span class="avatar-slot-label">Bottom</span>
+        <button class="unequip-btn" onclick="unequip('pants')">✕ remove</button>
+        <div class="avatar-slot-img" id="slot-img-pants"></div>
+        <div class="avatar-slot-empty" id="slot-empty-pants">👖</div>
+      </div>
+      <div class="avatar-slot" id="slot-shoes">
+        <span class="avatar-slot-label">Shoes</span>
+        <button class="unequip-btn" onclick="unequip('shoes')">✕ remove</button>
+        <div class="avatar-slot-img" id="slot-img-shoes"></div>
+        <div class="avatar-slot-empty" id="slot-empty-shoes">👟</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shop panel -->
+  <div class="shop-panel">
+    <div class="tab-bar" id="tab-bar"></div>
+    <div class="grid-wrap">
+      <div class="item-grid" id="item-grid"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Purchase modal -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-sprite" id="modal-sprite"></div>
+    <div class="modal-name" id="modal-name"></div>
+    <div class="modal-price" id="modal-price"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-confirm" id="modal-confirm-btn">Buy</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+
+// ── Catalog ────────────────────────────────────────────────────────────────────
+const SHEETS = {
+  headwear: { file: '../assests/headware.png', cols: 4, rows: 4, label: 'Hats' },
+  glasses:  { file: '../assests/glasses.png',  cols: 4, rows: 4, label: 'Glasses' },
+  shirts:   { file: '../assests/shirts.png',   cols: 6, rows: 4, label: 'Tops' },
+  pants:    { file: '../assests/pants.png',     cols: 6, rows: 4, label: 'Bottoms' },
+  shoes:    { file: '../assests/shoes.png',     cols: 6, rows: 4, label: 'Shoes' },
+};
+
+// Each entry: [name, price, exclusive?]
+const ITEM_DATA = {
+  headwear: [
+    ['Baseball Cap',     300,  false],
+    ['Witch Hat',        500,  false],
+    ['Crown',           2000,  true ],
+    ['Beanie',           300,  false],
+    ['Cowboy Hat',       400,  false],
+    ['Bunny Ears',       600,  false],
+    ['Cat Ears',         600,  false],
+    ['Top Hat',          800,  false],
+    ['Flower Crown',     500,  false],
+    ['Halo',             900,  false],
+    ['Devil Horns',      700,  false],
+    ['Viking Helmet',   2000,  true ],
+    ['Graduation Cap',   400,  false],
+    ['Santa Hat',        500,  false],
+    ['Pirate Hat',       700,  false],
+    ['Bow',              300,  false],
+  ],
+  glasses: [
+    ['Round Glasses',    300,  false],
+    ['Sunglasses',       400,  false],
+    ['Heart Glasses',    500,  false],
+    ['Star Glasses',    2000,  true ],
+    ['Binoculars',       600,  false],
+    ['Monocle',          700,  false],
+    ['Cat-Eye Glasses',  500,  false],
+    ['Thick Frames',     300,  false],
+    ['Small Ovals',      400,  false],
+    ['Visor',            600,  false],
+    ['Ski Goggles',      800,  false],
+    ['3D Glasses',       500,  false],
+    ['Bedazzled Glasses',2000, true ],
+    ['Reading Glasses',  400,  false],
+    ['Cracked Glasses',  300,  false],
+    ['Futuristic Visor', 1000, false],
+  ],
+  shirts: [
+    ['White Tee',        300,  false],
+    ['Sailor Shirt',     400,  false],
+    ['Hoodie',           500,  false],
+    ['Crop Top',         400,  false],
+    ['Black Crop',       500,  false],
+    ['Red Tee',          300,  false],
+    ['Flannel',          600,  false],
+    ['Green Sweater',    700,  false],
+    ['Off-Shoulder',     600,  false],
+    ['Varsity Jacket',  1000,  false],
+    ['Yellow Sweater',   500,  false],
+    ['Turtleneck',       600,  false],
+    ['Dress Shirt',      700,  false],
+    ['Tank Top',         300,  false],
+    ['Christmas Sweater',800,  false],
+    ['Leather Jacket',  2000,  true ],
+    ['Pink Hoodie',      500,  false],
+    ['Orange Hoodie',    400,  false],
+    ['Denim Jacket',     900,  false],
+    ['Polo',             400,  false],
+    ['Kimono',           800,  false],
+    ['Beige Hoodie',     500,  false],
+    ['Red Hoodie',       400,  false],
+    ['Graphic Tee',      300,  false],
+  ],
+  pants: [
+    ['Blue Jeans',       400,  false],
+    ['Mini Skirt',       400,  false],
+    ['Plaid Skirt',      500,  false],
+    ['Khaki Shorts',     300,  false],
+    ['Skinny Jeans',     500,  false],
+    ['Shorts',           300,  false],
+    ['Sweatpants',       400,  false],
+    ['Pleated Skirt',    500,  false],
+    ['Leggings',         400,  false],
+    ['Flowy Skirt',      600,  false],
+    ['Red Shorts',       300,  false],
+    ['Brown Shorts',     300,  false],
+    ['Cargo Pants',      700,  false],
+    ['Black Leggings',   400,  false],
+    ['Pink Tutu',        800,  false],
+    ['Orange Shorts',    300,  false],
+    ['Overalls',         900,  false],
+    ['Denim Shorts',     400,  false],
+    ['Dark Jeans',       500,  false],
+    ['Light Jeans',      400,  false],
+    ['Yoga Pants',       500,  false],
+    ['Bermuda Shorts',   400,  false],
+    ['Wide Leg Pants',   600,  false],
+    ['Linen Pants',      500,  false],
+  ],
+  shoes: [
+    ['Sneakers',         300,  false],
+    ['Heels',            600,  false],
+    ['Combat Boots',     700,  false],
+    ['Flip Flops',       300,  false],
+    ['Rainbow Flops',    300,  false],
+    ['Loafers',          400,  false],
+    ['Knee Boots',       800,  false],
+    ['Converse',         400,  false],
+    ['Platforms',        700,  false],
+    ['Ballet Flats',     400,  false],
+    ['Nude Flats',       400,  false],
+    ['Ankle Boots',      600,  false],
+    ['Ugg Boots',        500,  false],
+    ['Roller Skates',   2000,  true ],
+    ['Sandals',          400,  false],
+    ['Oxford Shoes',     500,  false],
+    ['Mary Janes',       500,  false],
+    ['Slip-Ons',         400,  false],
+    ['Rain Boots',       500,  false],
+    ['Cowboy Boots',     700,  false],
+    ['Western Boots',    700,  false],
+    ['Chelsea Boots',    600,  false],
+    ['Blue Sneakers',    400,  false],
+    ['Bunny Slippers',   300,  false],
+  ],
+};
+
+// Build flat catalog
+const CATALOG = [];
+for (const [cat, items] of Object.entries(ITEM_DATA)) {
+  const sheet = SHEETS[cat];
+  items.forEach(([name, price, exclusive], idx) => {
+    const row = Math.floor(idx / sheet.cols);
+    const col = idx % sheet.cols;
+    CATALOG.push({ id: `${cat}_${row}_${col}`, category: cat, row, col, name, price, exclusive });
+  });
+}
+
+function itemById(id) { return CATALOG.find(i => i.id === id) || null; }
+function spriteStyle(item) {
+  const s = SHEETS[item.category];
+  const xPct = s.cols > 1 ? (item.col / (s.cols - 1) * 100) : 0;
+  const yPct = s.rows > 1 ? (item.row / (s.rows - 1) * 100) : 0;
+  return `background-image:url('${s.file}');background-size:${s.cols * 100}% ${s.rows * 100}%;background-position:${xPct.toFixed(4)}% ${yPct.toFixed(4)}%;`;
+}
+
+// ── Auth / GitHub ─────────────────────────────────────────────────────────────
+const TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+const API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/';
+
+async function ghGet(path) {
+  try {
+    const r = await fetch(API + path + '?_=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    if (!r.ok) return null;
+    const j = await r.json();
+    return { data: JSON.parse(atob(j.content.replace(/\s/g, ''))), sha: j.sha };
+  } catch(_) { return null; }
+}
+
+async function ghPut(path, data, sha, msg) {
+  const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: 'main' };
+  if (sha) body.sha = sha;
+  return fetch(API + path, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+function getSession() { try { return JSON.parse(localStorage.getItem('rys-sess') || 'null'); } catch(_) { return null; } }
+function isLoggedIn() { const s = getSession(); return s && s.exp > Date.now(); }
+function username() { const s = getSession(); return s ? s.u : null; }
+
+// ── Inventory state ───────────────────────────────────────────────────────────
+let inventory = []; // array of item IDs owned
+let equipped  = { headwear: null, glasses: null, shirts: null, pants: null, shoes: null };
+
+function loadLocal() {
+  try { inventory = JSON.parse(localStorage.getItem('rys-inventory') || '[]'); } catch(_) { inventory = []; }
+  try { equipped  = Object.assign({ headwear: null, glasses: null, shirts: null, pants: null, shoes: null },
+                                   JSON.parse(localStorage.getItem('rys-equipped') || '{}')); } catch(_) {}
+}
+
+function saveLocal() {
+  localStorage.setItem('rys-inventory', JSON.stringify(inventory));
+  localStorage.setItem('rys-equipped', JSON.stringify(equipped));
+}
+
+let _syncTimer = null;
+function scheduleSync() {
+  if (_syncTimer) clearTimeout(_syncTimer);
+  _syncTimer = setTimeout(syncToGitHub, 2000);
+}
+
+async function syncToGitHub() {
+  if (!isLoggedIn()) return;
+  const u = username();
+  const path = 'auth/users/' + encodeURIComponent(u) + '.json';
+  let attempts = 0;
+  while (attempts < 3) {
+    const res = await ghGet(path);
+    if (!res) return;
+    const updated = Object.assign({}, res.data, { inventory, equipped, lastActive: Date.now(), lastPage: '/gf/shop' });
+    const r = await ghPut(path, updated, res.sha, 'wardrobe: sync ' + u);
+    if (r.ok) return;
+    if (r.status === 409) { attempts++; continue; }
+    return;
+  }
+}
+
+async function loadFromGitHub() {
+  if (!isLoggedIn()) return;
+  const u = username();
+  const res = await ghGet('auth/users/' + encodeURIComponent(u) + '.json');
+  if (!res) return;
+  // Merge: union of local + server inventory
+  const serverInv = res.data.inventory || [];
+  inventory = [...new Set([...inventory, ...serverInv])];
+  // Equipped: prefer server if set
+  if (res.data.equipped) {
+    equipped = Object.assign({ headwear: null, glasses: null, shirts: null, pants: null, shoes: null }, res.data.equipped);
+  }
+  saveLocal();
+  renderAll();
+}
+
+// ── Balance ───────────────────────────────────────────────────────────────────
+function getBal() { return parseInt(localStorage.getItem('rys-bal') || '0', 10) || 0; }
+function dispBal() {
+  const b = getBal();
+  document.getElementById('hdr-bal').textContent = '$' + b.toLocaleString();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+let activeTab = 'headwear';
+
+function buildTabs() {
+  const bar = document.getElementById('tab-bar');
+  bar.innerHTML = '';
+  Object.entries(SHEETS).forEach(([cat, s]) => {
+    const btn = document.createElement('button');
+    btn.className = 'tab-btn' + (cat === activeTab ? ' active' : '');
+    btn.textContent = s.label;
+    btn.onclick = () => { activeTab = cat; buildTabs(); renderGrid(); };
+    bar.appendChild(btn);
+  });
+}
+
+// ── Grid ──────────────────────────────────────────────────────────────────────
+function renderGrid() {
+  const grid = document.getElementById('item-grid');
+  grid.innerHTML = '';
+  const items = CATALOG.filter(i => i.category === activeTab);
+  items.forEach(item => {
+    const owned    = inventory.includes(item.id);
+    const isEquip  = equipped[item.category] === item.id;
+    const card = document.createElement('div');
+    card.className = 'item-card' + (isEquip ? ' equipped' : owned ? ' owned' : '');
+
+    const sprite = document.createElement('div');
+    sprite.className = 'item-sprite';
+    sprite.style.cssText = spriteStyle(item);
+
+    const info = document.createElement('div');
+    info.className = 'item-info';
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'item-name';
+    nameEl.title = item.name;
+    nameEl.textContent = item.name;
+
+    const bottom = document.createElement('div');
+    bottom.className = 'item-bottom';
+
+    const priceEl = document.createElement('div');
+    priceEl.className = 'item-price';
+    if (item.exclusive) {
+      const badge = document.createElement('span');
+      badge.className = 'excl-badge';
+      badge.textContent = 'EX';
+      priceEl.appendChild(badge);
+    }
+    priceEl.appendChild(document.createTextNode('$' + item.price.toLocaleString()));
+
+    const btn = document.createElement('button');
+    btn.className = 'item-btn';
+
+    if (isEquip) {
+      btn.textContent = 'Equipped ✓';
+      btn.className += ' btn-equipped';
+      btn.onclick = () => unequip(item.category);
+    } else if (owned) {
+      btn.textContent = 'Equip';
+      btn.className += ' btn-equip';
+      btn.onclick = () => equip(item.id);
+    } else {
+      btn.textContent = '$' + item.price.toLocaleString();
+      btn.className += ' btn-buy';
+      btn.onclick = () => openBuyModal(item);
+    }
+
+    bottom.appendChild(priceEl);
+    bottom.appendChild(btn);
+    info.appendChild(nameEl);
+    info.appendChild(bottom);
+    card.appendChild(sprite);
+    card.appendChild(info);
+    grid.appendChild(card);
+  });
+}
+
+// ── Avatar panel ──────────────────────────────────────────────────────────────
+function renderAvatar() {
+  Object.keys(equipped).forEach(cat => {
+    const id = equipped[cat];
+    const imgEl   = document.getElementById('slot-img-' + cat);
+    const emptyEl = document.getElementById('slot-empty-' + cat);
+    if (!imgEl) return;
+    if (id) {
+      const item = itemById(id);
+      if (item) {
+        imgEl.style.cssText = spriteStyle(item);
+        imgEl.style.display = 'block';
+        if (emptyEl) emptyEl.style.display = 'none';
+      }
+    } else {
+      imgEl.style.cssText = '';
+      imgEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'flex';
+    }
+  });
+}
+
+function renderAll() { renderGrid(); renderAvatar(); dispBal(); }
+
+// ── Equip / unequip ───────────────────────────────────────────────────────────
+function equip(id) {
+  const item = itemById(id);
+  if (!item || !inventory.includes(id)) return;
+  equipped[item.category] = id;
+  saveLocal();
+  scheduleSync();
+  renderAll();
+  toast('Equipped ' + item.name);
+}
+
+function unequip(cat) {
+  equipped[cat] = null;
+  saveLocal();
+  scheduleSync();
+  renderAll();
+}
+
+// ── Buy modal ─────────────────────────────────────────────────────────────────
+let _pendingItem = null;
+
+function openBuyModal(item) {
+  if (!isLoggedIn()) {
+    location.href = '/login?next=' + encodeURIComponent(location.pathname);
+    return;
+  }
+  _pendingItem = item;
+  document.getElementById('modal-sprite').style.cssText = spriteStyle(item);
+  document.getElementById('modal-name').textContent = item.name;
+  document.getElementById('modal-price').textContent = '$' + item.price.toLocaleString() + (item.exclusive ? ' · Exclusive' : '');
+  const bal = getBal();
+  const btn = document.getElementById('modal-confirm-btn');
+  if (bal < item.price) {
+    btn.textContent = 'Not enough balance';
+    btn.disabled = true;
+  } else {
+    btn.textContent = 'Buy for $' + item.price.toLocaleString();
+    btn.disabled = false;
+    btn.onclick = confirmBuy;
+  }
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  _pendingItem = null;
+}
+
+async function confirmBuy() {
+  if (!_pendingItem) return;
+  const item = _pendingItem;
+  closeModal();
+
+  const bal = getBal();
+  if (bal < item.price) { toast('Not enough balance!'); return; }
+
+  // Deduct
+  const newBal = bal - item.price;
+  localStorage.setItem('rys-bal', String(newBal));
+  if (window.RYS) window.RYS.setBal(newBal);
+  dispBal();
+
+  // Add to inventory
+  if (!inventory.includes(item.id)) inventory.push(item.id);
+  saveLocal();
+  renderAll();
+  toast('Bought ' + item.name + '!');
+
+  // Sync to GitHub with retry
+  const u = username();
+  const path = 'auth/users/' + encodeURIComponent(u) + '.json';
+  let attempts = 0;
+  while (attempts < 3) {
+    const res = await ghGet(path);
+    if (!res) break;
+    const updated = Object.assign({}, res.data, {
+      balance: newBal, inventory, equipped,
+      lastActive: Date.now(), lastPage: '/gf/shop'
+    });
+    const r = await ghPut(path, updated, res.sha, 'wardrobe: buy ' + item.id + ' for ' + u);
+    if (r.ok) break;
+    if (r.status === 409) { attempts++; continue; }
+    break;
+  }
+}
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+let _toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+loadLocal();
+buildTabs();
+renderAll();
+loadFromGitHub(); // async, updates UI when it comes back
+</script>
+<script src="/admin/control.js"></script>
+<script>
+// Re-sync balance after control.js loads
+(function() {
+  function refresh() {
+    const el = document.getElementById('hdr-bal');
+    if (el) el.textContent = '$' + (parseInt(localStorage.getItem('rys-bal')||'0',10)||0).toLocaleString();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
+  else refresh();
+})();
+</script>
+</body>
+</html>
