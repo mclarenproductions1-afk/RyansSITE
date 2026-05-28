@@ -1,7 +1,7 @@
 {
   "reload_at": 1779942251050,
   "banner": {
-    "enabled": true,
+    "enabled": false,
     "text": "testing",
     "type": "info"
   },
@@ -9,5 +9,5 @@
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-28T04:24:38.874Z"
+  "updated_at": "2026-05-28T04:24:54.215Z"
 }
