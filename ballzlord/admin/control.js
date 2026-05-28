@@ -32,12 +32,6 @@
     return s && s.exp > Date.now();
   }
 
-  // ── Auth gate ──────────────────────────────────────────────────────────────
-  if (!isExempt() && !isLoggedIn()) {
-    document.body.style.visibility = 'hidden';
-    location.replace('/login?next=' + encodeURIComponent(location.pathname + location.search));
-  }
-
   // ── GitHub helpers ─────────────────────────────────────────────────────────
   async function ghGet(path) {
     try {

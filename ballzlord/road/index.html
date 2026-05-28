@@ -215,10 +215,10 @@ function easeOut(t) { return 1 - (1 - t) * (1 - t); }
 
 // ── Balance ──────────────────────────────────────────────────────────────────
 function loadBal() {
-  bal = window.RYS ? window.RYS.bal() : parseInt(localStorage.getItem('rys-bal') || '1000', 10);
+  bal = window.RYS ? window.RYS.bal() : 1000;
   if (isNaN(bal) || bal < 1) bal = 1000;
 }
-function saveBal() { if (window.RYS) { window.RYS.setBal(bal); } else { localStorage.setItem('rys-bal', bal); } }
+function saveBal() { if (window.RYS) window.RYS.setBal(bal); }
 function dispBal() { document.getElementById('bal').textContent = bal.toLocaleString(); }
 
 // ── Cars ─────────────────────────────────────────────────────────────────────

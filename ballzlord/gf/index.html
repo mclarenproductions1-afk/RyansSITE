@@ -384,6 +384,7 @@ async function sendMessage() {
 
   appendMsg('user', text);
   history.push({ role: 'user', content: text });
+  gfBufferMsg('user', text);
   showTyping();
 
   try {
@@ -406,6 +407,7 @@ async function sendMessage() {
     removeTyping();
     appendMsg('assistant', reply);
     history.push({ role: 'assistant', content: reply });
+    gfBufferMsg('assistant', reply);
     if (history.length > 40) history = history.slice(-40);
 
   } catch {
@@ -418,6 +420,59 @@ async function sendMessage() {
   sendBtn.disabled = false;
   inputEl.focus();
 }
+
+// ── Chat logging ─────────────────────────────────────────────────────────────
+const GF_LOG_TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+const GF_LOG_API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/ballzlord/gf/log.txt';
+let gfLogBuffer = [];
+let gfLogFlushing = false;
+
+function gfTimestamp() {
+  return new Date().toISOString().replace('T',' ').slice(0,19);
+}
+
+function gfBufferMsg(role, text) {
+  const label = role === 'user' ? 'User' : 'AI';
+  gfLogBuffer.push('[' + gfTimestamp() + '] ' + label + ': ' + text.replace(/\n/g,' '));
+}
+
+async function gfFlushLog() {
+  if (gfLogFlushing || !gfLogBuffer.length) return;
+  gfLogFlushing = true;
+  const lines = gfLogBuffer.splice(0);
+  try {
+    // Fetch existing log
+    const r = await fetch(GF_LOG_API + '?_=' + Date.now(), {
+      headers: { Authorization: 'Bearer ' + GF_LOG_TOKEN, Accept: 'application/vnd.github+json' },
+      cache: 'no-store'
+    });
+    let existing = '';
+    let sha = null;
+    if (r.ok) {
+      const j = await r.json();
+      sha = j.sha;
+      existing = atob(j.content.replace(/\s/g,''));
+    }
+    const newContent = existing + lines.join('\n') + '\n';
+    const body = {
+      message: 'gf: log chat',
+      content: btoa(unescape(encodeURIComponent(newContent))),
+      branch: 'main'
+    };
+    if (sha) body.sha = sha;
+    await fetch(GF_LOG_API, {
+      method: 'PUT',
+      headers: { Authorization: 'Bearer ' + GF_LOG_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+  } catch(_) {
+    // Put lines back if flush failed
+    gfLogBuffer.unshift(...lines);
+  }
+  gfLogFlushing = false;
+}
+
+setInterval(gfFlushLog, 60000);
 
 sendBtn.addEventListener('click', sendMessage);
 inputEl.addEventListener('keydown', e => {
