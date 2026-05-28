@@ -208,6 +208,28 @@
     </div>
   </div>
 
+  <!-- Random redirect -->
+  <div class="section">
+    <div class="section-title">Random Redirect</div>
+    <div class="card">
+      <div class="card-title">Visitor Redirect</div>
+      <div class="card-desc">When enabled, visitors will be redirected to the URL below after a random delay of 1–2 minutes.</div>
+      <div style="margin-bottom:10px">
+        <label>Redirect URL</label>
+        <input type="text" id="redirect-url" placeholder="https://example.com">
+      </div>
+      <div class="row">
+        <button class="btn-primary" id="btn-redirect-on">Enable</button>
+        <button class="btn-ghost"   id="btn-redirect-off">Disable</button>
+      </div>
+      <div class="status-row">
+        <div class="dot" id="redirect-dot"></div>
+        <span id="redirect-status">Loading…</span>
+      </div>
+      <div class="feedback" id="fb-redirect"></div>
+    </div>
+  </div>
+
   <!-- Users -->
   <div class="section">
     <div class="section-title">Users</div>
@@ -321,6 +343,16 @@ function applyState(s) {
   if (maintOn && s.maintenance.message) {
     document.getElementById('maint-msg').value = s.maintenance.message;
   }
+
+  // Redirect
+  const redirectOn = s.redirect && s.redirect.enabled;
+  document.getElementById('redirect-dot').className      = 'dot ' + (redirectOn ? 'on' : 'off');
+  document.getElementById('redirect-status').textContent = redirectOn
+    ? 'Active → ' + (s.redirect.url || '')
+    : 'Off';
+  if (s.redirect && s.redirect.url) {
+    document.getElementById('redirect-url').value = s.redirect.url;
+  }
 }
 
 async function writeState(patch, feedbackId) {
@@ -388,6 +420,16 @@ document.getElementById('btn-maint-off').addEventListener('click', () => {
 });
 
 document.getElementById('btn-refresh').addEventListener('click', loadState);
+
+document.getElementById('btn-redirect-on').addEventListener('click', () => {
+  const url = document.getElementById('redirect-url').value.trim();
+  if (!url) { document.getElementById('redirect-url').focus(); return; }
+  writeState({ redirect: { enabled: true, url } }, 'fb-redirect');
+});
+
+document.getElementById('btn-redirect-off').addEventListener('click', () => {
+  writeState({ redirect: { enabled: false, url: document.getElementById('redirect-url').value.trim() } }, 'fb-redirect');
+});
 
 // ── Users ──────────────────────────────────────────────────────
 const AUTH_API = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/auth/';

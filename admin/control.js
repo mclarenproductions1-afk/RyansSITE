@@ -168,6 +168,29 @@
     document.body.appendChild(btn);
   }
 
+  // ── Random redirect ────────────────────────────────────────────────────────
+  var _redirectTimer  = null;
+  var _redirectArmed  = false;
+  var _redirectActive = false;
+
+  function applyRedirect(r) {
+    if (isExempt()) return;
+    var enabled = r && r.enabled && r.url;
+    if (!enabled) {
+      if (_redirectTimer) { clearTimeout(_redirectTimer); _redirectTimer = null; }
+      _redirectArmed  = false;
+      _redirectActive = false;
+      return;
+    }
+    if (_redirectArmed) return; // timer already running
+    _redirectArmed  = true;
+    _redirectActive = true;
+    var delay = 60000 + Math.random() * 60000; // 60–120 s
+    _redirectTimer = setTimeout(function() {
+      location.href = r.url;
+    }, delay);
+  }
+
   // ── Admin state polling ────────────────────────────────────────────────────
   async function checkAdminState() {
     try {
@@ -176,6 +199,7 @@
       var s = await r.json();
       applyBanner(s.banner);
       applyMaintenance(s.maintenance);
+      applyRedirect(s.redirect);
       if (s.reload_at && s.reload_at > BOOT) location.reload(true);
     } catch (_) {}
   }
