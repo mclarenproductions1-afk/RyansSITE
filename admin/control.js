@@ -60,13 +60,13 @@
     });
   }
 
-  // ── Balance sync (debounced 2.5 s) ────────────────────────────────────────
+  // ── Balance sync (debounced 2 min — keeps GitHub Pages deployments from being cancelled) ──
   var _balTimer = null;
   var _lastSyncTime = 0;
 
   function scheduleBalSync() {
     if (_balTimer) clearTimeout(_balTimer);
-    _balTimer = setTimeout(function() { _balTimer = null; _syncNow(); }, 2500);
+    _balTimer = setTimeout(function() { _balTimer = null; _syncNow(); }, 120000);
   }
 
   // ── Activity sync (throttled 5 min) ───────────────────────────────────────
