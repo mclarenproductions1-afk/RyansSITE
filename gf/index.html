@@ -211,6 +211,12 @@
   <button class="sel-btn" data-vibe="furry">Furry</button>
 </div>
 
+<div class="selector-bar">
+  <span class="bar-label">Name:</span>
+  <input type="text" id="custom-name" placeholder="Give them a name (optional)" maxlength="30"
+    style="font-family:'Inter',sans-serif;font-size:12px;padding:3px 12px;border-radius:20px;border:1px solid var(--border);outline:none;background:var(--bg);color:var(--text);width:220px">
+</div>
+
 <div class="messages" id="messages">
   <div class="empty-state" id="empty">
     <div class="empty-icon">💌</div>
@@ -276,20 +282,24 @@ const VIBES = {
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentType  = 'girlfriend';
 let currentVibe  = 'sweet';
+let currentName  = '';
 let history      = [];
 let isLoading    = false;
 
-const messagesEl = document.getElementById('messages');
-const inputEl    = document.getElementById('input');
-const sendBtn    = document.getElementById('send');
-const emptyEl    = document.getElementById('empty');
-const headerName = document.getElementById('header-name');
+const messagesEl  = document.getElementById('messages');
+const inputEl     = document.getElementById('input');
+const sendBtn     = document.getElementById('send');
+const emptyEl     = document.getElementById('empty');
+const headerName  = document.getElementById('header-name');
+const nameInput   = document.getElementById('custom-name');
 
 // ── Persona helpers ───────────────────────────────────────────────────────────
 function getPersona() {
   const t = TYPES[currentType];
   const v = VIBES[currentVibe];
-  return { emoji: v.emoji, system: v.build(t) };
+  let system = v.build(t);
+  if (currentName) system += ` The user has named you ${currentName} — use this name naturally when referring to yourself.`;
+  return { emoji: v.emoji, system };
 }
 
 function resetChat() {
@@ -297,7 +307,7 @@ function resetChat() {
   messagesEl.innerHTML = '';
   messagesEl.appendChild(emptyEl);
   emptyEl.style.display = 'flex';
-  headerName.textContent = TYPES[currentType].title;
+  headerName.textContent = currentName || TYPES[currentType].title;
 }
 
 // ── Selectors ─────────────────────────────────────────────────────────────────
@@ -416,6 +426,11 @@ inputEl.addEventListener('keydown', e => {
 inputEl.addEventListener('input', () => {
   inputEl.style.height = 'auto';
   inputEl.style.height = Math.min(inputEl.scrollHeight, 120) + 'px';
+});
+
+nameInput.addEventListener('input', () => {
+  currentName = nameInput.value.trim();
+  headerName.textContent = currentName || TYPES[currentType].title;
 });
 
 // Init

@@ -51,6 +51,29 @@
     document.body.appendChild(el);
   }
 
+  function injectSchool() {
+    var header = document.querySelector('header');
+    if (!header || document.getElementById('__school-link')) return;
+    var a = document.createElement('a');
+    a.id = '__school-link';
+    a.href = 'https://en.wikipedia.org/wiki/Special:Random';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    a.textContent = 'School';
+    a.style.cssText = 'font-size:12px;font-weight:500;color:#888;text-decoration:none;'
+      + 'background:#fafafa;border:1px solid #e5e5e5;padding:3px 10px;border-radius:4px;'
+      + 'flex-shrink:0;white-space:nowrap;transition:color 0.1s,border-color 0.1s';
+    a.onmouseenter = function() { a.style.color='#111'; a.style.borderColor='#111'; };
+    a.onmouseleave = function() { a.style.color='#888'; a.style.borderColor='#e5e5e5'; };
+    header.insertBefore(a, header.firstChild);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', injectSchool);
+  } else {
+    injectSchool();
+  }
+
   check();
   setInterval(check, POLL);
 })();
