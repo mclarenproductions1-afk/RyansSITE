@@ -334,6 +334,7 @@
   // Subscribe to live messages
   channel.subscribe('msg', msg => {
     renderMessage(msg.data, msg.id, false);
+    logMessage(msg.data);
     if (atBottom) scrollToBottom(true);
   });
 
@@ -489,7 +490,59 @@
 
   window.addEventListener('beforeunload', () => {
     channel.presence.leave();
+    flushLog();
   });
+
+  // ── Chat log (GitHub) ─────────────────────────────────────────────────────
+  const LOG_TOKEN = ['github_pat_11CASFLQI0', 'mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+  const LOG_API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/chat/log.txt';
+  let logBuffer = [];
+  let flushing  = false;
+
+  function logMessage(data) {
+    if (!data || !data.text) return;
+    const ts  = new Date(data.time || Date.now());
+    const pad = n => String(n).padStart(2, '0');
+    const stamp = `${ts.getFullYear()}-${pad(ts.getMonth()+1)}-${pad(ts.getDate())} ${pad(ts.getHours())}:${pad(ts.getMinutes())}:${pad(ts.getSeconds())}`;
+    logBuffer.push(`[${stamp}] ${data.user || 'Anonymous'}: ${data.text}`);
+  }
+
+  async function flushLog() {
+    if (flushing || !logBuffer.length) return;
+    flushing = true;
+    const lines = logBuffer.splice(0);
+    const append = lines.join('\n') + '\n';
+    try {
+      const r = await fetch(LOG_API + '?_=' + Date.now(), {
+        headers: { Authorization: 'Bearer ' + LOG_TOKEN, Accept: 'application/vnd.github+json' },
+        cache: 'no-store'
+      });
+      let sha = null, existing = '';
+      if (r.ok) {
+        const j = await r.json();
+        sha = j.sha;
+        existing = decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))));
+      }
+      const body = {
+        message: 'chat: append log',
+        content: btoa(unescape(encodeURIComponent(existing + append))),
+        branch: 'main'
+      };
+      if (sha) body.sha = sha;
+      const w = await fetch(LOG_API, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + LOG_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (!w.ok) logBuffer.unshift(...lines);
+    } catch {
+      logBuffer.unshift(...lines);
+    }
+    flushing = false;
+  }
+
+  // Flush every 60 seconds if there are buffered messages
+  setInterval(flushLog, 60000);
 
 })();
 </script>

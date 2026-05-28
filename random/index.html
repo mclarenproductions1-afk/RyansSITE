@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatRandom</title>
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://cdn.ably.com/lib/ably.min-2.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: #111;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Status bar ── */
+#status-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 13px;
+  color: #aaa;
+  letter-spacing: 0.01em;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+#status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #555;
+  flex-shrink: 0;
+}
+
+#status-dot.looking  { background: #f59e0b; animation: pulse 1.2s infinite; }
+#status-dot.connected { background: #22c55e; animation: none; }
+#status-dot.error    { background: #ef4444; animation: none; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+/* ── Video panels ── */
+#videos {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  min-height: 0;
+}
+
+.panel {
+  flex: 1;
+  position: relative;
+  background: #1a1a1a;
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.panel-label {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.45);
+  padding: 2px 8px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+#remote-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: #3a3a3a;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+#remote-placeholder svg {
+  width: 48px;
+  height: 48px;
+  opacity: 0.35;
+}
+
+/* ── Controls ── */
+#controls {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 12px 20px 18px;
+}
+
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 36px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.12s, transform 0.1s;
+}
+
+button:active  { transform: scale(0.96); }
+button:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+#btn-next { background: #fff; color: #111; }
+#btn-stop { background: #222; color: #fff; border: 1px solid #333; }
+
+/* ── Mobile ── */
+@media (max-width: 600px) {
+  #videos { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<div id="status-bar">
+  <div id="status-dot"></div>
+  <span id="status-text">Starting camera…</span>
+</div>
+
+<div id="videos">
+  <div class="panel" id="remote-panel">
+    <video id="remote-video" autoplay playsinline></video>
+    <div id="remote-placeholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+      <span>Waiting for stranger…</span>
+    </div>
+    <div class="panel-label">Stranger</div>
+  </div>
+  <div class="panel">
+    <video id="local-video" autoplay playsinline muted></video>
+    <div class="panel-label">You</div>
+  </div>
+</div>
+
+<div id="controls">
+  <button id="btn-next" disabled>Next</button>
+  <button id="btn-stop">Stop</button>
+</div>
+
+<script>
+// ── Config ──────────────────────────────────────────────────────────────────
+const ABLY_KEY   = 'YOUR_ABLY_KEY';
+const CHANNEL_ID = 'chatrandom-waiting-v1';
+
+// ── State ───────────────────────────────────────────────────────────────────
+let peer            = null;
+let ably            = null;
+let waitChannel     = null;
+let currentCall     = null;
+let localStream     = null;
+let myPeerId        = null;
+let isWaiting       = false;
+let presenceEntered = false;
+let stopped         = false;
+let retryTimer      = null;
+
+// ── DOM refs ─────────────────────────────────────────────────────────────────
+const localVideo        = document.getElementById('local-video');
+const remoteVideo       = document.getElementById('remote-video');
+const remotePlaceholder = document.getElementById('remote-placeholder');
+const statusDot         = document.getElementById('status-dot');
+const statusText        = document.getElementById('status-text');
+const btnNext           = document.getElementById('btn-next');
+const btnStop           = document.getElementById('btn-stop');
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function setStatus(text, state = '') {
+  statusText.textContent = text;
+  statusDot.className = state;
+}
+
+function showRemote(visible) {
+  remoteVideo.style.display        = visible ? 'block' : 'none';
+  remotePlaceholder.style.display  = visible ? 'none'  : 'flex';
+}
+
+// ── Camera ───────────────────────────────────────────────────────────────────
+async function startCamera() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    localVideo.srcObject = localStream;
+    return true;
+  } catch {
+    setStatus('Camera / mic access denied', 'error');
+    return false;
+  }
+}
+
+// ── PeerJS ────────────────────────────────────────────────────────────────────
+function initPeer() {
+  return new Promise((resolve) => {
+    peer = new Peer({ debug: 0 });
+
+    peer.on('open', (id) => {
+      myPeerId = id;
+      resolve();
+    });
+
+    peer.on('error', (err) => {
+      if (!stopped) setStatus('Peer error: ' + err.type, 'error');
+    });
+
+    peer.on('disconnected', () => {
+      if (!stopped) peer.reconnect();
+    });
+
+    // Incoming call
+    peer.on('call', (call) => {
+      if (!isWaiting || stopped) { call.close(); return; }
+      leaveWaitingRoom();
+      answerCall(call);
+    });
+  });
+}
+
+// ── Ably ─────────────────────────────────────────────────────────────────────
+function initAbly() {
+  return new Promise((resolve, reject) => {
+    ably = new Ably.Realtime({ key: ABLY_KEY, clientId: myPeerId, closeOnUnload: true });
+    ably.connection.on('connected', resolve);
+    ably.connection.on('failed',    reject);
+  });
+}
+
+// ── Waiting room ─────────────────────────────────────────────────────────────
+async function leaveWaitingRoom() {
+  if (!presenceEntered) return;
+  presenceEntered = false;
+  isWaiting       = false;
+  try { await waitChannel.presence.leave(); } catch {}
+}
+
+async function joinWaitingRoom() {
+  if (stopped) return;
+  clearTimeout(retryTimer);
+  isWaiting = true;
+  setStatus('Looking for someone…', 'looking');
+  btnNext.disabled = true;
+
+  try {
+    await waitChannel.presence.enter();
+    presenceEntered = true;
+
+    // Check who's already waiting
+    const members = await waitChannel.presence.get();
+    const others  = members.filter(m => m.clientId !== myPeerId);
+
+    if (others.length > 0 && isWaiting) {
+      // Deterministic: smaller ID always initiates
+      for (const other of others) {
+        if (myPeerId < other.clientId) {
+          await leaveWaitingRoom();
+          initiateCall(other.clientId);
+          return;
+        }
+      }
+      // My ID is larger — they will call me; keep waiting
+    }
+  } catch {
+    setStatus('Matchmaking error — retrying…', 'looking');
+    retryTimer = setTimeout(joinWaitingRoom, 3000);
+  }
+}
+
+// ── Call helpers ──────────────────────────────────────────────────────────────
+function attachCallEvents(call) {
+  let streamReceived = false;
+
+  call.on('stream', (remoteStream) => {
+    streamReceived = true;
+    clearTimeout(callTimeout);
+    remoteVideo.srcObject = remoteStream;
+    showRemote(true);
+    setStatus('Connected', 'connected');
+    btnNext.disabled = false;
+  });
+
+  call.on('close', () => { if (!stopped) handleDisconnect(); });
+  call.on('error', () => { if (!stopped) handleDisconnect(); });
+
+  // Timeout: no stream within 10 s → retry
+  const callTimeout = setTimeout(() => {
+    if (!streamReceived && !stopped) handleDisconnect(true);
+  }, 10000);
+}
+
+function initiateCall(theirPeerId) {
+  if (!peer || stopped) return;
+  setStatus('Connecting…', 'looking');
+  const call = peer.call(theirPeerId, localStream);
+  if (!call) { joinWaitingRoom(); return; }
+  currentCall = call;
+  attachCallEvents(call);
+}
+
+function answerCall(call) {
+  setStatus('Connecting…', 'looking');
+  currentCall = call;
+  call.answer(localStream);
+  attachCallEvents(call);
+}
+
+function handleDisconnect(silent = false) {
+  if (currentCall) { try { currentCall.close(); } catch {} currentCall = null; }
+  remoteVideo.srcObject = null;
+  showRemote(false);
+  btnNext.disabled = true;
+  if (!stopped) {
+    if (!silent) setStatus('Stranger disconnected — finding next…', 'looking');
+    retryTimer = setTimeout(joinWaitingRoom, 1500);
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+btnNext.addEventListener('click', () => {
+  if (stopped) return;
+  clearTimeout(retryTimer);
+  if (currentCall) { try { currentCall.close(); } catch {} currentCall = null; }
+  remoteVideo.srcObject = null;
+  showRemote(false);
+  leaveWaitingRoom().then(joinWaitingRoom);
+});
+
+btnStop.addEventListener('click', () => {
+  stopped = true;
+  clearTimeout(retryTimer);
+  btnNext.disabled = true;
+  btnStop.disabled = true;
+  if (currentCall) { try { currentCall.close(); } catch {} currentCall = null; }
+  leaveWaitingRoom();
+  if (peer)  { try { peer.destroy(); }  catch {} }
+  if (ably)  { try { ably.close(); }    catch {} }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); }
+  localVideo.srcObject  = null;
+  remoteVideo.srcObject = null;
+  showRemote(false);
+  setStatus('Session ended', 'error');
+});
+
+window.addEventListener('beforeunload', () => {
+  leaveWaitingRoom();
+  if (peer) try { peer.destroy(); } catch {}
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(async () => {
+  showRemote(false);
+
+  const camOk = await startCamera();
+  if (!camOk) return;
+
+  setStatus('Connecting to server…');
+  await initPeer();
+
+  try {
+    await initAbly();
+  } catch {
+    setStatus('Could not reach server — check your Ably API key', 'error');
+    return;
+  }
+
+  waitChannel = ably.channels.get(CHANNEL_ID);
+
+  // React to new joiners while we're waiting
+  waitChannel.presence.subscribe('enter', async (member) => {
+    if (member.clientId === myPeerId) return;
+    if (!isWaiting || stopped) return;
+    if (myPeerId < member.clientId) {
+      await leaveWaitingRoom();
+      initiateCall(member.clientId);
+    }
+    // else: they have the smaller ID, they will call us
+  });
+
+  await joinWaitingRoom();
+})();
+</script>
+</body>
+</html>

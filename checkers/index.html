@@ -377,7 +377,7 @@ input[type="text"]:focus { border-color: var(--text); }
   <div class="center-wrap">
     <div class="card">
       <h1>Chinese Checkers</h1>
-      <p class="sub">6-player online — share a code to play together in real time.</p>
+      <p class="sub">2–6 players online — share a code to play together in real time.</p>
 
       <input id="inp-name" type="text" placeholder="Your name" maxlength="20" autocomplete="off" />
 
@@ -422,7 +422,9 @@ input[type="text"]:focus { border-color: var(--text); }
     <div class="game-code-lbl">Code: <strong id="hdr-code"></strong></div>
   </div>
   <div class="board-area">
-    <svg id="board-svg" viewBox="10 -10 580 600" width="580" height="600"></svg>
+    <svg id="board-svg" viewBox="20 0 560 560" width="560" height="560" style="max-width:100%">
+      <g id="board-root"></g>
+    </svg>
   </div>
   <div id="player-bar" class="player-bar"></div>
   <div id="hint" class="hint"></div>
@@ -456,6 +458,8 @@ const CONFIG = {
 
 const PLAYER_COLORS = ["#e53e3e","#3182ce","#38a169","#dd6b20","#805ad5","#d69e2e"];
 const PLAYER_NAMES_DEFAULT = ["Red","Blue","Green","Orange","Purple","Amber"];
+// Rotation (degrees, clockwise) to put each player's zone at the bottom of the screen
+const PLAYER_ROTATIONS = [180, 120, 60, 0, 300, 240];
 
 /* ═══════════════════════════════════════════════════════
    CLIENT STATE
@@ -628,9 +632,10 @@ function generateCode() {
   return s;
 }
 
-function buildInitialBoard() {
+function buildInitialBoard(players) {
   const board = {};
   for (let p = 0; p < 6; p++) {
+    if (!players[p]) continue; // only place pieces for joined players
     for (const id of PLAYER_ZONES[p]) board[id] = p;
   }
   return board;
@@ -678,7 +683,7 @@ function getLegalMoves(board, fromId) {
 function nextActiveTurn(state, fromTurn) {
   let next = (fromTurn + 1) % 6;
   let safety = 0;
-  while (state.finishOrder.includes(next) && safety++ < 6) {
+  while ((state.finishOrder.includes(next) || !state.players[next]) && safety++ < 6) {
     next = (next + 1) % 6;
   }
   return next;
@@ -697,7 +702,8 @@ function applyMove(state, fromId, toId) {
   if (inTarget === 10 && !state.finishOrder.includes(pIdx)) {
     state.finishOrder.push(pIdx);
     if (state.finishOrder.length === 1) state.winner = pIdx;
-    if (state.finishOrder.length >= 5) state.status = "finished";
+    const activePlayers = state.players.filter(Boolean).length;
+    if (state.finishOrder.length >= activePlayers - 1) state.status = "finished";
   }
 
   state.currentTurn = nextActiveTurn(state, pIdx);
@@ -742,6 +748,7 @@ function applyGameState(newState) {
   // Transition screens
   if (newState.status === "active" && document.getElementById("screen-lobby").classList.contains("active")) {
     showScreen("game");
+    applyBoardRotation();
   }
   if (newState.status === "finished") {
     stopPolling();
@@ -760,11 +767,18 @@ function applyGameState(newState) {
 /* ═══════════════════════════════════════════════════════
    RENDERING
    ═══════════════════════════════════════════════════════ */
+function applyBoardRotation() {
+  const root = document.getElementById("board-root");
+  if (!root) return;
+  const angle = mySlot >= 0 ? (PLAYER_ROTATIONS[mySlot] || 0) : 0;
+  root.setAttribute("transform", `rotate(${angle}, 300, 280)`);
+}
+
 function renderBoard() {
-  const svg = document.getElementById("board-svg");
+  const root = document.getElementById("board-root");
 
   // Remove dynamic layer
-  const old = svg.querySelector(".dyn");
+  const old = root.querySelector(".dyn");
   if (old) old.remove();
 
   const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
@@ -822,7 +836,7 @@ function renderBoard() {
     g.appendChild(hit);
   }
 
-  svg.appendChild(g);
+  root.appendChild(g);
 }
 
 function renderTurnBadge() {
@@ -873,6 +887,7 @@ function renderHint() {
 }
 
 function renderGame() {
+  applyBoardRotation();
   renderBoard();
   renderTurnBadge();
   renderPlayerBar();
