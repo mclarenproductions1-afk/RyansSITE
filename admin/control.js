@@ -141,40 +141,31 @@
     document.body.appendChild(el);
   }
 
-  // ── User badge (fixed top-right) ───────────────────────────────────────────
-  function injectBadge() {
-    if (isExempt()) return;
-    var u = window.RYS.user();
-    if (!u) return;
-    if (document.getElementById('__rys-badge')) return;
-    var badge = document.createElement('div');
-    badge.id = '__rys-badge';
-    badge.style.cssText = 'position:fixed;top:12px;right:16px;z-index:9997;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #e5e5e5;border-radius:4px;padding:5px 10px;font-family:Inter,system-ui,sans-serif;font-size:12px;';
-    badge.innerHTML = '<span style="font-weight:600;color:#111">' + escHtml(u) + '</span>'
-      + '<button onclick="window.RYS.logout()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;font-family:inherit;padding:0">sign out</button>';
-    document.body.appendChild(badge);
-  }
-
   function escHtml(s) {
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── School link ────────────────────────────────────────────────────────────
-  function injectSchool() {
-    var header = document.querySelector('header');
-    if (!header || document.getElementById('__school-link')) return;
-    var a = document.createElement('a');
-    a.id = '__school-link';
-    a.href = 'https://en.wikipedia.org/wiki/Special:Random';
-    a.target = '_blank';
-    a.rel = 'noopener noreferrer';
-    a.textContent = 'School';
-    a.style.cssText = 'font-size:12px;font-weight:500;color:#888;text-decoration:none;'
-      + 'background:#fafafa;border:1px solid #e5e5e5;padding:3px 10px;border-radius:4px;'
-      + 'flex-shrink:0;white-space:nowrap;transition:color 0.1s,border-color 0.1s';
-    a.onmouseenter = function() { a.style.color='#111'; a.style.borderColor='#111'; };
-    a.onmouseleave = function() { a.style.color='#888'; a.style.borderColor='#e5e5e5'; };
-    header.insertBefore(a, header.firstChild);
+  // ── Account button (fixed bottom-right) ───────────────────────────────────
+  function injectAccountBtn() {
+    if (isExempt()) return;
+    if (document.getElementById('__rys-acct')) return;
+    var btn = document.createElement('div');
+    btn.id = '__rys-acct';
+    btn.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9997;font-family:Inter,system-ui,sans-serif;font-size:12px;';
+    var u = window.RYS.user();
+    if (u) {
+      btn.innerHTML = '<div style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e5e5e5;border-radius:6px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,0.08)">'
+        + '<span style="font-weight:600;color:#111">' + escHtml(u) + '</span>'
+        + '<span style="color:#e5e5e5">|</span>'
+        + '<button onclick="window.RYS.logout()" style="font-size:11px;color:#888;background:none;border:none;cursor:pointer;font-family:inherit;padding:0">sign out</button>'
+        + '</div>';
+    } else {
+      btn.innerHTML = '<a href="/login?next=' + encodeURIComponent(location.pathname) + '" '
+        + 'style="display:flex;align-items:center;gap:6px;background:#111;color:#fff;border-radius:6px;padding:7px 14px;text-decoration:none;font-size:12px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,0.15)">'
+        + '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+        + 'Sign in</a>';
+    }
+    document.body.appendChild(btn);
   }
 
   // ── Admin state polling ────────────────────────────────────────────────────
@@ -226,8 +217,7 @@
 
   // ── Init ───────────────────────────────────────────────────────────────────
   function init() {
-    injectSchool();
-    injectBadge();
+    injectAccountBtn();
     injectGamblingPrompt();
     if (isLoggedIn()) {
       _lastActivity = Date.now();
