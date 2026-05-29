@@ -1,13 +1,13 @@
 {
   "reload_at": 1780012817331,
   "banner": {
-    "enabled": false,
-    "text": "testing",
-    "type": "error"
+    "enabled": true,
+    "text": "added avatar section",
+    "type": "success"
   },
   "maintenance": {
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-29T00:01:36.488Z"
+  "updated_at": "2026-05-29T00:07:17.134Z"
 }
