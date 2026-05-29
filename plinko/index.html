@@ -79,7 +79,7 @@ canvas { display: block; width: 100%; height: 100%; }
     </div>
   </div>
   <div class="cg">
-    <div class="cl">Bet</div>
+    <div class="cl">Per Ball</div>
     <div class="bet-row">
       <div class="bet-pre">$</div>
       <input id="bet-inp" type="number" value="10" min="1" step="1">
@@ -280,9 +280,10 @@ function getBallPos(ball) {
     toY = buckY + buckH / 2;
   }
 
-  // Quadratic bezier — control point biased to bounce direction
-  const ctrlX = from.x + (goRight ? 1 : -1) * spX * 0.28;
-  const ctrlY = from.y + spY * 0.38;
+  // Quadratic bezier — control point biased to bounce direction + per-ball jitter
+  const arc   = ball.arcs ? ball.arcs[seg] : { dx: 0, dy: 0 };
+  const ctrlX = from.x + (goRight ? 1 : -1) * spX * 0.28 + arc.dx;
+  const ctrlY = from.y + spY * 0.38 + arc.dy;
   const u = t * t; // ease-in (gravity feel)
   return {
     x: (1 - u) * (1 - u) * from.x + 2 * (1 - u) * u * ctrlX + u * u * toX,
@@ -339,7 +340,13 @@ function doBet() {
   for (let i = 0; i < count; i++) {
     const path   = Array.from({ length: rows }, () => Math.random() < 0.5);
     const bucket = path.filter(Boolean).length;
-    balls.push({ path, bucket, bet: betAmt, mults: snapMults, seg: -1, col: 0, t: -(i * 0.18), done: false, landFlash: 0 });
+    // Per-segment arc jitter so each ball bounces uniquely
+    const arcs   = Array.from({ length: rows }, () => ({
+      dx: (Math.random() - 0.5) * spX * 0.45,
+      dy: (Math.random() - 0.5) * spY * 0.18
+    }));
+    const stagger = -(i * 0.18 + Math.random() * 0.06);
+    balls.push({ path, bucket, bet: betAmt, mults: snapMults, arcs, seg: -1, col: 0, t: stagger, done: false, landFlash: 0 });
   }
 }
 
