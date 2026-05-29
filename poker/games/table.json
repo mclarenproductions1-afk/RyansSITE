@@ -32,6 +32,17 @@
       "inHand": false,
       "lastAction": "",
       "joinedAt": "2026-05-29T00:16:58.726Z"
+    },
+    {
+      "name": "nig lord",
+      "chips": 520,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-05-29T00:18:12.608Z"
     }
   ],
   "handNum": 4,
@@ -98,7 +109,7 @@
   "lastAggressor": 0,
   "roundStartPlayer": 0,
   "actions": [],
-  "updatedAt": "2026-05-29T00:16:58.726Z",
+  "updatedAt": "2026-05-29T00:18:12.608Z",
   "lastWinners": [
     {
       "slot": 0,
