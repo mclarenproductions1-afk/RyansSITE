@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pindrop</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0c20; --panel: #0f1128; --border: rgba(255,255,255,0.07);
+  --muted: #5a6490; --green: #1ecb4f; --purple: #6c5dd3;
+}
+html, body { height: 100%; background: var(--bg); color: #fff; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden; }
+header { padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; flex-shrink: 0; background: var(--panel); }
+.back { font-size: 13px; color: var(--muted); text-decoration: none; }
+.back:hover { color: #fff; }
+.title { font-size: 14px; font-weight: 600; }
+#board-wrap { flex: 1; min-height: 0; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; }
+.ctrl { flex-shrink: 0; background: var(--panel); border-top: 1px solid var(--border); padding: 12px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.cg { display: flex; flex-direction: column; gap: 4px; }
+.cl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.bal-val { font-size: 18px; font-weight: 700; letter-spacing: -.5px; }
+.seg { display: flex; height: 32px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.seg button { padding: 0 12px; background: none; border: none; border-right: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: color .1s, background .1s; white-space: nowrap; }
+.seg button:last-child { border-right: none; }
+.seg button:hover:not(:disabled) { color: #fff; }
+.seg button.on { background: var(--purple); color: #fff; }
+.seg button:disabled { opacity: .4; cursor: default; }
+.bet-row { display: flex; align-items: stretch; height: 32px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.bet-pre { padding: 0 9px; display: flex; align-items: center; font-size: 12px; color: var(--muted); border-right: 1px solid var(--border); }
+#bet-inp { width: 72px; padding: 0 9px; background: transparent; border: none; outline: none; font-size: 13px; font-weight: 600; color: #fff; font-family: inherit; }
+#bet-inp::-webkit-inner-spin-button, #bet-inp::-webkit-outer-spin-button { display: none; }
+.bet-adj button { width: 34px; background: none; border: none; border-left: 1px solid var(--border); color: var(--muted); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; transition: color .1s, background .1s; }
+.bet-adj button:hover { color: #fff; background: rgba(255,255,255,.06); }
+.sp { flex: 1; min-width: 0; }
+#res-strip { display: flex; gap: 3px; align-items: center; flex-wrap: nowrap; overflow: hidden; max-width: 220px; }
+.rpip { font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 3px; white-space: nowrap; }
+.btn-bet { height: 32px; padding: 0 22px; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; background: var(--green); color: #111; transition: opacity .1s, transform .08s; white-space: nowrap; }
+.btn-bet:active { transform: scale(.96); }
+.btn-bet:disabled { opacity: .35; cursor: default; transform: none; }
+@media (max-width: 700px) { .ctrl { gap: 8px; padding: 10px 14px; } #res-strip { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="/">← Home</a>
+  <span class="title">Pindrop</span>
+</header>
+<div id="board-wrap"><canvas id="canvas"></canvas></div>
+<div class="ctrl">
+  <div class="cg">
+    <div class="cl">Balance</div>
+    <div class="bal-val" id="bal-disp">—</div>
+  </div>
+  <div class="cg">
+    <div class="cl">Rows</div>
+    <div class="seg" id="seg-rows">
+      <button data-v="8">8</button>
+      <button data-v="10">10</button>
+      <button class="on" data-v="12">12</button>
+      <button data-v="14">14</button>
+      <button data-v="16">16</button>
+    </div>
+  </div>
+  <div class="cg">
+    <div class="cl">Risk</div>
+    <div class="seg" id="seg-risk">
+      <button data-v="low">Low</button>
+      <button class="on" data-v="medium">Med</button>
+      <button data-v="high">High</button>
+    </div>
+  </div>
+  <div class="cg">
+    <div class="cl">Bet</div>
+    <div class="bet-row">
+      <div class="bet-pre">$</div>
+      <input id="bet-inp" type="number" value="10" min="1" step="1">
+      <div class="bet-adj">
+        <button onclick="adjBet(.5)">½</button>
+        <button onclick="adjBet(2)">2×</button>
+      </div>
+    </div>
+  </div>
+  <div class="sp"></div>
+  <div id="res-strip"></div>
+  <button class="btn-bet" id="btn-bet" onclick="doBet()">Bet</button>
+</div>
+
+<script>
+/* ── Multiplier tables (rows → buckets = rows+1) ─────────────────── */
+const MULTS = {
+  low: {
+    8:  [5.6,2.1,1.1,1,0.5,1,1.1,2.1,5.6],
+    10: [8.9,3,1.4,1.1,1,0.5,1,1.1,1.4,3,8.9],
+    12: [10,4,2,1.4,1.2,1.1,0.5,1.1,1.2,1.4,2,4,10],
+    14: [13,5,2,1.5,1.3,1.2,1.1,0.5,1.1,1.2,1.3,1.5,2,5,13],
+    16: [16,9,2,1.4,1.4,1.2,1.1,1,0.5,1,1.1,1.2,1.4,1.4,2,9,16]
+  },
+  medium: {
+    8:  [13,3,1.3,0.7,0.4,0.7,1.3,3,13],
+    10: [22,5,2,1.4,0.6,0.4,0.6,1.4,2,5,22],
+    12: [33,11,4,2,1.1,0.6,0.3,0.6,1.1,2,4,11,33],
+    14: [76,17,7,3,1.5,0.5,0.3,0.2,0.3,0.5,1.5,3,7,17,76],
+    16: [1000,130,26,9,4,2,0.2,0.2,0.2,0.2,0.2,2,4,9,26,130,1000]
+  },
+  high: {
+    8:  [29,4,1.5,0.3,0.2,0.3,1.5,4,29],
+    10: [74,12,3,0.9,0.3,0.2,0.3,0.9,3,12,74],
+    12: [141,33,11,3,1.5,0.5,0.1,0.5,1.5,3,11,33,141],
+    14: [270,76,25,8,3,1,0.5,0.2,0.5,1,3,8,25,76,270],
+    16: [1000,500,110,41,10,5,3,0.5,0.5,3,5,10,41,110,500,1000]
+  }
+};
+
+/* ── State ───────────────────────────────────────────────────────── */
+const canvas = document.getElementById('canvas');
+const ctx    = canvas.getContext('2d');
+var rows = 12, risk = 'medium';
+var bal = 0;
+var balls = [];
+var recentResults = [];
+var lastTs = 0;
+const STEP_S = 0.072; // seconds per row segment
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+var W, H, cx, topY, spX, spY, buckH, buckY;
+
+function layout() {
+  const dpr = window.devicePixelRatio || 1;
+  W = canvas.offsetWidth;
+  H = canvas.offsetHeight;
+  canvas.width  = Math.round(W * dpr);
+  canvas.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  buckH = Math.max(26, Math.min(36, H * 0.055));
+  const padX = 24, padTop = 14, padBot = 6;
+  spX   = (W - 2 * padX) / (rows + 1);
+  spY   = (H - padTop - padBot - buckH - 10) / (rows + 0.5);
+  cx    = W / 2;
+  topY  = padTop + spY * 0.5;
+  buckY = H - padBot - buckH;
+}
+
+/* Peg at row r (0-indexed), column c (0..r): r+1 pegs per row */
+function pegPos(r, c) {
+  return { x: cx + (c - r / 2) * spX, y: topY + r * spY };
+}
+/* Bucket b (0..rows) centers */
+function buckX(b) { return cx + (b - rows / 2) * spX; }
+
+/* ── Colors ──────────────────────────────────────────────────────── */
+function mCol(m) {
+  if (m >= 100) return { fg:'#ef4444', bg:'rgba(239,68,68,0.14)' };
+  if (m >= 10)  return { fg:'#f97316', bg:'rgba(249,115,22,0.14)' };
+  if (m >= 3)   return { fg:'#f5c842', bg:'rgba(245,200,66,0.12)' };
+  if (m >= 1)   return { fg:'#4ade80', bg:'rgba(74,222,128,0.10)' };
+  return           { fg:'#5a6490', bg:'rgba(90,100,144,0.10)' };
+}
+
+function fmult(m) {
+  if (m >= 1000) return (m/1000)+'k×';
+  return m+'×';
+}
+
+/* ── Draw ────────────────────────────────────────────────────────── */
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  const mults = MULTS[risk][rows];
+
+  // Buckets
+  for (let b = 0; b <= rows; b++) {
+    const m   = mults[b];
+    const col = mCol(m);
+    const bx  = buckX(b);
+    const bw  = spX * 0.80;
+    let flash = 0;
+    for (const ball of balls) {
+      if (ball.done && ball.bucket === b) flash = Math.max(flash, ball.landFlash);
+    }
+    rrect(bx - bw / 2, buckY, bw, buckH, 3);
+    ctx.fillStyle   = flash > 0 ? `rgba(255,255,255,${0.06 + flash * 0.18})` : col.bg;
+    ctx.fill();
+    ctx.strokeStyle = flash > 0 ? '#fff' : col.fg;
+    ctx.lineWidth   = flash > 0 ? 1.5 : 0.8;
+    ctx.stroke();
+    const fs = Math.max(7, Math.min(11, spX * 0.22));
+    ctx.font         = `700 ${fs}px Inter,system-ui,sans-serif`;
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle    = flash > 0 ? '#fff' : col.fg;
+    ctx.fillText(fmult(m), bx, buckY + buckH / 2);
+  }
+
+  // Pegs
+  const pegR = Math.max(2.5, Math.min(4.5, spX * 0.09));
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c <= r; c++) {
+      const p = pegPos(r, c);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, pegR, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ctx.fill();
+    }
+  }
+
+  // Balls
+  for (const ball of balls) {
+    const pos = getBallPos(ball);
+    if (!pos) continue;
+    const alpha = ball.done ? Math.min(1, ball.landFlash * 1.5) : 1;
+    if (alpha < 0.02) continue;
+    const br = Math.max(4, Math.min(9, spX * 0.17));
+
+    // soft glow
+    if (!ball.done) {
+      const grad = ctx.createRadialGradient(pos.x, pos.y, 0, pos.x, pos.y, br * 2.8);
+      grad.addColorStop(0, `rgba(239,68,68,${alpha * 0.35})`);
+      grad.addColorStop(1, 'rgba(239,68,68,0)');
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, br * 2.8, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, br, 0, Math.PI * 2);
+    ctx.fillStyle   = `rgba(239,68,68,${alpha})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(255,255,255,${alpha * 0.55})`;
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+  }
+}
+
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);   ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);   ctx.quadraticCurveTo(x,     y + h, x,     y + h - r);
+  ctx.lineTo(x, y + r);       ctx.quadraticCurveTo(x,     y,     x + r, y);
+  ctx.closePath();
+}
+
+/* ── Ball position interpolation ────────────────────────────────── */
+function getBallPos(ball) {
+  if (ball.done) {
+    if (ball.landFlash <= 0) return null;
+    return { x: buckX(ball.bucket), y: buckY + buckH / 2 };
+  }
+
+  const { seg, col, path, t } = ball;
+
+  if (seg < 0) {
+    // Falling from above to peg(0,0)
+    const p0 = pegPos(0, 0);
+    return { x: p0.x, y: (topY - spY * 0.9) + (p0.y - (topY - spY * 0.9)) * (t * t) };
+  }
+
+  const from     = pegPos(seg, col);
+  const goRight  = path[seg];
+  const nextCol  = col + (goRight ? 1 : 0);
+  let toX, toY;
+
+  if (seg < rows - 1) {
+    const tp = pegPos(seg + 1, nextCol);
+    toX = tp.x; toY = tp.y;
+  } else {
+    toX = buckX(nextCol);
+    toY = buckY + buckH / 2;
+  }
+
+  // Quadratic bezier — control point biased to bounce direction
+  const ctrlX = from.x + (goRight ? 1 : -1) * spX * 0.28;
+  const ctrlY = from.y + spY * 0.38;
+  const u = t * t; // ease-in (gravity feel)
+  return {
+    x: (1 - u) * (1 - u) * from.x + 2 * (1 - u) * u * ctrlX + u * u * toX,
+    y: (1 - u) * (1 - u) * from.y + 2 * (1 - u) * u * ctrlY + u * u * toY
+  };
+}
+
+/* ── Update ──────────────────────────────────────────────────────── */
+function update(dt) {
+  for (const ball of balls) {
+    if (ball.done) {
+      ball.landFlash = Math.max(0, ball.landFlash - dt * 1.8);
+      continue;
+    }
+    ball.t += dt / STEP_S;
+    while (ball.t >= 1) {
+      ball.t -= 1;
+      if (ball.seg >= 0) {
+        if (ball.path[ball.seg]) ball.col++;
+      }
+      ball.seg++;
+      if (ball.seg >= rows) {
+        ball.done = true;
+        ball.landFlash = 1.2;
+        const mult = ball.mults[ball.col];
+        bal += Math.round(ball.bet * mult);
+        saveBal(); dispBal();
+        pushResult(mult);
+        break;
+      }
+    }
+  }
+  balls = balls.filter(b => !b.done || b.landFlash > 0);
+
+  // Lock rows/risk while balls flying
+  const flying = balls.some(b => !b.done);
+  document.querySelectorAll('#seg-rows button, #seg-risk button').forEach(b => {
+    b.disabled = flying;
+  });
+  updateBetBtn();
+}
+
+/* ── Bet ─────────────────────────────────────────────────────────── */
+function doBet() {
+  const betAmt = Math.max(1, Math.floor(parseFloat(document.getElementById('bet-inp').value) || 10));
+  if (betAmt > bal) { flashBal(); return; }
+  bal -= betAmt;
+  saveBal(); dispBal();
+  const path   = Array.from({ length: rows }, () => Math.random() < 0.5);
+  const bucket = path.filter(Boolean).length;
+  balls.push({ path, bucket, bet: betAmt, mults: MULTS[risk][rows].slice(), seg: -1, col: 0, t: 0, done: false, landFlash: 0 });
+}
+
+function adjBet(f) {
+  const inp = document.getElementById('bet-inp');
+  inp.value = Math.max(1, Math.floor((parseFloat(inp.value) || 10) * f));
+  updateBetBtn();
+}
+
+function updateBetBtn() {
+  const betAmt = parseFloat(document.getElementById('bet-inp').value) || 0;
+  document.getElementById('btn-bet').disabled = betAmt < 1 || betAmt > bal || bal < 1;
+}
+
+function flashBal() {
+  const el = document.getElementById('bal-disp');
+  el.style.color = '#ef4444';
+  setTimeout(() => { el.style.color = ''; }, 400);
+}
+
+/* ── Results strip ───────────────────────────────────────────────── */
+function pushResult(mult) {
+  recentResults.unshift(mult);
+  if (recentResults.length > 14) recentResults.pop();
+  const strip = document.getElementById('res-strip');
+  strip.innerHTML = recentResults.slice(0, 12).map(m => {
+    const c = mCol(m);
+    return `<span class="rpip" style="background:${c.bg};color:${c.fg};border:1px solid ${c.fg}55">${fmult(m)}</span>`;
+  }).join('');
+}
+
+/* ── Balance ─────────────────────────────────────────────────────── */
+function loadBal() { bal = parseInt(localStorage.getItem('rys-bal') || '0', 10); if (!bal || bal < 1) bal = 1000; }
+function saveBal() { localStorage.setItem('rys-bal', String(bal)); if (window.RYS) window.RYS.setBal(bal); }
+function dispBal() { document.getElementById('bal-disp').textContent = '$' + bal.toLocaleString(); updateBetBtn(); }
+
+/* ── Seg button wiring ───────────────────────────────────────────── */
+function setupSeg(id, cb) {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('button[data-v]');
+    if (!btn || btn.disabled) return;
+    document.querySelectorAll('#' + id + ' button').forEach(b => b.classList.remove('on'));
+    btn.classList.add('on');
+    cb(btn.dataset.v);
+  });
+}
+
+/* ── Main loop ───────────────────────────────────────────────────── */
+function loop(ts) {
+  const dt = Math.min((ts - lastTs) / 1000, 0.05);
+  lastTs = ts;
+  update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener('resize', layout);
+document.getElementById('bet-inp').addEventListener('input', updateBetBtn);
+
+setupSeg('seg-rows', v => { rows = parseInt(v); layout(); });
+setupSeg('seg-risk', v => { risk = v; });
+
+loadBal(); dispBal(); layout();
+requestAnimationFrame(ts => { lastTs = ts; requestAnimationFrame(loop); });
+</script>
+<script src="/admin/control.js?v=2"></script>
+<script>
+(function() {
+  function sync() {
+    if (window.RYS && window.RYS.user()) { bal = window.RYS.bal(); dispBal(); }
+  }
+  if (document.readyState !== 'loading') sync();
+  else document.addEventListener('DOMContentLoaded', sync);
+})();
+</script>
+</body>
+</html>
