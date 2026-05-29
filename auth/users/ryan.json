@@ -2,7 +2,17 @@
   "username": "ryan",
   "passwordHash": "1137e4f23b9d562f3723dd1dcc505d4c480a7d4da788ba34ec9af4e279f2bd1f",
   "created": 1779951379361,
-  "lastActive": 1780013134409,
-  "lastPage": "/gf/shop/",
-  "balance": 10000000
+  "lastActive": 1780013140708,
+  "lastPage": "/gf/shop",
+  "balance": 9999700,
+  "inventory": [
+    "headwear_0_3"
+  ],
+  "equipped": {
+    "headwear": null,
+    "glasses": null,
+    "shirts": null,
+    "pants": null,
+    "shoes": null
+  }
 }
