@@ -2,9 +2,9 @@
   "username": "sh00taface",
   "passwordHash": "ba7f3c2c4176b61fb5c2fb0e6ed073590bebda4ffd9a0cb35d8c1327b7fced88",
   "created": 1780010804317,
-  "lastActive": 1780013130450,
+  "lastActive": 1780013132291,
   "lastPage": "/gf/shop",
-  "balance": 2108436684340,
+  "balance": 2108436683640,
   "inventory": [
     "headwear_0_0",
     "headwear_0_1",
@@ -13,7 +13,8 @@
     "headwear_1_3",
     "headwear_2_0",
     "headwear_2_1",
-    "headwear_2_2"
+    "headwear_2_2",
+    "headwear_2_3"
   ],
   "equipped": {
     "headwear": null,
