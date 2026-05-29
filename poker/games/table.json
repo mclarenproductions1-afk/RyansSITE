@@ -17,8 +17,8 @@
     },
     {
       "name": "sh00taface",
-      "chips": 499999980,
-      "bet": 20,
+      "chips": 499998460,
+      "bet": 1540,
       "hand": [
         "Js",
         "As"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
+      "lastAction": "Raise 1540",
       "joinedAt": "2026-05-29T00:10:52.820Z"
     },
     null,
@@ -89,20 +89,25 @@
     "2d"
   ],
   "communityCards": [],
-  "pot": 520,
+  "pot": 2040,
   "sidePots": [],
-  "currentBet": 500,
-  "minRaise": 480,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-05-29T00:12:04.410Z",
-  "lastAggressor": 0,
+  "currentBet": 1540,
+  "minRaise": 1040,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-05-29T00:12:16.813Z",
+  "lastAggressor": 1,
   "roundStartPlayer": 1,
   "actions": [
     {
       "slot": 0,
       "action": "raise",
       "amount": 500
+    },
+    {
+      "slot": 1,
+      "action": "raise",
+      "amount": 1540
     }
   ],
-  "updatedAt": "2026-05-29T00:12:04.410Z"
+  "updatedAt": "2026-05-29T00:12:16.813Z"
 }
