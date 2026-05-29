@@ -17,8 +17,8 @@
     },
     {
       "name": "sh00taface",
-      "chips": 499997420,
-      "bet": 0,
+      "chips": 499997400,
+      "bet": 20,
       "hand": [
         "Qd",
         "7h"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Raise 20",
       "joinedAt": "2026-05-29T00:10:52.820Z"
     },
     null,
@@ -90,22 +90,27 @@
     "6s",
     "Jc"
   ],
-  "pot": 40,
+  "pot": 60,
   "sidePots": [],
-  "currentBet": 0,
+  "currentBet": 20,
   "minRaise": 20,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-05-29T00:13:47.027Z",
-  "lastAggressor": 0,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-05-29T00:13:53.773Z",
+  "lastAggressor": 1,
   "roundStartPlayer": 1,
   "actions": [
     {
       "slot": 0,
       "action": "check",
       "amount": 0
+    },
+    {
+      "slot": 1,
+      "action": "raise",
+      "amount": 20
     }
   ],
-  "updatedAt": "2026-05-29T00:13:47.027Z",
+  "updatedAt": "2026-05-29T00:13:53.773Z",
   "lastWinners": [
     {
       "slot": 0,
