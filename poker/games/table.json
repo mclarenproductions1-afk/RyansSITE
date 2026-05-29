@@ -1,10 +1,10 @@
 {
-  "status": "active",
+  "status": "showdown",
   "players": [
     {
       "name": "ryan",
-      "chips": 0,
-      "bet": 3540,
+      "chips": 7120,
+      "bet": 0,
       "hand": [
         "10h",
         "Qh"
@@ -12,13 +12,13 @@
       "folded": false,
       "allIn": true,
       "inHand": true,
-      "lastAction": "All-in",
+      "lastAction": "Wins!",
       "joinedAt": "2026-05-28T03:53:21.765Z"
     },
     {
       "name": "sh00taface",
-      "chips": 499997400,
-      "bet": 20,
+      "chips": 499993880,
+      "bet": 0,
       "hand": [
         "Qd",
         "7h"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 20",
+      "lastAction": "",
       "joinedAt": "2026-05-29T00:10:52.820Z"
     },
     null,
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 3,
   "dealer": 1,
-  "phase": "flop",
+  "phase": "showdown",
   "deck": [
     "Qs",
     "9c",
@@ -82,45 +82,29 @@
     "2s",
     "4s",
     "4d",
-    "2h",
-    "Ac"
+    "2h"
   ],
   "communityCards": [
     "9d",
     "6s",
-    "Jc"
+    "Jc",
+    "Ac"
   ],
-  "pot": 3600,
+  "pot": 0,
   "sidePots": [],
-  "currentBet": 3540,
-  "minRaise": 3520,
-  "currentTurn": 1,
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": -1,
   "turnStartedAt": "2026-05-29T00:14:01.057Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [
-    {
-      "slot": 0,
-      "action": "check",
-      "amount": 0
-    },
-    {
-      "slot": 1,
-      "action": "raise",
-      "amount": 20
-    },
-    {
-      "slot": 0,
-      "action": "raise",
-      "amount": 3540
-    }
-  ],
-  "updatedAt": "2026-05-29T00:14:01.057Z",
+  "actions": [],
+  "updatedAt": "2026-05-29T00:14:08.010Z",
   "lastWinners": [
     {
       "slot": 0,
-      "hand": "All others folded",
-      "amount": 40
+      "hand": "High Card",
+      "amount": 7120
     }
   ]
 }
