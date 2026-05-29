@@ -262,9 +262,10 @@ function getBallPos(ball) {
   const { seg, col, path, t } = ball;
 
   if (seg < 0) {
-    // Falling from above to peg(0,0)
-    const p0 = pegPos(0, 0);
-    return { x: p0.x, y: (topY - spY * 0.9) + (p0.y - (topY - spY * 0.9)) * (t * t) };
+    // Falling from above — each ball starts from a slightly different X and converges to its first peg
+    const p0  = pegPos(0, 0);
+    const off = (ball.startXOff || 0) * (1 - t); // offset fades as ball reaches first peg
+    return { x: p0.x + off, y: (topY - spY * 0.9) + (p0.y - (topY - spY * 0.9)) * (t * t) };
   }
 
   const from     = pegPos(seg, col);
@@ -298,7 +299,7 @@ function update(dt) {
       ball.landFlash = Math.max(0, ball.landFlash - dt * 1.8);
       continue;
     }
-    ball.t += dt / STEP_S;
+    ball.t += dt / (STEP_S * (ball.speedMult || 1));
     while (ball.t >= 1) {
       ball.t -= 1;
       if (ball.seg >= 0) {
@@ -340,13 +341,17 @@ function doBet() {
   for (let i = 0; i < count; i++) {
     const path   = Array.from({ length: rows }, () => Math.random() < 0.5);
     const bucket = path.filter(Boolean).length;
-    // Per-segment arc jitter so each ball bounces uniquely
-    const arcs   = Array.from({ length: rows }, () => ({
-      dx: (Math.random() - 0.5) * spX * 0.45,
-      dy: (Math.random() - 0.5) * spY * 0.18
+    // Per-segment arc jitter — large enough to visually separate same-direction moves
+    const arcs = Array.from({ length: rows }, () => ({
+      dx: (Math.random() - 0.5) * spX * 0.7,
+      dy: (Math.random() - 0.5) * spY * 0.25
     }));
-    const stagger = -(i * 0.18 + Math.random() * 0.06);
-    balls.push({ path, bucket, bet: betAmt, mults: snapMults, arcs, seg: -1, col: 0, t: stagger, done: false, landFlash: 0 });
+    // Random start X offset so balls don't all drop from the same point
+    const startXOff = (Math.random() - 0.5) * spX * 0.5;
+    // Random speed so balls arrive at pegs at different times
+    const speedMult = 0.75 + Math.random() * 0.5;
+    const stagger   = -(i * 0.2 + Math.random() * 0.1);
+    balls.push({ path, bucket, bet: betAmt, mults: snapMults, arcs, startXOff, speedMult, seg: -1, col: 0, t: stagger, done: false, landFlash: 0 });
   }
 }
 
