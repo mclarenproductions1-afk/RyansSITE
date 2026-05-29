@@ -6,8 +6,8 @@
     "type": "error"
   },
   "maintenance": {
-    "enabled": true,
-    "message": "Adding avatar section, will be down for 1 minute"
+    "enabled": false,
+    "message": ""
   },
-  "updated_at": "2026-05-29T00:00:19.346Z"
+  "updated_at": "2026-05-29T00:01:36.488Z"
 }
