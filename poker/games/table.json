@@ -3,16 +3,16 @@
   "players": [
     {
       "name": "ryan",
-      "chips": 7100,
-      "bet": 0,
+      "chips": 0,
+      "bet": 7100,
       "hand": [
         "7c",
         "8s"
       ],
       "folded": false,
-      "allIn": false,
+      "allIn": true,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "All-in",
       "joinedAt": "2026-05-28T03:53:21.765Z"
     },
     {
@@ -90,22 +90,27 @@
     "7d",
     "5d"
   ],
-  "pot": 40,
+  "pot": 7140,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-05-29T00:14:31.357Z",
-  "lastAggressor": 1,
+  "currentBet": 7100,
+  "minRaise": 7100,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-05-29T00:14:36.741Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 0,
   "actions": [
     {
       "slot": 1,
       "action": "check",
       "amount": 0
+    },
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 7100
     }
   ],
-  "updatedAt": "2026-05-29T00:14:31.357Z",
+  "updatedAt": "2026-05-29T00:14:36.741Z",
   "lastWinners": [
     {
       "slot": 0,
