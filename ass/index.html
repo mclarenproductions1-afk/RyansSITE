@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
   /* ── Reset & Base ──────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -702,7 +703,7 @@
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
-   CONFIG — fill these in before deploying
+   CONFIG
    ═══════════════════════════════════════════════════════════════ */
 const CONFIG = {
   owner:  "mclarenproductions1-afk",
@@ -710,6 +711,38 @@ const CONFIG = {
   branch: "main",
   token:  ["github_pat_11CASFLQI0", "mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy"].join("")
 };
+
+/* ═══════════════════════════════════════════════════════════════
+   SYNC (Ably primary, GitHub backup)
+   ═══════════════════════════════════════════════════════════════ */
+const ABLY_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+const ABLY_CH  = 'ryanssite-ass-tasks';
+let _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+async function ablyRead(ch) {
+  return new Promise(resolve => {
+    try { getAbly().channels.get(ch).history({ limit: 1 }, (err, page) => {
+      if (err || !page || !page.items.length) resolve(null);
+      else resolve(page.items[0].data);
+    }); } catch(e) { resolve(null); }
+  });
+}
+async function ablyPublish(ch, data) {
+  return new Promise((resolve, reject) => {
+    try { getAbly().channels.get(ch).publish('state', data, err => { if (err) reject(err); else resolve(); }); }
+    catch(e) { reject(e); }
+  });
+}
+async function ghBackup(data) {
+  try {
+    const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${FILE_PATH}`;
+    const r = await fetch(url + `?_=${Date.now()}`, { headers: { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    let sha = null; if (r.ok) { const j = await r.json(); sha = j.sha; }
+    const body = { message: `ass: update tasks ${new Date().toISOString()}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: CONFIG.branch };
+    if (sha) body.sha = sha;
+    await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch(_) {}
+}
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -736,21 +769,21 @@ const ghHeaders = () => ({
 async function loadTasks() {
   if (!isConfigured()) { hideLoading(); return; }
   try {
-    const res = await fetch(`${API}?ref=${CONFIG.branch}&t=${Date.now()}`, { headers: ghHeaders() });
-    if (res.status === 404) {
-      // File doesn't exist yet — start empty
-      tasks = [];
-      fileSHA = null;
-      hideLoading();
-      render();
-      return;
+    // Try Ably first
+    const ablyData = await ablyRead(ABLY_CH);
+    if (ablyData) {
+      tasks = Array.isArray(ablyData) ? ablyData : (ablyData.tasks || []);
+      hideLoading(); render(); return;
     }
+    // Fallback: GitHub
+    const res = await fetch(`${API}?ref=${CONFIG.branch}&t=${Date.now()}`, { headers: ghHeaders() });
+    if (res.status === 404) { tasks = []; fileSHA = null; hideLoading(); render(); return; }
     if (!res.ok) throw new Error(`GitHub returned ${res.status}`);
     const data = await res.json();
     fileSHA = data.sha;
     tasks = JSON.parse(atob(data.content.replace(/\s/g, "")));
-    hideLoading();
-    render();
+    ablyPublish(ABLY_CH, tasks); // warm up Ably
+    hideLoading(); render();
   } catch (e) {
     console.error("Load failed:", e);
     showSaveStatus("error", "Error loading");
@@ -759,37 +792,11 @@ async function loadTasks() {
 }
 
 async function saveTasks() {
-  if (!isConfigured()) {
-    alert("Please fill in the CONFIG block in index.html first.");
-    return;
-  }
+  if (!isConfigured()) { alert("Please fill in the CONFIG block in index.html first."); return; }
   showSaveStatus("saving", "Saving…");
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(tasks, null, 2))));
-  const body = {
-    message: `Update tasks — ${new Date().toISOString()}`,
-    content,
-    branch: CONFIG.branch
-  };
-  if (fileSHA) body.sha = fileSHA;
-
   try {
-    const res = await fetch(API, {
-      method:  "PUT",
-      headers: ghHeaders(),
-      body:    JSON.stringify(body)
-    });
-
-    if (res.status === 409) {
-      // SHA conflict — re-fetch and retry
-      const refetch = await fetch(`${API}?ref=${CONFIG.branch}&t=${Date.now()}`, { headers: ghHeaders() });
-      const fresh = await refetch.json();
-      fileSHA = fresh.sha;
-      return saveTasks();
-    }
-    if (!res.ok) throw new Error(`GitHub ${res.status}`);
-
-    const data = await res.json();
-    fileSHA = data.content.sha;
+    await ablyPublish(ABLY_CH, tasks);
+    ghBackup(tasks);
     showSaveStatus("saved", "Saved ✓");
   } catch (e) {
     console.error("Save failed:", e);
@@ -1062,13 +1069,16 @@ document.addEventListener("keydown", e => {
 });
 
 /* ═══════════════════════════════════════════════════════════════
-   Auto-refresh every 30 seconds
+   Real-time: subscribe to Ably for task updates from other devices
    ═══════════════════════════════════════════════════════════════ */
-setInterval(() => {
-  if (isConfigured() && !document.getElementById("panel").classList.contains("open")) {
-    loadTasks();
-  }
-}, 30_000);
+if (isConfigured()) {
+  getAbly().channels.get(ABLY_CH).subscribe('state', msg => {
+    if (!document.getElementById("panel").classList.contains("open")) {
+      tasks = Array.isArray(msg.data) ? msg.data : (msg.data.tasks || []);
+      render();
+    }
+  });
+}
 
 /* ═══════════════════════════════════════════════════════════════
    Boot

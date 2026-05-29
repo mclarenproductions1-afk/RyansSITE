@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -503,6 +504,66 @@ const CONFIG = {
   token:  ["github_pat_11CASFLQI0", "mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy"].join("")
 };
 
+/* ═══════════════════════════════════════════════════════
+   ABLY SYNC (primary) + GITHUB BACKUP
+   ═══════════════════════════════════════════════════════ */
+const ABLY_KEY       = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+const ABLY_CH        = 'ryanssite-poker-table';
+const GH_API_BASE    = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/`;
+let _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+
+async function fetchGame() {
+  // Try Ably history first
+  try {
+    const p = await new Promise((res, rej) => {
+      getAbly().channels.get(ABLY_CH).history({ limit: 1 }, (err, page) => {
+        if (err) rej(err); else res(page);
+      });
+    });
+    if (p.items.length) return { state: p.items[0].data, sha: null };
+  } catch(_) {}
+  // Fallback: GitHub
+  const url = GH_API_BASE + GAME_FILE + `?_=${Date.now()}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+  if (res.status === 404) return "notfound";
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const data = await res.json();
+  const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
+  // Warm up Ably channel
+  getAbly().channels.get(ABLY_CH).publish('state', state, () => {});
+  return { state, sha: data.sha };
+}
+
+async function saveGame(state) {
+  // Primary: Ably
+  await new Promise((res, rej) => {
+    getAbly().channels.get(ABLY_CH).publish('state', state, err => { if (err) rej(err); else res(); });
+  });
+  // Backup: GitHub async
+  ghPokerBackup(state);
+  return null; // no SHA needed
+}
+
+async function createGameFile(state) {
+  await new Promise((res, rej) => {
+    getAbly().channels.get(ABLY_CH).publish('state', state, err => { if (err) rej(err); else res(); });
+  });
+  ghPokerBackup(state);
+  return null;
+}
+
+async function ghPokerBackup(state) {
+  try {
+    const url = GH_API_BASE + GAME_FILE;
+    const r = await fetch(url + `?_=${Date.now()}`, { headers: { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    let sha = null; if (r.ok) { const j = await r.json(); sha = j.sha; }
+    const body = { message: `poker: ${state.phase} hand${state.handNum}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2)))), branch: CONFIG.branch };
+    if (sha) body.sha = sha;
+    await fetch(url, { method: 'PUT', headers: { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch(_) {}
+}
+
 const GAME_FILE = "poker/games/table.json";
 let STARTING_CHIPS = 1000; // overridden by buy-in input
 
@@ -634,70 +695,7 @@ function score5(cards) {
   return { rank: ranks.reduce((a, v, i) => a + v * Math.pow(15, 4 - i), 0), name: 'High Card' };
 }
 
-/* ═══════════════════════════════════════════════════════
-   GITHUB API
-   ═══════════════════════════════════════════════════════ */
-function gameApiUrl() {
-  return `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/${GAME_FILE}`;
-}
-
-function ghHeaders(extra) {
-  return Object.assign({
-    "Authorization": `Bearer ${CONFIG.token}`,
-    "Accept":        "application/vnd.github+json",
-    "Content-Type":  "application/json"
-  }, extra || {});
-}
-
-async function fetchGame() {
-  // Always cache-bust — GitHub CDN serves stale data without a unique URL param
-  const url = gameApiUrl() + `?_=${Date.now()}`;
-  const res = await fetch(url, { headers: ghHeaders(), cache: 'no-store' });
-  if (res.status === 404) return "notfound";
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
-  const data = await res.json();
-  const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
-  return { state, sha: data.sha };
-}
-
-async function saveGame(state, sha) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-  const body = {
-    message: `poker: ${state.phase} hand${state.handNum}`,
-    content,
-    branch: CONFIG.branch,
-    sha
-  };
-  const res = await fetch(gameApiUrl(), {
-    method: "PUT",
-    headers: ghHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (res.status === 409) {
-    const fresh = await fetchGame();
-    if (fresh && fresh !== "notfound") {
-      gameFileSHA = fresh.sha;
-      applyGameState(fresh.state);
-    }
-    throw new Error("conflict");
-  }
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
-  const data = await res.json();
-  return data.content.sha;
-}
-
-async function createGameFile(state) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-  const body = { message: "poker: create table", content, branch: CONFIG.branch };
-  const res = await fetch(gameApiUrl(), {
-    method: "PUT",
-    headers: ghHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`Create failed: ${res.status}`);
-  const data = await res.json();
-  return data.content.sha;
-}
+/* GitHub API helpers removed — Ably is primary (see ABLY SYNC section above) */
 
 /* ═══════════════════════════════════════════════════════
    GAME STATE HELPERS
@@ -1021,18 +1019,34 @@ function resolveHand(state, forcedWinner) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   POLLING
+   REALTIME (Ably subscription replaces polling)
    ═══════════════════════════════════════════════════════ */
 const AFK_MS = AFK_SECONDS * 1000;
+let _ablyPokerSub = null;
 
 function startPolling() {
   stopPolling();
-  pollTimer = setInterval(pollGame, 2500);
+  // Subscribe to Ably channel for real-time updates
+  _ablyPokerSub = getAbly().channels.get(ABLY_CH);
+  _ablyPokerSub.subscribe('state', msg => {
+    if (!isSaving) {
+      const afkSlot = msg.data && msg.data.currentTurn;
+      applyGameState(msg.data);
+      // AFK check on each incoming state
+      if (msg.data && msg.data.status === 'active' && msg.data.currentTurn >= 0 && msg.data.turnStartedAt) {
+        const elapsed = Date.now() - new Date(msg.data.turnStartedAt);
+        if (elapsed > AFK_MS) {
+          const nextSlot = nextActiveSlot(msg.data, msg.data.currentTurn);
+          if (mySlot >= 0 && mySlot === nextSlot) kickAfkPlayer(msg.data.currentTurn);
+        }
+      }
+    }
+  });
   countdownTimer = setInterval(tickCountdown, 1000);
 }
 
 function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (_ablyPokerSub) { try { _ablyPokerSub.unsubscribe(); } catch(_) {} _ablyPokerSub = null; }
   if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
 }
 
@@ -1044,56 +1058,19 @@ function afkSecondsLeft(state) {
 function tickCountdown() {
   if (!gameState || gameState.status !== 'active' || gameState.currentTurn < 0) return;
   const secs = afkSecondsLeft(gameState);
-  // Update countdown label on the active player chip (if rendered)
   const el = document.getElementById('afk-countdown');
   if (el) {
     el.textContent = secs <= 10 ? `${secs}s` : secs <= 20 ? `${secs}s` : '';
     el.style.color = secs <= 10 ? '#e53e3e' : '#e5a23e';
   }
-  // If it's my turn and I'm about to time out, warn me
-  if (gameState.currentTurn === mySlot && secs <= 10 && secs > 0) {
-    const wmsg = document.getElementById('waiting-msg');
-    if (wmsg && wmsg.textContent === '') wmsg.textContent = ''; // action row is shown, handled below
-    updateCountdownWarning(secs);
-  }
+  if (gameState.currentTurn === mySlot && secs <= 10 && secs > 0) updateCountdownWarning(secs);
 }
 
 function updateCountdownWarning(secs) {
   const el = document.getElementById('turn-countdown-warn');
   if (!el) return;
-  if (secs > 0) {
-    el.textContent = `⚠ Act within ${secs}s or you'll be auto-folded`;
-    el.style.display = 'block';
-  } else {
-    el.style.display = 'none';
-  }
-}
-
-async function pollGame() {
-  if (isSaving) return;
-
-  // AFK check: if current turn player has been inactive > AFK_MS, auto-fold them
-  if (gameState && gameState.status === 'active' && gameState.currentTurn >= 0 && gameState.turnStartedAt) {
-    const elapsed = Date.now() - new Date(gameState.turnStartedAt);
-    if (elapsed > AFK_MS) {
-      // Only attempt the kick if we're a seated player (not a spectator)
-      // and we're the next-to-act player (lowest active slot after current), to reduce races
-      const afkSlot = gameState.currentTurn;
-      const nextSlot = nextActiveSlot(gameState, afkSlot);
-      if (mySlot >= 0 && mySlot === nextSlot) {
-        await kickAfkPlayer(afkSlot);
-        return;
-      }
-    }
-  }
-
-  try {
-    const result = await fetchGame();
-    if (!result || result === "notfound") return;
-    gameFileSHA = result.sha;
-    
-    applyGameState(result.state);
-  } catch (e) { /* silent */ }
+  if (secs > 0) { el.textContent = `⚠ Act within ${secs}s or you'll be auto-folded`; el.style.display = 'block'; }
+  else el.style.display = 'none';
 }
 
 async function kickAfkPlayer(afkSlot) {

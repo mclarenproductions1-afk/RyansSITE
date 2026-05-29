@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wardrobe — Companion</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root { --bg:#fff; --text:#111; --muted:#888; --border:#e5e5e5; --surface:#fafafa; --accent:#111; }
@@ -406,30 +407,54 @@ function spriteStyle(item) {
   return `background-image:url('${s.file}');background-size:${s.cols * 100}% ${s.rows * 100}%;background-position:${xPct.toFixed(4)}% ${yPct.toFixed(4)}%;`;
 }
 
-// ── Auth / GitHub ─────────────────────────────────────────────────────────────
-const TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
-const API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/';
-
-async function ghGet(path) {
+// ── Sync helpers (Ably primary, GitHub backup) ────────────────────────────────
+const ABLY_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+const GH_TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+const API      = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/';
+let _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+async function ablyRead(ch) {
+  return new Promise(resolve => {
+    try { getAbly().channels.get(ch).history({ limit: 1 }, (err, page) => {
+      if (err || !page || !page.items.length) resolve(null);
+      else resolve(page.items[0].data);
+    }); } catch(e) { resolve(null); }
+  });
+}
+async function ablyPublish(ch, data) {
+  return new Promise((resolve, reject) => {
+    try { getAbly().channels.get(ch).publish('state', data, err => { if (err) reject(err); else resolve(); }); }
+    catch(e) { reject(e); }
+  });
+}
+async function ghBackup(path, data, msg) {
   try {
-    const r = await fetch(API + path + '?_=' + Date.now(), {
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-      cache: 'no-store'
-    });
+    const r = await fetch(API + path + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    let sha = null; if (r.ok) { const j = await r.json(); sha = j.sha; }
+    const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: 'main' };
+    if (sha) body.sha = sha;
+    await fetch(API + path, { method: 'PUT', headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch(_) {}
+}
+async function ghGet(path) {
+  // Try Ably first
+  const ablyChannel = path.match(/^auth\/users\/(.+)\.json$/) ? 'ryanssite-user-' + decodeURIComponent(path.match(/^auth\/users\/(.+)\.json$/)[1]) : 'ryanssite-' + path.replace(/[^a-z0-9]/gi,'-');
+  try { const d = await ablyRead(ablyChannel); if (d != null) return { data: d, sha: null }; } catch(_) {}
+  // Fallback GitHub
+  try {
+    const r = await fetch(API + path + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
     if (!r.ok) return null;
     const j = await r.json();
-    return { data: JSON.parse(atob(j.content.replace(/\s/g, ''))), sha: j.sha };
+    const data = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    ablyPublish(ablyChannel, data);
+    return { data, sha: j.sha };
   } catch(_) { return null; }
 }
-
 async function ghPut(path, data, sha, msg) {
-  const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: 'main' };
-  if (sha) body.sha = sha;
-  return fetch(API + path, {
-    method: 'PUT',
-    headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  });
+  const ablyChannel = path.match(/^auth\/users\/(.+)\.json$/) ? 'ryanssite-user-' + decodeURIComponent(path.match(/^auth\/users\/(.+)\.json$/)[1]) : 'ryanssite-' + path.replace(/[^a-z0-9]/gi,'-');
+  try { await ablyPublish(ablyChannel, data); } catch(_) {}
+  ghBackup(path, data, msg);
+  return { ok: true, status: 200 };
 }
 
 function getSession() { try { return JSON.parse(localStorage.getItem('rys-sess') || 'null'); } catch(_) { return null; } }

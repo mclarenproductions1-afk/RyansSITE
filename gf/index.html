@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -578,6 +579,8 @@ async function sendMessage() {
 // ── Chat logging ─────────────────────────────────────────────────────────────
 const GF_LOG_TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
 const GF_LOG_API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/gf/log.txt';
+let _gfAbly = null;
+function getGfAbly() { if (!_gfAbly) _gfAbly = new Ably.Realtime({ key: '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM' }); return _gfAbly; }
 let gfLogBuffer = [];
 let gfLogFlushing = false;
 
@@ -594,33 +597,25 @@ async function gfFlushLog() {
   if (gfLogFlushing || !gfLogBuffer.length) return;
   gfLogFlushing = true;
   const lines = gfLogBuffer.splice(0);
+  // Primary: publish to Ably
   try {
-    // Fetch existing log
+    const ch = getGfAbly().channels.get('ryanssite-gf-log');
+    for (const line of lines) {
+      await new Promise((res, rej) => ch.publish('log', line, err => err ? rej(err) : res()));
+    }
+  } catch(_) {}
+  // Backup: append to GitHub log.txt
+  try {
     const r = await fetch(GF_LOG_API + '?_=' + Date.now(), {
       headers: { Authorization: 'Bearer ' + GF_LOG_TOKEN, Accept: 'application/vnd.github+json' },
       cache: 'no-store'
     });
-    let existing = '';
-    let sha = null;
-    if (r.ok) {
-      const j = await r.json();
-      sha = j.sha;
-      existing = atob(j.content.replace(/\s/g,''));
-    }
-    const newContent = existing + lines.join('\n') + '\n';
-    const body = {
-      message: 'gf: log chat',
-      content: btoa(unescape(encodeURIComponent(newContent))),
-      branch: 'main'
-    };
+    let existing = ''; let sha = null;
+    if (r.ok) { const j = await r.json(); sha = j.sha; existing = atob(j.content.replace(/\s/g,'')); }
+    const body = { message: 'gf: log chat', content: btoa(unescape(encodeURIComponent(existing + lines.join('\n') + '\n'))), branch: 'main' };
     if (sha) body.sha = sha;
-    await fetch(GF_LOG_API, {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + GF_LOG_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+    await fetch(GF_LOG_API, { method: 'PUT', headers: { Authorization: 'Bearer ' + GF_LOG_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
   } catch(_) {
-    // Put lines back if flush failed
     gfLogBuffer.unshift(...lines);
   }
   gfLogFlushing = false;

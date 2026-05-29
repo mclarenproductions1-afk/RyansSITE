@@ -68,15 +68,59 @@
   </div>
 </main>
 <footer>bigballzlord.online</footer>
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <script>
 (function(){
 'use strict';
 
-var TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
-var REPO  = 'mclarenproductions1-afk/RyansSITE';
-var API   = 'https://api.github.com/repos/' + REPO + '/contents/';
+var GH_TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+var API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/';
 var SESS  = 'rys-sess';
 var BAL   = 'rys-bal';
+
+// ── Sync helpers ─────────────────────────────────────────────
+var ABLY_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+var _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+function ablyRead(ch) {
+  return new Promise(function(resolve) {
+    try { getAbly().channels.get(ch).history({ limit: 1 }, function(err, page) {
+      if (err || !page || !page.items.length) resolve(null);
+      else resolve(page.items[0].data);
+    }); } catch(e) { resolve(null); }
+  });
+}
+function ablyPublish(ch, data) {
+  return new Promise(function(resolve, reject) {
+    try { getAbly().channels.get(ch).publish('state', data, function(err) { if (err) reject(err); else resolve(); }); }
+    catch(e) { reject(e); }
+  });
+}
+async function ghBackup(path, data, msg) {
+  try {
+    var r = await fetch(API + path + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    var sha = null; if (r.ok) { var j = await r.json(); sha = j.sha; }
+    var body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: 'main' };
+    if (sha) body.sha = sha;
+    await fetch(API + path, { method: 'PUT', headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch(_) {}
+}
+async function syncRead(ablyChannel, ghPath) {
+  try { var d = await ablyRead(ablyChannel); if (d != null) return { data: d, sha: null }; } catch(_) {}
+  try {
+    var r = await fetch(API + ghPath + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!r.ok) return null;
+    var j = await r.json();
+    var data = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    ablyPublish(ablyChannel, data);
+    return { data: data, sha: j.sha };
+  } catch(_) {}
+  return null;
+}
+async function syncWrite(ablyChannel, data, ghPath, ghMsg) {
+  await ablyPublish(ablyChannel, data);
+  ghBackup(ghPath, data, ghMsg);
+}
 
 // Redirect if already logged in
 (function(){
@@ -102,26 +146,18 @@ async function sha256hex(str) {
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-async function ghGet(path) {
-  var r = await fetch(API + path + '?_=' + Date.now(), {
-    headers:{ Authorization:'Bearer '+TOKEN, Accept:'application/vnd.github+json' },
-    cache:'no-store'
-  });
-  if (!r.ok) return null;
-  var j = await r.json();
-  var content = atob(j.content.replace(/\s/g,''));
-  return { data: JSON.parse(content), sha: j.sha };
+async function ghGet(path) { return syncRead(pathToAblyChannel(path), path); }
+function pathToAblyChannel(path) {
+  var m;
+  if ((m = path.match(/^auth\/users\/(.+)\.json$/))) return 'ryanssite-user-' + decodeURIComponent(m[1]);
+  if (path === 'auth/index.json') return 'ryanssite-auth-index';
+  return 'ryanssite-' + path.replace(/[^a-z0-9]/gi, '-');
 }
-
 async function ghPut(path, data, sha, msg) {
-  var body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch:'main' };
-  if (sha) body.sha = sha;
-  var r = await fetch(API + path, {
-    method:'PUT',
-    headers:{ Authorization:'Bearer '+TOKEN, Accept:'application/vnd.github+json', 'Content-Type':'application/json' },
-    body: JSON.stringify(body)
-  });
-  return r;
+  var ch = pathToAblyChannel(path);
+  try { await ablyPublish(ch, data); } catch(_) {}
+  ghBackup(path, data, msg);
+  return { ok: true, status: 200 };
 }
 
 // ── Sign in ──────────────────────────────────────────────────────────────────

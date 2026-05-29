@@ -268,11 +268,52 @@
   </div>
 </main>
 
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <script>
 // ── Config ────────────────────────────────────────────────────
 const ADMIN_PASS = 'ryancrying'; // ← change this
-const TOKEN = ['github_pat_11CASFLQI0', 'mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
-const API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/admin/state.json';
+
+// ── Sync helpers (Ably primary, GitHub backup) ─────────────────
+const ABLY_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+const GH_TOKEN = ['github_pat_11CASFLQI0','mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy'].join('');
+const GH_API   = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/';
+let _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+async function ablyRead(ch) {
+  return new Promise(resolve => {
+    try { getAbly().channels.get(ch).history({ limit: 1 }, (err, page) => {
+      if (err || !page || !page.items.length) resolve(null);
+      else resolve(page.items[0].data);
+    }); } catch(e) { resolve(null); }
+  });
+}
+async function ablyPublish(ch, data) {
+  return new Promise((resolve, reject) => {
+    try { getAbly().channels.get(ch).publish('state', data, err => { if (err) reject(err); else resolve(); }); }
+    catch(e) { reject(e); }
+  });
+}
+async function ghBackup(path, data, msg) {
+  try {
+    const r = await fetch(GH_API + path + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    let sha = null; if (r.ok) { const j = await r.json(); sha = j.sha; }
+    const body = { message: msg, content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))), branch: 'main' };
+    if (sha) body.sha = sha;
+    await fetch(GH_API + path, { method: 'PUT', headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  } catch(_) {}
+}
+async function syncRead(ablyChannel, ghPath) {
+  try { const d = await ablyRead(ablyChannel); if (d != null) return d; } catch(_) {}
+  try {
+    const r = await fetch(GH_API + ghPath + '?_=' + Date.now(), { headers: { Authorization: 'Bearer ' + GH_TOKEN, Accept: 'application/vnd.github+json' }, cache: 'no-store' });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const d = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    ablyPublish(ablyChannel, d);
+    return d;
+  } catch(_) {}
+  return null;
+}
 
 // ── Gate ──────────────────────────────────────────────────────
 const pwInput = document.getElementById('pw-input');
@@ -302,20 +343,14 @@ function unlock() {
   loadUsers();
 }
 
-// ── GitHub state ──────────────────────────────────────────────
-let currentSha  = null;
+// ── State ─────────────────────────────────────────────────────
 let currentState = null;
 
 async function loadState() {
   try {
-    const r = await fetch(API + '?_=' + Date.now(), {
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-      cache: 'no-store'
-    });
-    if (!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    currentSha   = j.sha;
-    currentState = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, '')))));
+    const s = await syncRead('ryanssite-admin-state', 'admin/state.json');
+    if (s == null) throw new Error('no state');
+    currentState = s;
     applyState(currentState);
   } catch (e) {
     document.getElementById('state-pre').textContent = 'Error loading state: ' + e.message;
@@ -357,39 +392,17 @@ function applyState(s) {
 
 async function writeState(patch, feedbackId) {
   const fb = document.getElementById(feedbackId);
-  fb.textContent = 'Saving…';
-  fb.className = 'feedback';
+  fb.textContent = 'Saving…'; fb.className = 'feedback';
   const newState = Object.assign({}, currentState, patch, { updated_at: new Date().toISOString() });
   try {
-    const body = {
-      message: 'admin: update state',
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(newState, null, 2) + '\n'))),
-      branch: 'main'
-    };
-    if (currentSha) body.sha = currentSha;
-    const w = await fetch(API, {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!w.ok) {
-      if (w.status === 409) {
-        // SHA conflict — re-fetch and retry
-        await loadState();
-        return writeState(patch, feedbackId);
-      }
-      throw new Error(w.status);
-    }
-    const j = await w.json();
-    currentSha   = j.content.sha;
+    await ablyPublish('ryanssite-admin-state', newState);
+    ghBackup('admin/state.json', newState, 'admin: update state');
     currentState = newState;
     applyState(currentState);
-    fb.textContent = 'Saved ✓';
-    fb.className   = 'feedback ok';
+    fb.textContent = 'Saved ✓'; fb.className = 'feedback ok';
     setTimeout(() => { fb.textContent = ''; fb.className = 'feedback'; }, 3000);
   } catch (e) {
-    fb.textContent = 'Error: ' + e.message;
-    fb.className   = 'feedback err';
+    fb.textContent = 'Error: ' + e.message; fb.className = 'feedback err';
   }
 }
 
@@ -432,7 +445,6 @@ document.getElementById('btn-redirect-off').addEventListener('click', () => {
 });
 
 // ── Users ──────────────────────────────────────────────────────
-const AUTH_API = 'https://api.github.com/repos/mclarenproductions1-afk/RyansSITE/contents/auth/';
 
 function timeAgo(ts) {
   if (!ts) return '—';
@@ -451,13 +463,8 @@ async function loadUsers() {
   const tbody = document.getElementById('users-tbody');
   tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">Loading…</td></tr>';
   try {
-    const r = await fetch(AUTH_API + 'index.json?_=' + Date.now(), {
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-      cache: 'no-store'
-    });
-    if (!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    const idx = JSON.parse(atob(j.content.replace(/\s/g,'')));
+    const idx = await syncRead('ryanssite-auth-index', 'auth/index.json');
+    if (!idx) throw new Error('No index');
     const users = idx.users || [];
     if (!users.length) {
       tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">No users yet.</td></tr>';
@@ -465,13 +472,7 @@ async function loadUsers() {
     }
     const files = await Promise.all(users.map(async u => {
       try {
-        const fr = await fetch(AUTH_API + 'users/' + encodeURIComponent(u) + '.json?_=' + Date.now(), {
-          headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-          cache: 'no-store'
-        });
-        if (!fr.ok) return null;
-        const fj = await fr.json();
-        return JSON.parse(atob(fj.content.replace(/\s/g,'')));
+        return await syncRead('ryanssite-user-' + u, 'auth/users/' + encodeURIComponent(u) + '.json');
       } catch(_) { return null; }
     }));
     const rows = files.filter(Boolean).sort((a,b) => (b.lastActive||0) - (a.lastActive||0));
@@ -526,26 +527,11 @@ async function saveBal(username) {
   const fb = document.getElementById('bal-fb-' + username);
   fb.textContent = 'Saving…';
   try {
-    const filePath = AUTH_API + 'users/' + encodeURIComponent(username) + '.json';
-    const r = await fetch(filePath + '?_=' + Date.now(), {
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-      cache: 'no-store'
-    });
-    if (!r.ok) throw new Error(r.status);
-    const j = await r.json();
-    const data = JSON.parse(atob(j.content.replace(/\s/g,'')));
-    data.balance = newBal;
-    const body = {
-      message: 'admin: set balance for ' + username + ' to ' + newBal,
-      content: btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2)))),
-      sha: j.sha, branch: 'main'
-    };
-    const w = await fetch(AUTH_API + 'users/' + encodeURIComponent(username) + '.json', {
-      method: 'PUT',
-      headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    if (!w.ok) throw new Error(w.status);
+    const data = await syncRead('ryanssite-user-' + username, 'auth/users/' + encodeURIComponent(username) + '.json');
+    if (!data) throw new Error('User not found');
+    const updated = Object.assign({}, data, { balance: newBal });
+    await ablyPublish('ryanssite-user-' + username, updated);
+    ghBackup('auth/users/' + encodeURIComponent(username) + '.json', updated, 'admin: set balance for ' + username + ' to ' + newBal);
     document.getElementById('bal-display-' + username).textContent = '$' + newBal;
     cancelEditBal(username);
     fb.textContent = '✓';

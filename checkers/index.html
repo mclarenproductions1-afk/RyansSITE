@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -456,6 +457,64 @@ const CONFIG = {
   token:  ["github_pat_11CASFLQI0", "mSMwrQorr6is_8w1PYxuskuOF567X3WQslSr67uzWaYNVODD8nx0icOqEJFVHH5I2dQXuhPy"].join("")
 };
 
+/* ═══════════════════════════════════════════════════════
+   ABLY SYNC (primary) + GITHUB BACKUP
+   ═══════════════════════════════════════════════════════ */
+const ABLY_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+let _ably = null;
+function getAbly() { if (!_ably) _ably = new Ably.Realtime({ key: ABLY_KEY }); return _ably; }
+function checkersChannel(code) { return 'ryanssite-checkers-' + code; }
+
+async function fetchGame(code) {
+  // Try Ably first
+  try {
+    const p = await new Promise((res, rej) => {
+      getAbly().channels.get(checkersChannel(code)).history({ limit: 1 }, (err, page) => {
+        if (err) rej(err); else res(page);
+      });
+    });
+    if (p.items.length) return { state: p.items[0].data, sha: null };
+  } catch(_) {}
+  // Fallback: GitHub
+  const ghUrl = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/checkers/games/${code}.json`;
+  const ghHdrs = { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json' };
+  const res = await fetch(ghUrl + `?_=${Date.now()}`, { headers: ghHdrs, cache: 'no-store' });
+  if (res.status === 404) return "notfound";
+  if (!res.ok) throw new Error(`GitHub ${res.status}`);
+  const data = await res.json();
+  const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
+  getAbly().channels.get(checkersChannel(code)).publish('state', state, () => {});
+  return { state, sha: null };
+}
+
+async function saveGame(code, state) {
+  await new Promise((res, rej) => {
+    getAbly().channels.get(checkersChannel(code)).publish('state', state, err => { if (err) rej(err); else res(); });
+  });
+  ghCheckersBackup(code, state);
+  return null;
+}
+
+async function createGame(code, state) {
+  await new Promise((res, rej) => {
+    getAbly().channels.get(checkersChannel(code)).publish('state', state, err => { if (err) rej(err); else res(); });
+  });
+  ghCheckersBackup(code, state);
+  return null;
+}
+
+async function ghCheckersBackup(code, state) {
+  try {
+    const url = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/checkers/games/${code}.json`;
+    const hdrs = { Authorization: `Bearer ${CONFIG.token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' };
+    const r = await fetch(url + `?_=${Date.now()}`, { headers: hdrs, cache: 'no-store' });
+    let sha = null; if (r.ok) { const j = await r.json(); sha = j.sha; }
+    const body = { message: `checkers: turn ${state.turnCount}`, content: btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2)))), branch: CONFIG.branch };
+    if (sha) body.sha = sha;
+    await fetch(url, { method: 'PUT', headers: hdrs, body: JSON.stringify(body) });
+  } catch(_) {}
+}
+
 const PLAYER_COLORS = ["#e53e3e","#3182ce","#38a169","#dd6b20","#805ad5","#d69e2e"];
 const PLAYER_NAMES_DEFAULT = ["Red","Blue","Green","Orange","Purple","Amber"];
 // Rotation (degrees, clockwise) to put each player's zone at the bottom of the screen
@@ -472,7 +531,6 @@ let gameEtag     = null;
 let gameState    = null;
 let selectedHole = null;
 let validMoves   = [];
-let pollTimer    = null;
 let isSaving     = false;
 let toastTimer   = null;
 
@@ -557,69 +615,6 @@ function buildZones() {
     PLAYER_ZONES[p] = new Set(zones[p]);
     TARGET_ZONES[p] = new Set(zones[(p + 3) % 6]);
   }
-}
-
-/* ═══════════════════════════════════════════════════════
-   GITHUB API
-   ═══════════════════════════════════════════════════════ */
-function gameApiUrl(code) {
-  return `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/checkers/games/${code}.json`;
-}
-
-function ghHeaders(extra) {
-  return Object.assign({
-    "Authorization": `Bearer ${CONFIG.token}`,
-    "Accept":        "application/vnd.github+json",
-    "Content-Type":  "application/json"
-  }, extra || {});
-}
-
-async function fetchGame(code, etag) {
-  const headers = ghHeaders();
-  if (etag) headers["If-None-Match"] = etag;
-  const res = await fetch(gameApiUrl(code), { headers });
-  if (res.status === 304) return null;
-  if (res.status === 404) return "notfound";
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
-  const data = await res.json();
-  const newEtag = res.headers.get("ETag");
-  const state = JSON.parse(atob(data.content.replace(/\s/g, "")));
-  return { state, sha: data.sha, etag: newEtag };
-}
-
-async function saveGame(code, state, sha) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-  const body = { message: `checkers: turn ${state.turnCount}`, content, branch: CONFIG.branch, sha };
-  const res = await fetch(gameApiUrl(code), {
-    method: "PUT",
-    headers: ghHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (res.status === 409) {
-    const fresh = await fetchGame(code, null);
-    if (fresh && fresh !== "notfound") {
-      gameFileSHA = fresh.sha;
-      gameEtag    = fresh.etag;
-      applyGameState(fresh.state);
-    }
-    throw new Error("conflict");
-  }
-  if (!res.ok) throw new Error(`GitHub ${res.status}`);
-  const data = await res.json();
-  return data.content.sha;
-}
-
-async function createGame(code, state) {
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(state, null, 2))));
-  const body = { message: `checkers: create ${code}`, content, branch: CONFIG.branch };
-  const res = await fetch(gameApiUrl(code), {
-    method: "PUT",
-    headers: ghHeaders(),
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) throw new Error(`Create failed: ${res.status}`);
-  const data = await res.json();
-  return data.content.sha;
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -712,28 +707,22 @@ function applyMove(state, fromId, toId) {
 }
 
 /* ═══════════════════════════════════════════════════════
-   POLLING
+   REALTIME (Ably subscription)
    ═══════════════════════════════════════════════════════ */
+let _ablyCheckersSub = null;
+
 function startPolling() {
   stopPolling();
-  pollTimer = setInterval(pollGame, 2000);
+  const ch = getAbly().channels.get(checkersChannel(gameCode));
+  _ablyCheckersSub = ch;
+  ch.subscribe('state', msg => {
+    if (isSaving) return;
+    applyGameState(msg.data);
+  });
 }
 
 function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-}
-
-async function pollGame() {
-  if (isSaving) return;
-  try {
-    const result = await fetchGame(gameCode, gameEtag);
-    if (!result || result === "notfound") return;
-    gameFileSHA = result.sha;
-    gameEtag    = result.etag;
-    applyGameState(result.state);
-  } catch (e) {
-    // silent poll failure
-  }
+  if (_ablyCheckersSub) { _ablyCheckersSub.unsubscribe(); _ablyCheckersSub = null; }
 }
 
 function applyGameState(newState) {
