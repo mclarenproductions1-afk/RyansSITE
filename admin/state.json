@@ -2,12 +2,12 @@
   "reload_at": 1780013297317,
   "banner": {
     "enabled": true,
-    "text": "added avatar section (dih option)",
+    "text": "added avatar section",
     "type": "error"
   },
   "maintenance": {
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-29T00:09:30.751Z"
+  "updated_at": "2026-05-29T00:09:40.365Z"
 }
