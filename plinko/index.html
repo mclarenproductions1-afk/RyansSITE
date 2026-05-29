@@ -73,6 +73,15 @@ canvas { display: block; width: 100%; height: 100%; }
     </div>
   </div>
   <div class="cg">
+    <div class="cl">Balls</div>
+    <div class="seg" id="seg-balls">
+      <button class="on" data-v="1">1</button>
+      <button data-v="3">3</button>
+      <button data-v="5">5</button>
+      <button data-v="10">10</button>
+    </div>
+  </div>
+  <div class="cg">
     <div class="cl">Bet</div>
     <div class="bet-row">
       <div class="bet-pre">$</div>
@@ -117,7 +126,7 @@ const MULTS = {
 /* ── State ───────────────────────────────────────────────────────── */
 const canvas = document.getElementById('canvas');
 const ctx    = canvas.getContext('2d');
-var rows = 12, risk = 'medium';
+var rows = 12, risk = 'medium', ballCount = 1;
 var bal = 0;
 var balls = [];
 var recentResults = [];
@@ -247,6 +256,7 @@ function rrect(x, y, w, h, r) {
 
 /* ── Ball position interpolation ────────────────────────────────── */
 function getBallPos(ball) {
+  if (ball.t < 0) return null; // stagger delay — not yet visible
   if (ball.done) {
     if (ball.landFlash <= 0) return null;
     return { x: buckX(ball.bucket), y: buckY + buckH / 2 };
@@ -312,7 +322,7 @@ function update(dt) {
 
   // Lock rows/risk while balls flying
   const flying = balls.some(b => !b.done);
-  document.querySelectorAll('#seg-rows button, #seg-risk button').forEach(b => {
+  document.querySelectorAll('#seg-rows button, #seg-risk button, #seg-balls button').forEach(b => {
     b.disabled = flying;
   });
   updateBetBtn();
@@ -321,12 +331,18 @@ function update(dt) {
 /* ── Bet ─────────────────────────────────────────────────────────── */
 function doBet() {
   const betAmt = Math.max(1, Math.floor(parseFloat(document.getElementById('bet-inp').value) || 10));
-  if (betAmt > bal) { flashBal(); return; }
-  bal -= betAmt;
+  const total  = betAmt * ballCount;
+  if (total > bal) { flashBal(); return; }
+  bal -= total;
   saveBal(); dispBal();
-  const path   = Array.from({ length: rows }, () => Math.random() < 0.5);
-  const bucket = path.filter(Boolean).length;
-  balls.push({ path, bucket, bet: betAmt, mults: MULTS[risk][rows].slice(), seg: -1, col: 0, t: 0, done: false, landFlash: 0 });
+  const snapMults = MULTS[risk][rows].slice();
+  for (let i = 0; i < ballCount; i++) {
+    const path   = Array.from({ length: rows }, () => Math.random() < 0.5);
+    const bucket = path.filter(Boolean).length;
+    // stagger each ball's start by a small offset so they don't all overlap
+    const staggerT = -(i * 0.18);
+    balls.push({ path, bucket, bet: betAmt, mults: snapMults, seg: -1, col: 0, t: staggerT, done: false, landFlash: 0 });
+  }
 }
 
 function adjBet(f) {
@@ -337,7 +353,10 @@ function adjBet(f) {
 
 function updateBetBtn() {
   const betAmt = parseFloat(document.getElementById('bet-inp').value) || 0;
-  document.getElementById('btn-bet').disabled = betAmt < 1 || betAmt > bal || bal < 1;
+  const total  = betAmt * ballCount;
+  const btn    = document.getElementById('btn-bet');
+  btn.disabled = betAmt < 1 || total > bal || bal < 1;
+  btn.textContent = ballCount > 1 ? `Bet $${total.toLocaleString()}` : 'Bet';
 }
 
 function flashBal() {
@@ -385,8 +404,9 @@ function loop(ts) {
 window.addEventListener('resize', layout);
 document.getElementById('bet-inp').addEventListener('input', updateBetBtn);
 
-setupSeg('seg-rows', v => { rows = parseInt(v); layout(); });
-setupSeg('seg-risk', v => { risk = v; });
+setupSeg('seg-rows',  v => { rows = parseInt(v); layout(); });
+setupSeg('seg-risk',  v => { risk = v; });
+setupSeg('seg-balls', v => { ballCount = parseInt(v); updateBetBtn(); });
 
 loadBal(); dispBal(); layout();
 requestAnimationFrame(ts => { lastTs = ts; requestAnimationFrame(loop); });
