@@ -1,9 +1,9 @@
 {
-  "status": "active",
+  "status": "showdown",
   "players": [
     {
       "name": "ryan",
-      "chips": 3520,
+      "chips": 3560,
       "bet": 0,
       "hand": [
         "4c",
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Wins!",
       "joinedAt": "2026-05-28T03:53:21.765Z"
     },
     {
@@ -23,10 +23,10 @@
         "Ah",
         "Qs"
       ],
-      "folded": false,
+      "folded": true,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Fold",
       "joinedAt": "2026-05-29T00:10:52.820Z"
     },
     null,
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 2,
   "dealer": 0,
-  "phase": "river",
+  "phase": "showdown",
   "deck": [
     "4h",
     "3s",
@@ -90,26 +90,27 @@
     "6c",
     "9s"
   ],
-  "pot": 40,
+  "pot": 0,
   "sidePots": [],
   "currentBet": 0,
   "minRaise": 20,
-  "currentTurn": 1,
+  "currentTurn": -1,
   "turnStartedAt": "2026-05-29T00:13:19.670Z",
   "lastAggressor": 1,
   "roundStartPlayer": 0,
-  "actions": [],
-  "updatedAt": "2026-05-29T00:13:19.670Z",
+  "actions": [
+    {
+      "slot": 1,
+      "action": "fold",
+      "amount": 0
+    }
+  ],
+  "updatedAt": "2026-05-29T00:13:28.585Z",
   "lastWinners": [
     {
       "slot": 0,
-      "hand": "Pair",
-      "amount": 3540
-    },
-    {
-      "slot": 1,
-      "hand": "Pair",
-      "amount": 3540
+      "hand": "All others folded",
+      "amount": 40
     }
   ]
 }
