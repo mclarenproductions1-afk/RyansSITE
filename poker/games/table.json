@@ -3,8 +3,8 @@
   "players": [
     {
       "name": "ryan",
-      "chips": 990,
-      "bet": 10,
+      "chips": 500,
+      "bet": 500,
       "hand": [
         "10h",
         "Ac"
@@ -12,9 +12,8 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "SB",
-      "joinedAt": "2026-05-28T03:53:21.765Z",
-      "isSB": true
+      "lastAction": "Raise 500",
+      "joinedAt": "2026-05-28T03:53:21.765Z"
     },
     {
       "name": "sh00taface",
@@ -28,9 +27,7 @@
       "allIn": false,
       "inHand": true,
       "lastAction": "BB",
-      "joinedAt": "2026-05-29T00:10:52.820Z",
-      "isDealer": true,
-      "isBB": true
+      "joinedAt": "2026-05-29T00:10:52.820Z"
     },
     null,
     null,
@@ -92,14 +89,20 @@
     "2d"
   ],
   "communityCards": [],
-  "pot": 30,
+  "pot": 520,
   "sidePots": [],
-  "currentBet": 20,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-05-29T00:11:47.583Z",
-  "lastAggressor": 1,
+  "currentBet": 500,
+  "minRaise": 480,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-05-29T00:12:04.410Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-05-29T00:11:47.583Z"
+  "actions": [
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 500
+    }
+  ],
+  "updatedAt": "2026-05-29T00:12:04.410Z"
 }
