@@ -1,20 +1,7 @@
 {
   "status": "showdown",
   "players": [
-    {
-      "name": "ryan",
-      "chips": 7120,
-      "bet": 0,
-      "hand": [
-        "7c",
-        "8s"
-      ],
-      "folded": false,
-      "allIn": true,
-      "inHand": true,
-      "lastAction": "Wins!",
-      "joinedAt": "2026-05-28T03:53:21.765Z"
-    },
+    null,
     {
       "name": "sh00taface",
       "chips": 499993880,
@@ -99,7 +86,7 @@
   "lastAggressor": 0,
   "roundStartPlayer": 0,
   "actions": [],
-  "updatedAt": "2026-05-29T00:14:47.844Z",
+  "updatedAt": "2026-05-29T00:14:55.442Z",
   "lastWinners": [
     {
       "slot": 0,
