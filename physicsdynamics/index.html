@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Module 2: Dynamics — The Crash Course</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'], ['\\(','\\)']], displayMath: [['$$','$$'], ['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<style>
+:root {
+  --paper: #f5efe1;
+  --paper-shade: #ebe3d0;
+  --ink: #1a2238;
+  --ink-soft: #45506b;
+  --rule: #c9bea5;
+  --coral: #c8553d;
+  --coral-soft: #f1a892;
+  --sage: #4a6b5c;
+  --sage-soft: #c4d4cb;
+  --mustard: #d4a017;
+  --mustard-soft: #f5e6b3;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'Newsreader', Georgia, serif;
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.7;
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(200,85,61,0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(74,107,92,0.05) 0%, transparent 50%);
+}
+.hero {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 80px 40px 40px;
+  border-bottom: 1px solid var(--rule);
+}
+.kicker {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--coral);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.kicker::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+h1.title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: clamp(48px, 7vw, 88px);
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+h1.title .amp { font-style: italic; font-weight: 300; color: var(--coral); }
+h1.title .accent { font-style: italic; font-weight: 400; }
+.subtitle {
+  font-family: 'Newsreader', serif;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--ink-soft);
+  max-width: 600px;
+  margin-bottom: 32px;
+}
+.meta-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+.meta-row span strong { color: var(--ink); font-weight: 500; }
+.toc {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 40px;
+  background: var(--paper-shade);
+  border-radius: 4px;
+  position: relative;
+}
+.toc::before {
+  content: 'CONTENTS';
+  position: absolute; top: -10px; left: 32px;
+  background: var(--paper);
+  padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+.toc ol { list-style: none; counter-reset: toc; columns: 2; column-gap: 40px; }
+.toc li {
+  counter-increment: toc;
+  padding: 10px 0;
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  break-inside: avoid;
+}
+.toc li::before {
+  content: counter(toc, decimal-leading-zero);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--coral);
+  margin-right: 14px; vertical-align: 2px;
+}
+.toc a { color: var(--ink); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+.toc a:hover { border-bottom-color: var(--coral); }
+@media (max-width: 600px) { .toc ol { columns: 1; } }
+main { max-width: 760px; margin: 0 auto; padding: 40px 40px 120px; }
+section { margin-top: 100px; scroll-margin-top: 40px; }
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; letter-spacing: 0.2em; color: var(--coral);
+  display: flex; align-items: center; gap: 16px; margin-bottom: 16px;
+}
+.section-num::before { content: ''; width: 40px; height: 1px; background: var(--coral); }
+h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(36px, 5vw, 52px);
+  line-height: 1.05; letter-spacing: -0.01em; margin-bottom: 12px;
+}
+h2 em { color: var(--coral); font-weight: 300; }
+.section-intro {
+  font-family: 'Newsreader', serif;
+  font-style: italic; font-size: 20px;
+  color: var(--ink-soft);
+  margin-bottom: 40px; padding-bottom: 24px;
+  border-bottom: 1px solid var(--rule);
+}
+h3 { font-family: 'Fraunces', serif; font-weight: 500; font-size: 26px; margin: 48px 0 16px; letter-spacing: -0.01em; }
+h4 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-soft); margin: 32px 0 12px;
+}
+p { margin-bottom: 18px; }
+p strong { color: var(--ink); font-weight: 600; }
+ul, ol { margin: 16px 0 24px 24px; }
+li { margin-bottom: 8px; }
+.formula {
+  background: var(--ink); color: var(--paper);
+  padding: 28px 32px; margin: 28px 0;
+  border-radius: 2px; position: relative;
+  font-size: 22px; text-align: center;
+}
+.formula::before {
+  content: 'KEY FORMULA';
+  position: absolute; top: -9px; left: 24px;
+  background: var(--coral); color: var(--paper);
+  padding: 2px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em; border-radius: 2px;
+}
+.formula .label {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.15em;
+  color: var(--coral-soft); margin-bottom: 12px; text-transform: uppercase;
+}
+.concept {
+  background: var(--sage-soft);
+  border-left: 4px solid var(--sage);
+  padding: 24px 28px; margin: 28px 0;
+  font-family: 'Newsreader', serif;
+}
+.concept .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--sage); margin-bottom: 8px; display: block; font-weight: 600;
+}
+.warning {
+  background: var(--mustard-soft);
+  border-left: 4px solid var(--mustard);
+  padding: 20px 24px; margin: 24px 0; font-size: 16px;
+}
+.warning .tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+  color: #8a6d0f; margin-bottom: 6px; display: block; font-weight: 600;
+}
+.example {
+  border: 1px solid var(--rule);
+  background: rgba(255,255,255,0.4);
+  padding: 28px 32px; margin: 32px 0;
+  border-radius: 2px; position: relative;
+}
+.example::before {
+  content: 'WORKED EXAMPLE';
+  position: absolute; top: -9px; left: 24px;
+  background: var(--paper); padding: 0 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em;
+  color: var(--coral); font-weight: 600;
+}
+.example .question {
+  font-family: 'Fraunces', serif;
+  font-style: italic; font-size: 18px;
+  color: var(--ink); margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--rule);
+}
+.example .solution { font-size: 16px; }
+.step { display: flex; gap: 16px; margin: 14px 0; align-items: flex-start; }
+.step-num {
+  flex-shrink: 0; width: 24px; height: 24px;
+  background: var(--coral); color: var(--paper);
+  border-radius: 50%;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; display: flex; align-items: center; justify-content: center;
+  font-weight: 600; margin-top: 4px;
+}
+.step-body { flex: 1; }
+.three-up {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 16px; margin: 32px 0;
+}
+.case-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--rule);
+  padding: 20px 16px; text-align: center; border-radius: 2px;
+}
+.case-card .delta { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; color: var(--coral); margin-bottom: 8px; }
+.case-card .case-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 16px; }
+.case-card .desc { font-size: 14px; font-style: italic; color: var(--ink-soft); margin-top: 12px; line-height: 1.4; }
+@media (max-width: 700px) { .three-up { grid-template-columns: 1fr; } }
+.two-up { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
+@media (max-width: 700px) { .two-up { grid-template-columns: 1fr; } }
+.method-card {
+  background: rgba(255,255,255,0.6);
+  border: 1px solid var(--rule);
+  padding: 24px; border-radius: 2px;
+}
+.method-card h5 { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 500; margin-bottom: 12px; color: var(--coral); }
+.method-card .when { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--sage); margin-bottom: 16px; }
+.cheat-sheet { background: var(--ink); color: var(--paper); padding: 60px 50px; margin: 100px 0 0; border-radius: 4px; }
+.cheat-sheet h2 { color: var(--paper); margin-bottom: 32px; }
+.cheat-sheet h2 em { color: var(--coral-soft); }
+.cheat-sheet h3 { color: var(--coral-soft); font-size: 20px; margin: 32px 0 12px; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; font-family: 'JetBrains Mono', monospace; }
+.cheat-sheet .formula-line { padding: 12px 0; border-bottom: 1px solid rgba(245,239,225,0.15); display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
+.cheat-sheet .formula-line .desc { font-family: 'Newsreader', serif; font-style: italic; font-size: 15px; color: var(--coral-soft); flex: 1; }
+.cheat-sheet .formula-line .eq { font-size: 17px; text-align: right; }
+footer { max-width: 760px; margin: 80px auto 60px; padding: 40px; text-align: center; border-top: 1px solid var(--rule); }
+footer p { font-family: 'Newsreader', serif; font-style: italic; color: var(--ink-soft); font-size: 16px; }
+footer .signature { font-family: 'Fraunces', serif; font-size: 24px; color: var(--coral); margin-top: 12px; font-style: italic; }
+mjx-container { color: inherit; }
+.pull-quote {
+  font-family: 'Fraunces', serif; font-style: italic;
+  font-size: 24px; line-height: 1.4; color: var(--coral);
+  padding: 24px 0 24px 32px; margin: 32px 0;
+  border-left: 3px solid var(--coral);
+}
+.hl { background: linear-gradient(180deg, transparent 60%, var(--mustard-soft) 60%); padding: 0 2px; }
+.demo {
+  background: var(--paper-shade);
+  border: 1px solid var(--rule);
+  border-radius: 4px; padding: 32px 28px 24px;
+  margin: 36px 0; position: relative;
+}
+.demo::before {
+  content: 'LIVE DEMO';
+  position: absolute; top: -9px; left: 24px;
+  background: var(--coral); color: var(--paper);
+  padding: 2px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 0.2em; border-radius: 2px; font-weight: 600;
+}
+.demo-title { font-family: 'Fraunces', serif; font-weight: 500; font-size: 20px; margin-bottom: 4px; color: var(--ink); }
+.demo-subtitle { font-family: 'Newsreader', serif; font-style: italic; font-size: 14px; color: var(--ink-soft); margin-bottom: 18px; line-height: 1.5; }
+.demo-stage { background: rgba(255,255,255,0.55); border-radius: 3px; padding: 16px; display: grid; grid-template-columns: 1fr 170px; gap: 18px; align-items: center; }
+@media (max-width: 640px) { .demo-stage { grid-template-columns: 1fr; } }
+.demo-svg { width: 100%; height: auto; display: block; }
+.demo-readouts { display: flex; flex-direction: column; gap: 10px; }
+.readout { background: var(--paper); padding: 10px 14px; border-radius: 2px; border: 1px solid var(--rule); }
+.readout-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--ink-soft); display: block; margin-bottom: 4px; }
+.readout-value { font-family: 'Fraunces', serif; font-size: 17px; color: var(--ink); font-weight: 500; transition: color 0.35s; display: block; font-variant-numeric: tabular-nums; }
+.readout-value.positive { color: var(--sage); }
+.readout-value.negative { color: var(--coral); }
+.readout-value.zero { color: #b58400; }
+.demo-controls { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; padding: 16px 18px; background: var(--paper); border: 1px solid var(--rule); border-radius: 2px; }
+.control-row { display: grid; grid-template-columns: 40px 1fr 80px; gap: 14px; align-items: center; }
+.control-label { font-family: 'Fraunces', serif; font-style: italic; font-size: 16px; color: var(--ink); text-align: right; }
+.control-value { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink-soft); text-align: right; font-variant-numeric: tabular-nums; }
+input[type="range"].demo-slider { -webkit-appearance: none; appearance: none; background: transparent; width: 100%; height: 24px; margin: 0; cursor: pointer; }
+input[type="range"].demo-slider:focus { outline: none; }
+input[type="range"].demo-slider::-webkit-slider-runnable-track { height: 4px; background: var(--rule); border-radius: 2px; }
+input[type="range"].demo-slider::-moz-range-track { height: 4px; background: var(--rule); border-radius: 2px; border: none; }
+input[type="range"].demo-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--coral); border-radius: 50%; margin-top: -8px; border: 2px solid var(--paper); box-shadow: 0 1px 3px rgba(26,34,56,0.25); }
+input[type="range"].demo-slider::-moz-range-thumb { width: 20px; height: 20px; background: var(--coral); border-radius: 50%; border: 2px solid var(--paper); }
+.demo-hint { font-family: 'Newsreader', serif; font-style: italic; font-size: 13px; color: var(--ink-soft); margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--mustard); }
+.quiz { background: linear-gradient(135deg, rgba(245,239,225,0.6) 0%, rgba(235,227,208,0.4) 100%); border: 1px solid var(--rule); border-radius: 4px; padding: 40px 32px 32px; margin: 60px 0 20px; position: relative; }
+.quiz::before { content: 'REVISION QUIZ'; position: absolute; top: -10px; left: 28px; background: var(--ink); color: var(--paper); padding: 3px 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.2em; border-radius: 2px; font-weight: 600; }
+.quiz-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; gap: 12px; }
+.quiz-title { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 500; color: var(--ink); }
+.quiz-title em { color: var(--coral); font-style: italic; font-weight: 400; }
+.quiz-progress { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.15em; background: var(--ink); color: var(--paper); padding: 4px 12px; border-radius: 2px; }
+.quiz-question { padding: 18px 0; border-bottom: 1px dashed var(--rule); }
+.quiz-question:last-child { border-bottom: none; padding-bottom: 0; }
+.q-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--coral); margin-bottom: 6px; font-weight: 600; }
+.q-text { font-family: 'Newsreader', serif; font-size: 17px; line-height: 1.5; margin-bottom: 16px; color: var(--ink); }
+.q-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+@media (max-width: 600px) { .q-options { grid-template-columns: 1fr; } }
+.option { background: var(--paper); border: 1px solid var(--rule); padding: 12px 38px 12px 14px; border-radius: 2px; font-family: 'Newsreader', serif; font-size: 15px; text-align: left; cursor: pointer; transition: all 0.15s; color: var(--ink); position: relative; line-height: 1.4; }
+.option:hover:not(:disabled) { background: var(--paper-shade); border-color: var(--coral); transform: translateX(2px); }
+.option:disabled { cursor: default; }
+.option .letter { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-soft); margin-right: 10px; letter-spacing: 0.08em; font-weight: 600; }
+.option.correct { background: var(--sage-soft); border-color: var(--sage); }
+.option.correct .letter { color: var(--sage); }
+.option.correct::after { content: '✓'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--sage); font-weight: bold; font-size: 16px; }
+.option.wrong { background: rgba(200,85,61,0.13); border-color: var(--coral); }
+.option.wrong .letter { color: var(--coral); }
+.option.wrong::after { content: '✗'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--coral); font-weight: bold; font-size: 16px; }
+.q-feedback { background: var(--paper); border-left: 3px solid var(--coral); padding: 12px 16px; font-size: 14px; font-family: 'Newsreader', serif; font-style: italic; color: var(--ink-soft); margin-top: 12px; display: none; border-radius: 0 2px 2px 0; line-height: 1.6; }
+.q-feedback.show { display: block; animation: feedbackIn 0.3s ease-out; }
+@keyframes feedbackIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.q-feedback strong { font-style: normal; color: var(--ink); font-weight: 600; }
+ol.styled { list-style: none; counter-reset: step; margin-left: 0; }
+ol.styled li { counter-increment: step; padding-left: 44px; position: relative; margin-bottom: 14px; }
+ol.styled li::before { content: counter(step); position: absolute; left: 0; top: 2px; width: 28px; height: 28px; background: var(--coral); color: var(--paper); border-radius: 50%; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="kicker">Year 11 · Physics · Module 2</div>
+  <h1 class="title">Dynamics<br><span class="accent">Forces, Energy</span><br><span class="amp">&amp;</span> Momentum</h1>
+  <p class="subtitle">Newton's laws, friction, conservation of energy, collisions and impulse — distilled, with live demos, worked examples, and every formula that matters.</p>
+  <div class="meta-row">
+    <span>Module <strong>2: Dynamics</strong></span>
+    <span>Sections <strong>6</strong></span>
+    <span>Quizzes <strong>17 questions</strong></span>
+    <span>Read time <strong>~30 min</strong></span>
+  </div>
+</header>
+
+<nav class="toc">
+  <ol>
+    <li><a href="#s1">Newton's Three Laws</a></li>
+    <li><a href="#s2">Forces and Friction</a></li>
+    <li><a href="#s3">Inclined Planes</a></li>
+    <li><a href="#s4">Work, Energy and Power</a></li>
+    <li><a href="#s5">Momentum and Collisions</a></li>
+    <li><a href="#s6">Impulse</a></li>
+    <li><a href="#cheat">Formula Cheat Sheet</a></li>
+  </ol>
+</nav>
+
+<main>
+
+<!-- ============ SECTION 1: NEWTON'S LAWS ============ -->
+<section id="s1">
+  <div class="section-num">Section 01</div>
+  <h2>Newton's <em>three laws</em></h2>
+  <p class="section-intro">Everything in this module traces back to these three statements. Learn them precisely, not vaguely, because examiners will test the exact wording as much as the calculations.</p>
+
+  <p>The laws describe how forces cause (or don't cause) changes in motion. The key word throughout is <strong>net force</strong> — the vector sum of all forces acting on an object. Single forces in isolation rarely tell the full story.</p>
+
+  <div class="three-up">
+    <div class="case-card">
+      <div class="delta">1st Law</div>
+      <div class="case-label">Inertia</div>
+      <svg viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="60" x2="130" y2="60" stroke="#c9bea5" stroke-width="2"/>
+        <rect x="50" y="38" width="40" height="22" fill="#c8553d" rx="2"/>
+        <text x="70" y="54" font-family="serif" font-size="11" fill="white" text-anchor="middle">m</text>
+      </svg>
+      <div class="desc">An object stays at rest, or moves in a straight line at constant speed, unless acted on by a non-zero net force.</div>
+    </div>
+    <div class="case-card">
+      <div class="delta">2nd Law</div>
+      <div class="case-label">F = ma</div>
+      <svg viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg">
+        <line x1="10" y1="60" x2="130" y2="60" stroke="#c9bea5" stroke-width="2"/>
+        <rect x="55" y="38" width="30" height="22" fill="#c8553d" rx="2"/>
+        <text x="70" y="54" font-family="serif" font-size="11" fill="white" text-anchor="middle">m</text>
+        <line x1="10" y1="49" x2="52" y2="49" stroke="#4a6b5c" stroke-width="2.5" marker-end="url(#arrowG)"/>
+        <line x1="88" y1="49" x2="128" y2="49" stroke="#1a2238" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#arrowD)"/>
+        <defs>
+          <marker id="arrowG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4a6b5c"/></marker>
+          <marker id="arrowD" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1a2238"/></marker>
+        </defs>
+        <text x="25" y="44" font-family="serif" font-size="10" fill="#4a6b5c">F</text>
+        <text x="98" y="44" font-family="serif" font-size="10" fill="#1a2238">a</text>
+      </svg>
+      <div class="desc">The net force on an object equals its mass times acceleration. Larger force or smaller mass means larger acceleration.</div>
+    </div>
+    <div class="case-card">
+      <div class="delta">3rd Law</div>
+      <div class="case-label">Action-Reaction</div>
+      <svg viewBox="0 0 140 80" xmlns="http://www.w3.org/2000/svg">
+        <rect x="15" y="36" width="30" height="22" fill="#c8553d" rx="2"/>
+        <rect x="95" y="36" width="30" height="22" fill="#4a6b5c" rx="2"/>
+        <text x="30" y="52" font-family="serif" font-size="10" fill="white" text-anchor="middle">A</text>
+        <text x="110" y="52" font-family="serif" font-size="10" fill="white" text-anchor="middle">B</text>
+        <line x1="48" y1="47" x2="92" y2="47" stroke="#c8553d" stroke-width="2" marker-end="url(#arrowR)"/>
+        <line x1="92" y1="55" x2="48" y2="55" stroke="#4a6b5c" stroke-width="2" marker-end="url(#arrowS)"/>
+        <defs>
+          <marker id="arrowR" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#c8553d"/></marker>
+          <marker id="arrowS" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#4a6b5c"/></marker>
+        </defs>
+        <text x="70" y="43" font-family="monospace" font-size="8" fill="#c8553d" text-anchor="middle">F<tspan dy="3" font-size="6">AB</tspan></text>
+        <text x="70" y="63" font-family="monospace" font-size="8" fill="#4a6b5c" text-anchor="middle">F<tspan dy="3" font-size="6">BA</tspan></text>
+      </svg>
+      <div class="desc">For every action force there is an equal and opposite reaction force. They act on different objects and never cancel each other.</div>
+    </div>
+  </div>
+
+  <div class="formula">
+    <span class="label">Newton's Second Law</span>
+    $$\vec{F}_{\text{net}} = m\vec{a} \quad \Longrightarrow \quad a = \frac{F_{\text{net}}}{m}$$
+  </div>
+
+  <div class="warning">
+    <span class="tag">Common Mistake</span>
+    Newton's 3rd Law pairs act on <em>different</em> objects, so they never cancel. Students often confuse "balanced forces" (equal and opposite forces on the <em>same</em> object, making net force zero) with action-reaction pairs (forces on two <em>different</em> objects). These are completely different situations.
+  </div>
+
+  <div class="concept">
+    <span class="tag">Key Concept: Inertia</span>
+    Inertia is the <em>tendency of an object to resist changes to its state of motion</em>. It is measured by mass. A more massive object requires a larger net force to produce the same acceleration. Inertia is a property of matter, not a force.
+  </div>
+
+  <!-- DEMO 1: F = ma Interactive -->
+  <div class="demo">
+    <div class="demo-title">Newton's Second Law</div>
+    <div class="demo-subtitle">Adjust force and mass to see how acceleration changes. Watch the block's motion respond in real time.</div>
+    <div class="demo-stage">
+      <svg id="fmaSvg" class="demo-svg" viewBox="0 0 360 140" xmlns="http://www.w3.org/2000/svg">
+        <!-- floor -->
+        <line x1="0" y1="105" x2="360" y2="105" stroke="#c9bea5" stroke-width="2"/>
+        <line x1="0" y1="107" x2="360" y2="107" stroke="#ebe3d0" stroke-width="1"/>
+        <!-- floor hatch -->
+        <pattern id="hatch" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="8" stroke="#c9bea5" stroke-width="1"/>
+        </pattern>
+        <rect x="0" y="107" width="360" height="15" fill="url(#hatch)" opacity="0.5"/>
+        <!-- force arrow -->
+        <line id="forceArrow" x1="30" y1="82" x2="30" y2="82" stroke="#4a6b5c" stroke-width="3" marker-end="url(#arrowF)"/>
+        <defs>
+          <marker id="arrowF" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#4a6b5c"/>
+          </marker>
+        </defs>
+        <!-- block -->
+        <rect id="fmaBlock" x="120" y="65" width="50" height="40" fill="#c8553d" rx="3"/>
+        <text id="fmaBlockLabel" x="145" y="91" font-family="'Newsreader', serif" font-size="14" fill="white" text-anchor="middle">m</text>
+        <!-- acceleration arrow -->
+        <line id="accelArrow" x1="175" y1="82" x2="175" y2="82" stroke="#1a2238" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrowA)"/>
+        <defs>
+          <marker id="arrowA" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L8,4 L0,8 Z" fill="#1a2238"/>
+          </marker>
+        </defs>
+        <text id="accelLabel" x="200" y="78" font-family="'JetBrains Mono', monospace" font-size="10" fill="#1a2238">a</text>
+        <text id="forceLabel" x="30" y="60" font-family="'JetBrains Mono', monospace" font-size="10" fill="#4a6b5c" text-anchor="middle">F</text>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Force (N)</span>
+          <span class="readout-value" id="fmaFOut">20</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Mass (kg)</span>
+          <span class="readout-value" id="fmaMOut">4.0</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Acceleration (m/s²)</span>
+          <span class="readout-value positive" id="fmaAOut">5.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="demo-controls">
+      <div class="control-row">
+        <span class="control-label">F</span>
+        <input type="range" class="demo-slider" id="fmaFSlider" min="2" max="60" value="20" step="1">
+        <span class="control-value" id="fmaFVal">20 N</span>
+      </div>
+      <div class="control-row">
+        <span class="control-label">m</span>
+        <input type="range" class="demo-slider" id="fmaMSlider" min="1" max="12" value="4" step="0.5">
+        <span class="control-value" id="fmaMVal">4.0 kg</span>
+      </div>
+    </div>
+    <p class="demo-hint">The green arrow is the applied force. The dashed arrow shows the resulting acceleration. Double the force, double the acceleration. Double the mass, halve the acceleration.</p>
+  </div>
+
+  <div class="example">
+    <p class="question">A 6.0 kg shopping trolley is pushed with a net horizontal force of 18 N. What is its acceleration?</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Identify and write the formula:</strong> $F_{\text{net}} = ma$, so $a = \dfrac{F_{\text{net}}}{m}$</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Substitute:</strong> $a = \dfrac{18}{6.0}$</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Answer:</strong> $a = 3.0 \text{ m s}^{-2}$ (in the direction of the force)</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Newton's Laws</em></div>
+      <div class="quiz-progress" id="qprog1">0 / 3</div>
+    </div>
+    <div class="quiz" id="quiz1" style="background:none;border:none;padding:0;margin:0;">
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q · 01</div>
+        <div class="q-text">A book sits perfectly still on a table. What is true about the forces on the book?</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> The table exerts no force on the book</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> The net force on the book is upward</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> The net force on the book is zero</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> There is no gravitational force since the book is not moving</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Newton's 1st Law: the book is at rest, so net force = 0. The downward weight force is balanced exactly by the upward normal reaction force from the table. Both forces are real and equal in magnitude.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 02</div>
+        <div class="q-text">A 5.0 kg block accelerates at $4.0\ \text{m s}^{-2}$ to the right. The net force on the block is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $1.25\ \text{N}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $20\ \text{N}$ to the right</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $20\ \text{N}$ to the left</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $9.0\ \text{N}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $F_{\text{net}} = ma = 5.0 \times 4.0 = 20\ \text{N}$. Direction matters: net force is always in the direction of acceleration.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 03</div>
+        <div class="q-text">You push a wall with 80 N. By Newton's Third Law, the reaction force is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> 80 N from the wall, in the same direction as your push</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> 80 N from the wall on you, in the opposite direction</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> 40 N, because the wall does not accelerate</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> Zero, because the wall is stationary</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> The wall doesn't moving is irrelevant to the force magnitude. 3rd Law pairs are always equal in magnitude. The reaction force acts on <em>you</em>, not the wall — that's why it doesn't cancel your push force.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: FRICTION ============ -->
+<section id="s2">
+  <div class="section-num">Section 02</div>
+  <h2>Forces <em>&amp; friction</em></h2>
+  <p class="section-intro">Friction is the force that opposes the relative motion (or attempted motion) between surfaces. It is proportional to the normal force — not the contact area.</p>
+
+  <p>The frictional force depends on two things: how hard the surfaces press together (the <strong>normal force</strong> $F_N$) and how rough the surfaces are (the <strong>coefficient of friction</strong> $\mu$). That's it. Surface area does not appear in the formula.</p>
+
+  <div class="formula">
+    <span class="label">Friction</span>
+    $$f = \mu F_N$$
+  </div>
+
+  <div class="two-up">
+    <div class="method-card">
+      <div class="when">Static friction</div>
+      <h5>$f_s \leq \mu_s F_N$</h5>
+      <p>Acts when the surfaces are <em>not sliding</em>. Adjusts itself to match the applied force up to a maximum. The object does not move while $F_{\text{applied}} \leq \mu_s F_N$.</p>
+    </div>
+    <div class="method-card">
+      <div class="when">Kinetic friction</div>
+      <h5>$f_k = \mu_k F_N$</h5>
+      <p>Acts when surfaces <em>are sliding</em>. Constant in magnitude (for a given pair of surfaces). Always $\mu_k < \mu_s$, which is why it is easier to keep something sliding than to start it sliding.</p>
+    </div>
+  </div>
+
+  <div class="warning">
+    <span class="tag">Classic Trap</span>
+    If an object is at rest and the applied force is less than the maximum static friction, the <em>actual</em> friction force equals the applied force — not $\mu_s F_N$. The formula $f = \mu_s F_N$ gives the <em>maximum</em> before sliding begins. Applying it blindly is one of the most common errors on the exam.
+  </div>
+
+  <!-- DEMO 2: Friction Slider -->
+  <div class="demo">
+    <div class="demo-title">Static vs Kinetic Friction</div>
+    <div class="demo-subtitle">Drag the force slider. Watch what happens when you exceed the maximum static friction threshold.</div>
+    <div class="demo-stage">
+      <svg id="fricSvg" class="demo-svg" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="90" x2="360" y2="90" stroke="#c9bea5" stroke-width="2"/>
+        <rect x="0" y="92" width="360" height="15" fill="url(#hatch)" opacity="0.4"/>
+        <!-- friction arrow (red, leftward) -->
+        <line id="fricArrow" x1="140" y1="72" x2="140" y2="72" stroke="#c8553d" stroke-width="2.5" marker-end="url(#arrowFric)"/>
+        <defs>
+          <marker id="arrowFric" markerWidth="7" markerHeight="7" refX="1" refY="3.5" orient="auto">
+            <path d="M7,0 L0,3.5 L7,7 Z" fill="#c8553d"/>
+          </marker>
+          <marker id="arrowApplied" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+            <path d="M0,0 L7,3.5 L0,7 Z" fill="#4a6b5c"/>
+          </marker>
+        </defs>
+        <!-- applied arrow (green, rightward) -->
+        <line id="appliedArrow" x1="200" y1="72" x2="200" y2="72" stroke="#4a6b5c" stroke-width="2.5" marker-end="url(#arrowApplied)"/>
+        <!-- block -->
+        <rect id="fricBlock" x="140" y="50" width="60" height="40" fill="#c8553d" rx="3"/>
+        <text x="170" y="76" font-family="'Newsreader',serif" font-size="12" fill="white" text-anchor="middle">10 kg</text>
+        <!-- labels -->
+        <text id="fricFLabel" x="90" y="66" font-family="'JetBrains Mono',monospace" font-size="9" fill="#c8553d" text-anchor="middle">f</text>
+        <text id="applFLabel" x="250" y="66" font-family="'JetBrains Mono',monospace" font-size="9" fill="#4a6b5c" text-anchor="middle">F_applied</text>
+        <!-- status banner -->
+        <rect id="statusBg" x="110" y="12" width="140" height="22" rx="3" fill="#c4d4cb"/>
+        <text id="fricStatus" x="180" y="27" font-family="'JetBrains Mono',monospace" font-size="10" fill="#4a6b5c" text-anchor="middle" letter-spacing="0.12em">STATIC</text>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Applied Force</span>
+          <span class="readout-value" id="fricFOut">20 N</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Friction Force</span>
+          <span class="readout-value positive" id="fricFricOut">20 N</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Net Force</span>
+          <span class="readout-value zero" id="fricNetOut">0 N</span>
+        </div>
+      </div>
+    </div>
+    <div class="demo-controls">
+      <div class="control-row">
+        <span class="control-label">F</span>
+        <input type="range" class="demo-slider" id="fricSlider" min="0" max="80" value="20" step="1">
+        <span class="control-value" id="fricFVal">20 N</span>
+      </div>
+    </div>
+    <p class="demo-hint">$\mu_s = 0.50$, $\mu_k = 0.35$, $m = 10\ \text{kg}$. Max static friction = $0.50 \times 10 \times 9.8 = 49\ \text{N}$. Below that, static friction matches the applied force exactly.</p>
+  </div>
+
+  <div class="example">
+    <p class="question">A 10 kg box is pulled across a rough floor by a horizontal force of 60 N. The coefficient of kinetic friction is 0.35. Find the acceleration.</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Normal force:</strong> $F_N = mg = 10 \times 9.8 = 98\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Friction force:</strong> $f_k = \mu_k F_N = 0.35 \times 98 = 34.3\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Net force:</strong> $F_{\text{net}} = 60 - 34.3 = 25.7\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">4</span><div class="step-body"><strong>Acceleration:</strong> $a = \dfrac{F_{\text{net}}}{m} = \dfrac{25.7}{10} = 2.57\ \text{m s}^{-2}$</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Friction</em></div>
+      <div class="quiz-progress" id="qprog2">0 / 3</div>
+    </div>
+    <div id="quiz2">
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q · 04</div>
+        <div class="q-text">A 10 kg crate is at rest. Applied force = 40 N. $\mu_s = 0.50$. The frictional force acting on the crate is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> 49 N (maximum static friction)</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> 34.3 N (kinetic friction)</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> 40 N (matches applied force)</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> 0 N (no friction on a crate at rest)</button>
+        </div>
+        <div class="q-feedback"><strong>Tricky one.</strong> Max static friction = $0.50 \times 10 \times 9.8 = 49\ \text{N}$. Since 40 N &lt; 49 N, the crate does not move. Static friction adjusts to exactly balance the applied force: $f_s = 40\ \text{N}$. You only use $\mu_s F_N$ when the object is on the verge of slipping.</div>
+      </div>
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q · 05</div>
+        <div class="q-text">Which of these does NOT affect the kinetic friction force between two surfaces?</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> The coefficient of friction $\mu_k$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> The normal force $F_N$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> The area of contact between the surfaces</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> The weight of the object (on a horizontal surface)</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $f_k = \mu_k F_N$. Area does not appear in the formula and does not affect friction. This is counterintuitive but true for most everyday surfaces.</div>
+      </div>
+      <div class="quiz-question" data-answer="A">
+        <div class="q-num">Q · 06</div>
+        <div class="q-text">A rope pulls a 15 kg box at 25° above horizontal with a tension of 80 N. What is the normal force on the box?</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $\approx 113\ \text{N}$ (less than $mg$ because rope lifts slightly)</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $147\ \text{N}$ (just $mg$)</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $80\ \text{N}$ (equals tension)</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $\approx 181\ \text{N}$ (greater than $mg$)</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> The rope's vertical component partially supports the box: $F_N = mg - T\sin25° = 15(9.8) - 80(0.423) = 147 - 33.8 \approx 113\ \text{N}$. An angled pull always reduces the normal force, which also reduces friction — that's why you pull at an angle when dragging heavy objects.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: INCLINED PLANES ============ -->
+<section id="s3">
+  <div class="section-num">Section 03</div>
+  <h2><em>Inclined</em> planes</h2>
+  <p class="section-intro">A slope is just Newton's 2nd Law with the weight vector split into two components: one along the slope, one perpendicular to it.</p>
+
+  <p>The trick with inclined planes is choosing your coordinate system wisely. Tilt the axes so that $x$ runs along the slope and $y$ runs perpendicular to it. Weight $mg$ then splits into:</p>
+  <ul>
+    <li><strong>Parallel to slope:</strong> $F_\parallel = mg\sin\theta$ (causes acceleration along the slope)</li>
+    <li><strong>Perpendicular to slope:</strong> $F_\perp = mg\cos\theta$ (equals the normal force on a frictionless slope)</li>
+  </ul>
+
+  <div class="formula">
+    <span class="label">On a slope (tilted axes)</span>
+    $$F_N = mg\cos\theta \qquad a = g\sin\theta \text{ (frictionless)}$$
+  </div>
+
+  <div class="concept">
+    <span class="tag">Finding the friction angle</span>
+    On a slope with friction, the object is on the verge of sliding when $mg\sin\theta = \mu mg\cos\theta$. The masses cancel, giving $\tan\theta = \mu$. So $\theta = \arctan(\mu)$ — the angle at which the object just starts to slide is independent of mass. This is called the <em>friction angle</em>.
+  </div>
+
+  <div class="example">
+    <p class="question">A 4.0 kg block slides down a frictionless 35° incline. Find its acceleration and the normal force.</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Normal force:</strong> $F_N = mg\cos35° = 4.0 \times 9.8 \times 0.819 = 32.1\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Net force along slope:</strong> $F_\parallel = mg\sin35° = 4.0 \times 9.8 \times 0.574 = 22.5\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Acceleration:</strong> $a = g\sin35° = 9.8 \times 0.574 = 5.62\ \text{m s}^{-2}$ (down the slope)</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Inclined Planes</em></div>
+      <div class="quiz-progress" id="qprog3">0 / 2</div>
+    </div>
+    <div id="quiz3">
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 07</div>
+        <div class="q-text">A 5 kg block on a frictionless 30° incline. Its acceleration is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $9.8\ \text{m s}^{-2}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $4.9\ \text{m s}^{-2}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $8.5\ \text{m s}^{-2}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $0\ \text{m s}^{-2}$ (the slope provides a normal force that balances gravity)</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $a = g\sin30° = 9.8 \times 0.5 = 4.9\ \text{m s}^{-2}$. The mass cancels entirely. Note the block doesn't fall at full $g$ because the slope redirects part of the gravitational force into the normal force.</div>
+      </div>
+      <div class="quiz-question" data-answer="D">
+        <div class="q-num">Q · 08</div>
+        <div class="q-text">A 50 kg crate just starts to slide on a slope when the angle reaches 30°. What is $\mu_s$?</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $0.50$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $0.87$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $0.25$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $0.577$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> At the point of slipping: $\tan\theta = \mu_s$, so $\mu_s = \tan30° \approx 0.577$. Notice the mass of the crate is completely irrelevant — it cancels out of both sides of the equation.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: WORK, ENERGY AND POWER ============ -->
+<section id="s4">
+  <div class="section-num">Section 04</div>
+  <h2>Work, energy <em>&amp; power</em></h2>
+  <p class="section-intro">Energy cannot be created or destroyed, only transformed. This is the most powerful idea in the module — it lets you solve problems that would be nightmarish with forces alone.</p>
+
+  <div class="formula">
+    <span class="label">The Energy Toolkit</span>
+    $$W = Fs\cos\theta \qquad K = \tfrac{1}{2}mv^2 \qquad \Delta U = mg\Delta h$$
+    $$P = \frac{\Delta E}{\Delta t} = Fv\cos\theta$$
+  </div>
+
+  <div class="concept">
+    <span class="tag">Conservation of Mechanical Energy</span>
+    If there are no dissipative forces (friction, air resistance), the total mechanical energy $E = K + U$ is constant. Mathematically: $K_i + U_i = K_f + U_f$. This means you can find velocities and heights without knowing time or acceleration.
+  </div>
+
+  <div class="warning">
+    <span class="tag">Common Mistake</span>
+    The $\theta$ in $W = Fs\cos\theta$ is the angle between the <em>force vector</em> and the <em>displacement vector</em> — not the slope angle or any other angle in the problem. Sketch a free body diagram and identify this angle explicitly before substituting.
+  </div>
+
+  <!-- DEMO 3: Energy Conservation Pendulum -->
+  <div class="demo">
+    <div class="demo-title">Conservation of Mechanical Energy</div>
+    <div class="demo-subtitle">Watch a pendulum swing. Kinetic and potential energy trade off, but their sum stays constant.</div>
+    <div class="demo-stage">
+      <svg id="pendSvg" class="demo-svg" viewBox="0 0 360 200" xmlns="http://www.w3.org/2000/svg">
+        <!-- pivot -->
+        <circle cx="180" cy="20" r="4" fill="#1a2238"/>
+        <!-- rod -->
+        <line id="pendRod" x1="180" y1="20" x2="180" y2="130" stroke="#c9bea5" stroke-width="2"/>
+        <!-- bob -->
+        <circle id="pendBob" cx="180" cy="130" r="14" fill="#c8553d"/>
+        <!-- KE bar background -->
+        <rect x="20" y="155" width="80" height="12" rx="2" fill="#ebe3d0"/>
+        <!-- KE bar fill -->
+        <rect id="keBar" x="20" y="155" width="0" height="12" rx="2" fill="#4a6b5c"/>
+        <!-- PE bar background -->
+        <rect x="120" y="155" width="80" height="12" rx="2" fill="#ebe3d0"/>
+        <!-- PE bar fill -->
+        <rect id="peBar" x="120" y="155" width="80" height="12" rx="2" fill="#c8553d"/>
+        <!-- E total bar background -->
+        <rect x="220" y="155" width="120" height="12" rx="2" fill="#ebe3d0"/>
+        <!-- E total bar fill -->
+        <rect id="etBar" x="220" y="155" width="120" height="12" rx="2" fill="#1a2238" opacity="0.3"/>
+        <!-- labels -->
+        <text x="60" y="178" font-family="'JetBrains Mono',monospace" font-size="9" fill="#4a6b5c" text-anchor="middle">KE</text>
+        <text x="160" y="178" font-family="'JetBrains Mono',monospace" font-size="9" fill="#c8553d" text-anchor="middle">PE</text>
+        <text x="280" y="178" font-family="'JetBrains Mono',monospace" font-size="9" fill="#1a2238" text-anchor="middle">TOTAL</text>
+        <!-- ground reference -->
+        <line x1="60" y1="147" x2="300" y2="147" stroke="#c9bea5" stroke-width="0.5" stroke-dasharray="3,3"/>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">KE (J)</span>
+          <span class="readout-value positive" id="pendKE">0.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">PE (J)</span>
+          <span class="readout-value negative" id="pendPE">4.90</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Total E (J)</span>
+          <span class="readout-value" id="pendTotal">4.90</span>
+        </div>
+      </div>
+    </div>
+    <p class="demo-hint">At the extremes: all PE, zero KE. At the bottom: all KE, zero PE. The total stays constant — that's conservation of mechanical energy.</p>
+  </div>
+
+  <div class="example">
+    <p class="question">A 2.0 kg ball is released from rest at a height of 5.0 m on a frictionless ramp. What is its speed at the bottom?</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Set up energy conservation:</strong> $K_i + U_i = K_f + U_f$. At rest at top: $K_i = 0$. At bottom: $U_f = 0$.</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Simplify:</strong> $mgΔh = \tfrac{1}{2}mv^2$. The mass cancels: $gΔh = \tfrac{1}{2}v^2$</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Solve:</strong> $v = \sqrt{2g\Delta h} = \sqrt{2 \times 9.8 \times 5.0} = \sqrt{98} \approx 9.90\ \text{m s}^{-1}$</div></div>
+      <div class="step"><span class="step-num">4</span><div class="step-body"><strong>Note:</strong> The mass of 2.0 kg was not needed. Any mass dropped from 5.0 m reaches the same speed (on a frictionless surface).</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Energy and Power</em></div>
+      <div class="quiz-progress" id="qprog4">0 / 4</div>
+    </div>
+    <div id="quiz4">
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 09</div>
+        <div class="q-text">A 3 kg ball has initial KE of 60 J at ground level and is thrown straight up. How high does it rise? (Use $g = 9.8$)</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $6.12\ \text{m}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $2.04\ \text{m}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $20\ \text{m}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $0.98\ \text{m}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $\Delta U = KE_i \Rightarrow mgh = 60 \Rightarrow h = 60/(3 \times 9.8) = 2.04\ \text{m}$. Use energy conservation — you don't need initial speed or time.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 10</div>
+        <div class="q-text">A force of 60 N is applied at 45° above horizontal for a displacement of 10 m. Work done is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $600\ \text{J}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $424\ \text{J}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $300\ \text{J}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $848\ \text{J}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $W = Fs\cos\theta = 60 \times 10 \times \cos45° = 600 \times 0.707 \approx 424\ \text{J}$. Only the horizontal component of force does work on horizontal displacement.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 11</div>
+        <div class="q-text">A 1000 kg car travels at constant 20 m/s against 500 N of air resistance. Engine power required:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $2500\ \text{W}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $10\,000\ \text{W}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $25\,000\ \text{W}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $500\ \text{W}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Constant speed means net force = 0, so engine force = drag = 500 N. $P = Fv = 500 \times 20 = 10\,000\ \text{W} = 10\ \text{kW}$.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 12</div>
+        <div class="q-text">A ball (5 kg) slides down a ramp from height 8 m and onto a rough floor. It stops after 10 m on the floor. The average friction force on the floor is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $49\ \text{N}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $39.2\ \text{N}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $5\ \text{N}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $196\ \text{N}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> KE at bottom of ramp = $mgh = 5 \times 9.8 \times 8 = 392\ \text{J}$. Friction does work $W = f \times d = f \times 10$. Setting equal: $f = 392/10 = 39.2\ \text{N}$. Work-energy theorem is the slick approach here.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5: MOMENTUM ============ -->
+<section id="s5">
+  <div class="section-num">Section 05</div>
+  <h2>Momentum <em>&amp; collisions</em></h2>
+  <p class="section-intro">Momentum is always conserved in a closed system. This is what makes it so powerful: you can analyse collisions without needing to know the forces involved or the collision duration.</p>
+
+  <div class="formula">
+    <span class="label">Momentum and Conservation</span>
+    $$p = mv \qquad \sum m\vec{v}_{\text{before}} = \sum m\vec{v}_{\text{after}}$$
+  </div>
+
+  <div class="two-up">
+    <div class="method-card">
+      <div class="when">Elastic collision</div>
+      <h5>KE is conserved</h5>
+      <p>Both momentum and kinetic energy are conserved. Objects bounce off each other and no energy is lost to heat, sound or deformation. Rare in practice — billiard balls are close.</p>
+    </div>
+    <div class="method-card">
+      <div class="when">Inelastic collision</div>
+      <h5>KE is NOT conserved</h5>
+      <p>Momentum is conserved, but kinetic energy is converted to other forms (heat, sound, deformation). In a <em>perfectly inelastic</em> collision the objects stick together. This is the most common type.</p>
+    </div>
+  </div>
+
+  <div class="warning">
+    <span class="tag">Direction is Critical</span>
+    Momentum is a vector. Before substituting, define a positive direction (usually "to the right"). Any object moving left gets a negative velocity. Forgetting signs is responsible for most wrong answers in collision problems.
+  </div>
+
+  <!-- DEMO 4: Collision Animation -->
+  <div class="demo">
+    <div class="demo-title">Conservation of Momentum</div>
+    <div class="demo-subtitle">Two trolleys collide. Total momentum before equals total momentum after, regardless of collision type.</div>
+    <div class="demo-stage">
+      <svg id="collSvg" class="demo-svg" viewBox="0 0 360 120" xmlns="http://www.w3.org/2000/svg">
+        <line x1="0" y1="88" x2="360" y2="88" stroke="#c9bea5" stroke-width="2"/>
+        <!-- block A -->
+        <rect id="collA" x="40" y="58" width="50" height="30" fill="#c8553d" rx="3"/>
+        <text id="collALabel" x="65" y="79" font-family="'Newsreader',serif" font-size="12" fill="white" text-anchor="middle">A</text>
+        <!-- velocity arrow A -->
+        <line id="collAArrow" x1="92" y1="73" x2="130" y2="73" stroke="#c8553d" stroke-width="2.5" marker-end="url(#arrowCA)"/>
+        <defs>
+          <marker id="arrowCA" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#c8553d"/></marker>
+          <marker id="arrowCB" markerWidth="7" markerHeight="7" refX="1" refY="3.5" orient="auto"><path d="M7,0 L0,3.5 L7,7 Z" fill="#4a6b5c"/></marker>
+        </defs>
+        <!-- block B -->
+        <rect id="collB" x="270" y="58" width="50" height="30" fill="#4a6b5c" rx="3"/>
+        <text id="collBLabel" x="295" y="79" font-family="'Newsreader',serif" font-size="12" fill="white" text-anchor="middle">B</text>
+        <!-- velocity arrow B -->
+        <line id="collBArrow" x1="268" y1="73" x2="230" y2="73" stroke="#4a6b5c" stroke-width="2.5" marker-end="url(#arrowCB)"/>
+        <!-- total p label -->
+        <text id="collPLabel" x="180" y="18" font-family="'JetBrains Mono',monospace" font-size="10" fill="#1a2238" text-anchor="middle">p_total = 4.00 kg·m/s</text>
+        <text id="collPhase" x="180" y="32" font-family="'JetBrains Mono',monospace" font-size="9" fill="#c8553d" text-anchor="middle">BEFORE</text>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">p of A (kg·m/s)</span>
+          <span class="readout-value negative" id="collPA">6.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">p of B (kg·m/s)</span>
+          <span class="readout-value positive" id="collPB">-2.00</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Total p (kg·m/s)</span>
+          <span class="readout-value" id="collPTotal">4.00</span>
+        </div>
+      </div>
+    </div>
+    <p class="demo-hint">A: 2 kg at +3 m/s (rightward). B: 2 kg at -1 m/s (leftward). Total momentum = 4.00 kg m/s throughout — watch the animation to see it conserved after collision.</p>
+  </div>
+
+  <div class="example">
+    <p class="question">A 1500 kg car moving east at 20 m/s collides with a 1000 kg ute moving west at 15 m/s. They lock together. Find the velocity of the wreckage.</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Define positive direction:</strong> Let east = positive. Ute's velocity = $-15\ \text{m s}^{-1}$.</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Total initial momentum:</strong> $p_i = 1500(20) + 1000(-15) = 30\,000 - 15\,000 = 15\,000\ \text{kg m s}^{-1}$ east</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Conservation:</strong> $p_f = (m_1 + m_2)v_f = 2500 \cdot v_f$</div></div>
+      <div class="step"><span class="step-num">4</span><div class="step-body"><strong>Solve:</strong> $v_f = 15\,000 / 2500 = 6.0\ \text{m s}^{-1}$ east</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Momentum</em></div>
+      <div class="quiz-progress" id="qprog5">0 / 3</div>
+    </div>
+    <div id="quiz5">
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q · 13</div>
+        <div class="q-text">Object A (2 kg, 6 m/s right) collides with stationary B (4 kg). They stick together. Final velocity:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $6.0\ \text{m s}^{-1}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $3.0\ \text{m s}^{-1}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $2.0\ \text{m s}^{-1}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $4.0\ \text{m s}^{-1}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> $m_1 v_1 = (m_1+m_2)v_f \Rightarrow 2 \times 6 = 6 \times v_f \Rightarrow v_f = 2.0\ \text{m s}^{-1}$. Notice the final velocity is much less than initial — kinetic energy was lost (inelastic).</div>
+      </div>
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q · 14</div>
+        <div class="q-text">Enzo (50 kg) and Jake (80 kg) stand at rest on a frictionless ice rink. They push off each other. Enzo moves at 3.0 m/s. Jake's speed is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $3.0\ \text{m s}^{-1}$ (same as Enzo, by Newton's 3rd Law)</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $4.8\ \text{m s}^{-1}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $1.88\ \text{m s}^{-1}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $0\ \text{m s}^{-1}$ (Jake is heavier so he doesn't move)</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Initial momentum = 0. So $50 \times 3 + 80 \times v_J = 0 \Rightarrow v_J = -150/80 = -1.875\ \text{m s}^{-1}$. Jake moves in the opposite direction, with speed 1.88 m/s. Heavier means slower, not stationary.</div>
+      </div>
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q · 15</div>
+        <div class="q-text">In an inelastic collision, which of the following is always true?</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> Kinetic energy is conserved</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> Momentum is conserved</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> The objects must stick together</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> Total energy is destroyed</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Momentum is always conserved in any collision in a closed system. Kinetic energy is only conserved in elastic collisions. Objects sticking together is a special case (perfectly inelastic). Total energy is never destroyed — it converts to heat and sound.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 6: IMPULSE ============ -->
+<section id="s6">
+  <div class="section-num">Section 06</div>
+  <h2><em>Impulse</em></h2>
+  <p class="section-intro">Impulse connects force and time to the change in momentum. It explains why a long, soft landing is safer than a short, hard one — and why airbags save lives.</p>
+
+  <div class="formula">
+    <span class="label">Impulse-Momentum Theorem</span>
+    $$\text{Impulse} = \Delta p = F_{\text{net}}\,\Delta t = m\Delta v$$
+  </div>
+
+  <div class="concept">
+    <span class="tag">Graphical Interpretation</span>
+    On a force-time graph, the impulse equals the area under the curve. A tall, narrow spike (short hard collision) and a short, wide curve (long soft collision) can have identical areas — identical impulses — but very different peak forces. This is the physics of crumple zones and airbags.
+  </div>
+
+  <!-- DEMO: Impulse Force-Time Graph -->
+  <div class="demo">
+    <div class="demo-title">Force vs Time: Two Collisions</div>
+    <div class="demo-subtitle">Same impulse (same area), but the longer collision has a much smaller peak force.</div>
+    <div class="demo-stage">
+      <svg id="impSvg" class="demo-svg" viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg">
+        <!-- axes -->
+        <line x1="40" y1="20" x2="40" y2="155" stroke="#1a2238" stroke-width="1.5"/>
+        <line x1="40" y1="155" x2="340" y2="155" stroke="#1a2238" stroke-width="1.5"/>
+        <text x="185" y="175" font-family="'JetBrains Mono',monospace" font-size="9" fill="#45506b" text-anchor="middle">time (s)</text>
+        <text x="12" y="90" font-family="'JetBrains Mono',monospace" font-size="9" fill="#45506b" text-anchor="middle" transform="rotate(-90,12,90)">Force (N)</text>
+        <!-- Short hard collision (red triangle) -->
+        <polygon id="impA" points="60,155 80,30 100,155" fill="#c8553d" opacity="0.35"/>
+        <polyline points="60,155 80,30 100,155" fill="none" stroke="#c8553d" stroke-width="2"/>
+        <text x="80" y="24" font-family="'Newsreader',serif" font-size="10" fill="#c8553d" text-anchor="middle" font-style="italic">Hard &amp; short</text>
+        <!-- Long soft collision (green triangle) -->
+        <polygon id="impB" points="150,155 230,85 310,155" fill="#4a6b5c" opacity="0.25"/>
+        <polyline points="150,155 230,85 310,155" fill="none" stroke="#4a6b5c" stroke-width="2"/>
+        <text x="230" y="80" font-family="'Newsreader',serif" font-size="10" fill="#4a6b5c" text-anchor="middle" font-style="italic">Soft &amp; long</text>
+        <!-- Area labels -->
+        <text x="80" y="120" font-family="'JetBrains Mono',monospace" font-size="8" fill="#c8553d" text-anchor="middle">Area = J</text>
+ont-family="'JetBrains Mono',monospace" font-size="8" fill="#4a6b5c" text-anchor="middle">Area = J (same!)</text>
+        <!-- brace label -->
+        <text x="185" y="148" font-family="'JetBrains Mono',monospace" font-size="8" fill="#1a2238" text-anchor="middle" opacity="0.6">same impulse = same &#916;p</text>
+      </svg>
+      <div class="demo-readouts">
+        <div class="readout">
+          <span class="readout-label">Peak Force A</span>
+          <span class="readout-value negative">HIGH</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Peak Force B</span>
+          <span class="readout-value positive">LOW</span>
+        </div>
+        <div class="readout">
+          <span class="readout-label">Impulse (both)</span>
+          <span class="readout-value zero">Same</span>
+        </div>
+      </div>
+    </div>
+    <p class="demo-hint">Airbags extend the collision time &#916;t. Since $F = \Delta p / \Delta t$, a larger &#916;t means a smaller force on the passenger for the same change in momentum (stopping from 60 km/h to 0).</p>
+  </div>
+
+  <div class="example">
+    <p class="question">A 0.060 kg tennis ball traveling at 25 m/s is struck by a racquet and returns at 30 m/s in the opposite direction. Contact time is 5.0 ms. Find the average force on the ball.</p>
+    <div class="solution">
+      <div class="step"><span class="step-num">1</span><div class="step-body"><strong>Define positive direction:</strong> Let the initial direction = positive. So $v_i = +25\ \text{m s}^{-1}$ and $v_f = -30\ \text{m s}^{-1}$.</div></div>
+      <div class="step"><span class="step-num">2</span><div class="step-body"><strong>Change in momentum:</strong> $\Delta p = m(v_f - v_i) = 0.060(-30 - 25) = 0.060 \times (-55) = -3.3\ \text{kg m s}^{-1}$</div></div>
+      <div class="step"><span class="step-num">3</span><div class="step-body"><strong>Average force:</strong> $F = \dfrac{\Delta p}{\Delta t} = \dfrac{-3.3}{0.0050} = -660\ \text{N}$</div></div>
+      <div class="step"><span class="step-num">4</span><div class="step-body"><strong>Interpret:</strong> Magnitude = 660 N, directed opposite to the ball's initial motion (the racquet pushes the ball back).</div></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">
+      <div class="quiz-title">Check: <em>Impulse</em></div>
+      <div class="quiz-progress" id="qprog6">0 / 2</div>
+    </div>
+    <div id="quiz6">
+      <div class="quiz-question" data-answer="B">
+        <div class="q-num">Q &middot; 16</div>
+        <div class="q-text">A 0.10 kg ball hits a wall at 10 m/s and bounces straight back at 8 m/s. The magnitude of the impulse is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> $0.20\ \text{N&#183;s}$</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> $1.8\ \text{N&#183;s}$</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> $1.0\ \text{N&#183;s}$</button>
+          <button class="option" data-choice="D"><span class="letter">D</span> $0.80\ \text{N&#183;s}$</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Take initial direction as positive: $v_i = +10$, $v_f = -8$. $J = m\Delta v = 0.10 \times (-8 - 10) = 0.10 \times (-18) = -1.8\ \text{N&#183;s}$. Magnitude = 1.8 N&#183;s. Don't just subtract the magnitudes&#8202;&#8212;&#8202;the direction reversal matters.</div>
+      </div>
+      <div class="quiz-question" data-answer="C">
+        <div class="q-num">Q &middot; 17</div>
+        <div class="q-text">The fundamental SI unit of impulse is:</div>
+        <div class="q-options">
+          <button class="option" data-choice="A"><span class="letter">A</span> kg/s</button>
+          <button class="option" data-choice="B"><span class="letter">B</span> N</button>
+          <button class="option" data-choice="C"><span class="letter">C</span> kg&#183;m&#183;s<sup>-1</sup></button>
+          <button class="option" data-choice="D"><span class="letter">D</span> J&#183;s</button>
+        </div>
+        <div class="q-feedback"><strong>Correct.</strong> Impulse = change in momentum. Momentum has units kg&#183;m&#183;s<sup>-1</sup>. While N&#183;s is also correct (and equivalent), the <em>fundamental</em> SI unit uses base units only: kg, m, s.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cheat-sheet" id="cheat">
+  <h2>Formula <em>Cheat Sheet</em></h2>
+  <h3>Newton's Laws</h3>
+  <div class="formula-line"><span class="desc">Newton's 2nd Law</span><span class="eq">$\vec{F}_{\text{net}} = m\vec{a}$</span></div>
+  <div class="formula-line"><span class="desc">3rd Law pair</span><span class="eq">$\vec{F}_{AB} = -\vec{F}_{BA}$</span></div>
+  <div class="formula-line"><span class="desc">Weight force</span><span class="eq">$W = mg$</span></div>
+  <h3>Friction</h3>
+  <div class="formula-line"><span class="desc">Friction force</span><span class="eq">$f = \mu F_N$</span></div>
+  <div class="formula-line"><span class="desc">Normal (horizontal surface)</span><span class="eq">$F_N = mg$</span></div>
+  <div class="formula-line"><span class="desc">Friction angle</span><span class="eq">$\tan\theta = \mu_s$</span></div>
+  <h3>Inclined Planes</h3>
+  <div class="formula-line"><span class="desc">Parallel component</span><span class="eq">$F_\parallel = mg\sin\theta$</span></div>
+  <div class="formula-line"><span class="desc">Normal force on slope</span><span class="eq">$F_N = mg\cos\theta$</span></div>
+  <div class="formula-line"><span class="desc">Acceleration (frictionless)</span><span class="eq">$a = g\sin\theta$</span></div>
+  <h3>Work, Energy and Power</h3>
+  <div class="formula-line"><span class="desc">Work done</span><span class="eq">$W = Fs\cos\theta$</span></div>
+  <div class="formula-line"><span class="desc">Kinetic energy</span><span class="eq">$K = \tfrac{1}{2}mv^2$</span></div>
+  <div class="formula-line"><span class="desc">Gravitational PE</span><span class="eq">$\Delta U = mg\Delta h$</span></div>
+  <div class="formula-line"><span class="desc">Conservation (no friction)</span><span class="eq">$K_i + U_i = K_f + U_f$</span></div>
+  <div class="formula-line"><span class="desc">Power</span><span class="eq">$P = \Delta E / \Delta t = Fv\cos\theta$</span></div>
+  <h3>Momentum and Impulse</h3>
+  <div class="formula-line"><span class="desc">Momentum</span><span class="eq">$p = mv$</span></div>
+  <div class="formula-line"><span class="desc">Conservation of momentum</span><span class="eq">$\sum m\vec{v}_{\text{before}} = \sum m\vec{v}_{\text{after}}$</span></div>
+  <div class="formula-line"><span class="desc">Elastic: KE conserved too</span><span class="eq">$\sum \tfrac{1}{2}mv^2_{\text{before}} = \sum \tfrac{1}{2}mv^2_{\text{after}}$</span></div>
+  <div class="formula-line"><span class="desc">Impulse</span><span class="eq">$J = \Delta p = F_{\text{net}}\,\Delta t$</span></div>
+</div>
+
+</main>
+
+<footer>
+  <p>Work through every worked example by hand before touching the practice test. Watching is not the same as doing.</p>
+  <div class="signature">good luck</div>
+</footer>
+
+<script>
+// ===== QUIZ LOGIC =====
+document.querySelectorAll('.quiz-question').forEach(function(q) {
+  var correctAnswer = q.dataset.answer;
+  var options = q.querySelectorAll('.option');
+  options.forEach(function(opt) {
+    opt.addEventListener('click', function() {
+      if (q.classList.contains('done')) return;
+      q.classList.add('done');
+      var choice = opt.dataset.choice;
+      options.forEach(function(o) {
+        o.disabled = true;
+        if (o.dataset.choice === correctAnswer) o.classList.add('correct');
+        else if (o.dataset.choice === choice) o.classList.add('wrong');
+      });
+      var feedback = q.querySelector('.q-feedback');
+      if (feedback) {
+        feedback.classList.add('show');
+        if (window.MathJax && window.MathJax.typesetPromise) MathJax.typesetPromise([feedback]);
+      }
+      // update progress
+      var quizDiv = q.closest('[id^="quiz"]');
+      if (quizDiv) {
+        var num = quizDiv.id.replace('quiz','');
+        var prog = document.getElementById('qprog' + num);
+        if (prog) {
+          var total = quizDiv.querySelectorAll('.quiz-question').length;
+          var answered = quizDiv.querySelectorAll('.quiz-question.done').length;
+          prog.textContent = answered + ' / ' + total;
+        }
+      }
+    });
+  });
+});
+
+// ===== DEMO 1: F = ma =====
+(function() {
+  var fSlider = document.getElementById('fmaFSlider');
+  var mSlider = document.getElementById('fmaMSlider');
+  if (!fSlider) return;
+  var fVal = document.getElementById('fmaFVal');
+  var mVal = document.getElementById('fmaMVal');
+  var fOut = document.getElementById('fmaFOut');
+  var mOut = document.getElementById('fmaMOut');
+  var aOut = document.getElementById('fmaAOut');
+  var forceArrow = document.getElementById('forceArrow');
+  var accelArrow = document.getElementById('accelArrow');
+  var accelLabel = document.getElementById('accelLabel');
+  var block = document.getElementById('fmaBlock');
+  var blockLabel = document.getElementById('fmaBlockLabel');
+  var forceLabel = document.getElementById('forceLabel');
+  var t = 0;
+  function update() {
+    var F = parseFloat(fSlider.value);
+    var m = parseFloat(mSlider.value);
+    var a = F / m;
+    fVal.textContent = F + ' N';
+    mVal.textContent = m.toFixed(1) + ' kg';
+    fOut.textContent = F;
+    mOut.textContent = m.toFixed(1);
+    aOut.textContent = a.toFixed(2);
+  }
+  function animate() {
+    t += 0.018;
+    var F = parseFloat(fSlider.value);
+    var m = parseFloat(mSlider.value);
+    var a = F / m;
+    var speed = Math.sqrt(a) * 0.5;
+    var bx = 160 + Math.sin(t * speed) * 70;
+    block.setAttribute('x', bx);
+    blockLabel.setAttribute('x', bx + 25);
+    var arrowLen = (F / 60) * 85;
+    forceArrow.setAttribute('x1', 10); forceArrow.setAttribute('x2', 10 + arrowLen);
+    forceArrow.setAttribute('y1', 82); forceArrow.setAttribute('y2', 82);
+    forceLabel.setAttribute('x', 10 + arrowLen / 2);
+    var aLen = Math.min((a / 15) * 75, 75);
+    accelArrow.setAttribute('x1', bx + 53); accelArrow.setAttribute('x2', bx + 53 + aLen);
+    accelArrow.setAttribute('y1', 82); accelArrow.setAttribute('y2', 82);
+    accelLabel.setAttribute('x', bx + 53 + aLen + 5);
+    requestAnimationFrame(animate);
+  }
+  fSlider.addEventListener('input', update);
+  mSlider.addEventListener('input', update);
+  update();
+  animate();
+})();
+
+// ===== DEMO 2: Friction =====
+(function() {
+  var slider = document.getElementById('fricSlider');
+  if (!slider) return;
+  var fOut = document.getElementById('fricFOut');
+  var fricOut = document.getElementById('fricFricOut');
+  var netOut = document.getElementById('fricNetOut');
+  var fVal = document.getElementById('fricFVal');
+  var status = document.getElementById('fricStatus');
+  var statusBg = document.getElementById('statusBg');
+  var fricArrow = document.getElementById('fricArrow');
+  var applArrow = document.getElementById('appliedArrow');
+  var block = document.getElementById('fricBlock');
+  var t = 0;
+  var m = 10, g = 9.8, mus = 0.50, muk = 0.35;
+  var maxStatic = mus * m * g;
+  var kineticF = muk * m * g;
+
+  function update() {
+    var F = parseFloat(slider.value);
+    fVal.textContent = F + ' N';
+    fOut.textContent = F + ' N';
+    var applLen = (F / 80) * 75;
+    applArrow.setAttribute('x1', 200); applArrow.setAttribute('x2', 200 + applLen);
+    applArrow.setAttribute('y1', 72); applArrow.setAttribute('y2', 72);
+    if (F <= maxStatic) {
+      var fricLen = (F / 80) * 75;
+      fricArrow.setAttribute('x1', 140); fricArrow.setAttribute('x2', 140 - fricLen);
+      fricArrow.setAttribute('y1', 72); fricArrow.setAttribute('y2', 72);
+      fricOut.textContent = F.toFixed(1) + ' N';
+      fricOut.className = 'readout-value positive';
+      netOut.textContent = '0.0 N';
+      netOut.className = 'readout-value zero';
+      status.textContent = 'STATIC';
+      statusBg.setAttribute('fill', '#c4d4cb');
+      status.setAttribute('fill', '#4a6b5c');
+    } else {
+      var fl2 = (kineticF / 80) * 75;
+      fricArrow.setAttribute('x1', 140); fricArrow.setAttribute('x2', 140 - fl2);
+      fricArrow.setAttribute('y1', 72); fricArrow.setAttribute('y2', 72);
+      fricOut.textContent = kineticF.toFixed(1) + ' N';
+      fricOut.className = 'readout-value negative';
+      var net = F - kineticF;
+      netOut.textContent = '+' + net.toFixed(1) + ' N';
+      netOut.className = 'readout-value negative';
+      status.textContent = 'SLIDING';
+      statusBg.setAttribute('fill', '#f1a892');
+      status.setAttribute('fill', '#c8553d');
+    }
+  }
+  function animFric() {
+    t += 0.016;
+    var F = parseFloat(slider.value);
+    if (F > maxStatic) {
+      var a = (F - kineticF) / m;
+      var nx = 120 + Math.abs(Math.sin(t * a * 0.4)) * 80;
+      block.setAttribute('x', nx);
+    } else {
+      block.setAttribute('x', 140);
+    }
+    requestAnimationFrame(animFric);
+  }
+  slider.addEventListener('input', update);
+  update();
+  animFric();
+})();
+
+// ===== DEMO 3: Pendulum (Energy Conservation) =====
+(function() {
+  var rod = document.getElementById('pendRod');
+  var bob = document.getElementById('pendBob');
+  var keBar = document.getElementById('keBar');
+  var peBar = document.getElementById('peBar');
+  var keOut = document.getElementById('pendKE');
+  var peOut = document.getElementById('pendPE');
+  var totOut = document.getElementById('pendTotal');
+  if (!rod) return;
+  var L = 108, pivX = 180, pivY = 20;
+  var maxAngle = 0.85;
+  var m = 0.5, g = 9.8;
+  var totalE = m * g * L * (1 - Math.cos(maxAngle));
+  var t = 0;
+  function frame() {
+    t += 0.022;
+    var angle = maxAngle * Math.cos(t);
+    var bobX = pivX + L * Math.sin(angle);
+    var bobY = pivY + L * Math.cos(angle);
+    rod.setAttribute('x1', pivX); rod.setAttribute('y1', pivY);
+    rod.setAttribute('x2', bobX.toFixed(1)); rod.setAttribute('y2', bobY.toFixed(1));
+    bob.setAttribute('cx', bobX.toFixed(1)); bob.setAttribute('cy', bobY.toFixed(1));
+    var h = L - L * Math.cos(angle);
+    var PE = m * g * h;
+    var KE = Math.max(0, totalE - PE);
+    keBar.setAttribute('width', ((KE / totalE) * 80).toFixed(1));
+    peBar.setAttribute('width', ((PE / totalE) * 80).toFixed(1));
+    keOut.textContent = KE.toFixed(2);
+    peOut.textContent = PE.toFixed(2);
+    totOut.textContent = totalE.toFixed(2);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ===== DEMO 4: Collision =====
+(function() {
+  var aBox = document.getElementById('collA');
+  var bBox = document.getElementById('collB');
+  var aArrow = document.getElementById('collAArrow');
+  var bArrow = document.getElementById('collBArrow');
+  var pLabel = document.getElementById('collPLabel');
+  var phaseLabel = document.getElementById('collPhase');
+  var paOut = document.getElementById('collPA');
+  var pbOut = document.getElementById('collPB');
+  var ptOut = document.getElementById('collPTotal');
+  if (!aBox) return;
+  var mA = 2, mB = 2, viA = 3, viB = -1;
+  var vfAB = (mA * viA + mB * viB) / (mA + mB);
+  var totalP = mA * viA + mB * viB;
+  var t = 0;
+  function frame() {
+    t += 0.018;
+    var cycle = t % 6;
+    if (cycle < 2) {
+      var ax = 30 + cycle * 32;
+      var bx = 280 - cycle * 30;
+      aBox.setAttribute('x', ax); bBox.setAttribute('x', bx);
+      aArrow.setAttribute('x1', ax + 52); aArrow.setAttribute('x2', Math.min(ax + 92, bx));
+      aArrow.setAttribute('y1', 73); aArrow.setAttribute('y2', 73);
+      bArrow.setAttribute('x1', bx); bArrow.setAttribute('x2', Math.max(bx - 38, ax + 52));
+      bArrow.setAttribute('y1', 73); bArrow.setAttribute('y2', 73);
+      phaseLabel.textContent = 'BEFORE';
+      phaseLabel.setAttribute('fill', '#c8553d');
+      paOut.textContent = (mA * viA).toFixed(2);
+      pbOut.textContent = (mB * viB).toFixed(2);
+    } else if (cycle < 2.8) {
+      aBox.setAttribute('x', 150); bBox.setAttribute('x', 200);
+      phaseLabel.textContent = 'COLLISION';
+      phaseLabel.setAttribute('fill', '#d4a017');
+    } else {
+      var dt = cycle - 2.8;
+      var mx = 150 + vfAB * dt * 32;
+      aBox.setAttribute('x', mx); bBox.setAttribute('x', mx + 52);
+      aArrow.setAttribute('x1', mx + 52); aArrow.setAttribute('x2', mx + 52 + vfAB * 25);
+      aArrow.setAttribute('y1', 73); aArrow.setAttribute('y2', 73);
+      bArrow.setAttribute('x1', mx + 104); bArrow.setAttribute('x2', mx + 104 + vfAB * 25);
+      bArrow.setAttribute('y1', 73); bArrow.setAttribute('y2', 73);
+      phaseLabel.textContent = 'AFTER';
+      phaseLabel.setAttribute('fill', '#4a6b5c');
+      paOut.textContent = (mA * vfAB).toFixed(2);
+      pbOut.textContent = (mB * vfAB).toFixed(2);
+    }
+    pLabel.textContent = 'p_total = ' + totalP.toFixed(2) + ' kg·m/s';
+    ptOut.textContent = totalP.toFixed(2);
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+</script>
+</body>
+</html>
