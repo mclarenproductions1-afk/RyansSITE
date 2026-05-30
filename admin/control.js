@@ -37,7 +37,8 @@
     try {
       var r = await fetch(_API + path + '?_=' + Date.now(), {
         headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json' },
-        cache: 'no-store'
+        cache: 'no-store',
+        keepalive: true
       });
       if (!r.ok) return null;
       var j = await r.json();
@@ -56,7 +57,8 @@
     return fetch(_API + path, {
       method: 'PUT',
       headers: { Authorization: 'Bearer ' + TOKEN, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      keepalive: true
     });
   }
 
@@ -261,6 +263,12 @@
   // Sync activity on page visibility change
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) scheduleActivitySync();
+    // Flush pending balance sync immediately when tab is hidden/closed
+    if (document.hidden && _balTimer) {
+      clearTimeout(_balTimer);
+      _balTimer = null;
+      _syncNow();
+    }
   });
 
 })();

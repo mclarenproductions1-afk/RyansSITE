@@ -310,7 +310,7 @@ main {
     <div style="font-size:48px">😿</div>
     <h2>You're broke!</h2>
     <p>All out of money. Better luck next time.</p>
-    <button class="restart-btn" id="restart-btn">Start over with $100</button>
+    <button class="restart-btn" id="restart-btn">Start over with $1,000</button>
   </div>
 
   <!-- Paytable -->
@@ -360,7 +360,7 @@ const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
 // ── State ──────────────────────────────────────────────────────────────────
 
-let balance     = window.RYS ? window.RYS.bal() : 1000;
+let balance     = parseInt(localStorage.getItem('rys-bal') || '0', 10); if (!balance || balance < 1) balance = 1000;
 let bet         = 10;
 let spinning    = false;
 let toastTimer  = null;
@@ -376,6 +376,7 @@ function showToast(msg) {
 }
 
 function saveBalance() {
+  localStorage.setItem('rys-bal', String(balance));
   if (window.RYS) window.RYS.setBal(balance);
   document.getElementById('balance-display').textContent = '$' + balance;
 }
