@@ -2,7 +2,7 @@
   "username": "sh00taface",
   "passwordHash": "ba7f3c2c4176b61fb5c2fb0e6ed073590bebda4ffd9a0cb35d8c1327b7fced88",
   "created": 1780010804317,
-  "lastActive": 1780153652596,
+  "lastActive": 1780153654348,
   "lastPage": "/gf/shop",
   "balance": 999999588831472100000,
   "inventory": [
@@ -77,7 +77,8 @@
     "pants_1_5",
     "pants_1_4",
     "pants_1_3",
-    "pants_1_2"
+    "pants_1_2",
+    "pants_1_1"
   ],
   "equipped": {
     "headwear": "headwear_0_2",
