@@ -2,7 +2,7 @@
   "username": "sh00taface",
   "passwordHash": "ba7f3c2c4176b61fb5c2fb0e6ed073590bebda4ffd9a0cb35d8c1327b7fced88",
   "created": 1780010804317,
-  "lastActive": 1780153532826,
+  "lastActive": 1780153535193,
   "lastPage": "/gf/shop",
   "balance": 999999588831472100000,
   "inventory": [
@@ -27,7 +27,8 @@
     "glasses_3_3",
     "glasses_3_0",
     "glasses_2_3",
-    "glasses_2_2"
+    "glasses_2_2",
+    "glasses_2_1"
   ],
   "equipped": {
     "headwear": "headwear_0_2",
