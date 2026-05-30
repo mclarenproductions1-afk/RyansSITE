@@ -1,13 +1,13 @@
 {
   "reload_at": 1780013297317,
   "banner": {
-    "enabled": false,
-    "text": "",
-    "type": "info"
+    "enabled": true,
+    "text": "Added phsycis study page",
+    "type": "error"
   },
   "maintenance": {
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-29T00:12:51.074Z"
+  "updated_at": "2026-05-30T03:23:16.980Z"
 }
