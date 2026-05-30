@@ -1289,6 +1289,7 @@ document.getElementById('btn-enter-den').addEventListener('click', () => {
 
 document.getElementById('btn-edit-fursona').addEventListener('click', () => {
   inHangout = false;
+  keys = {}; isMoving = false;
   cancelAnimationFrame(animFrame);
   showScreen('customize');
   initCustomize();

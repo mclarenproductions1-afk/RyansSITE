@@ -1209,7 +1209,7 @@ function init() {
 
   const codeInput = document.getElementById("inp-code");
   codeInput.addEventListener("input", e => {
-    e.target.value = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, "");
+    e.target.value = e.target.value.toUpperCase().replace(/[^ABCDEFGHJKLMNPQRSTUVWXYZ23456789]/g, "");
   });
   codeInput.addEventListener("keydown", e => {
     if (e.key === "Enter") onJoinGame();
