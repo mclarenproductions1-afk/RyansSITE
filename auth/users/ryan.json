@@ -2,9 +2,9 @@
   "username": "ryan",
   "passwordHash": "1137e4f23b9d562f3723dd1dcc505d4c480a7d4da788ba34ec9af4e279f2bd1f",
   "created": 1779951379361,
-  "lastActive": 1780197583642,
+  "lastActive": 1780272230469,
   "lastPage": "/",
-  "balance": 6767676767,
+  "balance": null,
   "inventory": [
     "headwear_0_3",
     "headwear_0_2",
