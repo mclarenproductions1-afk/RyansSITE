@@ -1,147 +1,27 @@
 {
-  "status": "showdown",
+  "status": "waiting",
   "players": [
     null,
-    {
-      "name": "sh00taface",
-      "chips": 499993880,
-      "bet": 0,
-      "hand": [
-        "7s",
-        "Qs"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "Wins!",
-      "joinedAt": "2026-05-29T00:10:52.820Z"
-    },
+    null,
     null,
     null,
     null,
     null
   ],
-  "queue": [
-    {
-      "name": "dad",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-05-29T00:16:58.726Z"
-    },
-    {
-      "name": "nig lord",
-      "chips": 520,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-05-29T00:18:12.608Z"
-    },
-    {
-      "name": "caedo_the_potato",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-05-29T04:11:24.876Z"
-    },
-    {
-      "name": "dih",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-06-01T08:29:43.586Z"
-    }
-  ],
-  "handNum": 4,
+  "queue": [],
+  "handNum": 0,
   "dealer": 0,
-  "phase": "showdown",
-  "deck": [
-    "4h",
-    "6c",
-    "9h",
-    "5h",
-    "10s",
-    "3c",
-    "5s",
-    "5c",
-    "2h",
-    "8c",
-    "Ks",
-    "9c",
-    "2d",
-    "4c",
-    "Qh",
-    "Kc",
-    "9d",
-    "Jh",
-    "3d",
-    "4s",
-    "10d",
-    "6d",
-    "Kh",
-    "7h",
-    "3h",
-    "Jd",
-    "9s",
-    "10h",
-    "As",
-    "Kd",
-    "4d",
-    "6h",
-    "8d",
-    "Qc",
-    "10c",
-    "6s",
-    "Qd",
-    "Js",
-    "Jc",
-    "Ac",
-    "3s",
-    "Ah",
-    "2s",
-    "8h"
-  ],
-  "communityCards": [
-    "2c",
-    "7d",
-    "5d",
-    "Ad"
-  ],
+  "phase": "waiting",
+  "deck": [],
+  "communityCards": [],
   "pot": 0,
   "sidePots": [],
   "currentBet": 0,
   "minRaise": 20,
   "currentTurn": -1,
-  "turnStartedAt": "2026-05-29T00:14:36.741Z",
-  "lastAggressor": 0,
-  "roundStartPlayer": 0,
+  "turnStartedAt": null,
+  "lastAggressor": -1,
+  "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-06-01T08:29:43.586Z",
-  "lastWinners": [
-    {
-      "slot": 0,
-      "hand": "Pair",
-      "amount": 7120
-    },
-    {
-      "slot": 1,
-      "hand": "Pair",
-      "amount": 7120
-    }
-  ]
+  "updatedAt": "2026-06-01T08:36:26.142Z"
 }
