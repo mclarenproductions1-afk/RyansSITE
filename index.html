@@ -470,6 +470,19 @@ if (sessionStorage.getItem('hide-updates')) {
     return d2;
   }
 
+  function fmtLb(n) {
+    if (!n || n <= 0) return '$0';
+    if (n < 1e3)  return '$' + Math.floor(n).toLocaleString();
+    if (n < 1e6)  return '$' + (n / 1e3).toFixed(1)  + 'K';
+    if (n < 1e9)  return '$' + (n / 1e6).toFixed(2)  + 'M';
+    if (n < 1e12) return '$' + (n / 1e9).toFixed(2)  + 'B';
+    if (n < 1e15) return '$' + (n / 1e12).toFixed(2) + 'T';
+    const exp = Math.floor(Math.log10(n));
+    return '$' + (n / Math.pow(10, exp)).toFixed(2) + '\u00d710^' + exp;
+  }
+
+  const DISP_GROWTH_LB = 0.005;
+
   async function loadLeaderboard() {
     const lbBody = document.getElementById('lb-body');
     try {
@@ -480,7 +493,17 @@ if (sessionStorage.getItem('hide-updates')) {
       }
       const users = await Promise.all(idx.users.map(async u => {
         const data = await syncRead('ryanssite-user-' + u, 'auth/users/' + u + '.json');
-        return { name: u, bal: data ? (data.balance || 0) : 0 };
+        let bal = 0;
+        if (data) {
+          if (data.dispBal && data.dispBalTs) {
+            // Apply offline growth since last sync so numbers feel live
+            const secs = Math.min((Date.now() - data.dispBalTs) / 1000, 86400);
+            bal = data.dispBal * Math.pow(1 + DISP_GROWTH_LB, secs);
+          } else {
+            bal = data.balance || 0;
+          }
+        }
+        return { name: u, bal: bal };
       }));
       users.sort((a, b) => b.bal - a.bal);
       const top = users.slice(0, 10);
@@ -488,7 +511,7 @@ if (sessionStorage.getItem('hide-updates')) {
         `<div class="leaderboard-row">
           <span class="lb-rank">${i + 1}</span>
           <span class="lb-name">${u.name}</span>
-          <span class="lb-bal">$${u.bal.toLocaleString()}</span>
+          <span class="lb-bal">${fmtLb(u.bal)}</span>
         </div>`
       ).join('');
     } catch(e) {
@@ -497,9 +520,13 @@ if (sessionStorage.getItem('hide-updates')) {
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', loadLeaderboard);
+    document.addEventListener('DOMContentLoaded', function() {
+      loadLeaderboard();
+      setInterval(loadLeaderboard, 90000); // refresh every 90s
+    });
   } else {
     loadLeaderboard();
+    setInterval(loadLeaderboard, 90000);
   }
 })();
 </script>

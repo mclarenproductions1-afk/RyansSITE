@@ -62,6 +62,31 @@
     });
   }
 
+  // ── Ably helpers (safe — no-op if SDK not loaded on this page) ─────────────
+  var ABLY_KEY  = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+  var _ablyInst = null;
+  function _getAbly() {
+    if (_ablyInst) return _ablyInst;
+    if (!window.Ably) return null;
+    try { _ablyInst = new window.Ably.Realtime({ key: ABLY_KEY }); } catch(_) {}
+    return _ablyInst;
+  }
+  function _ablyPub(ch, data) {
+    try { var a = _getAbly(); if (a) a.channels.get(ch).publish('state', data, function(){}); } catch(_) {}
+  }
+  function _ablyReadLatest(ch) {
+    return new Promise(function(resolve) {
+      try {
+        var a = _getAbly();
+        if (!a) { resolve(null); return; }
+        a.channels.get(ch).history({ limit: 1 }, function(err, page) {
+          if (err || !page || !page.items.length) resolve(null);
+          else resolve(page.items[0].data);
+        });
+      } catch(_) { resolve(null); }
+    });
+  }
+
   // ── Infinite money mode (game logic still sees ∞, display counter grows exponentially) ──
   localStorage.setItem(BAL, '∞');
 
@@ -122,13 +147,21 @@
     }, DISP_TICK_MS);
   }
 
-  // ── Balance sync (debounced 2 min — keeps GitHub Pages deployments from being cancelled) ──
-  var _balTimer = null;
+  // ── Balance sync ───────────────────────────────────────────────────────────
+  var _balTimer  = null;
+  var _winTimer  = null;
   var _lastSyncTime = 0;
 
+  // Debounced 2-min sync (for non-win activity)
   function scheduleBalSync() {
     if (_balTimer) clearTimeout(_balTimer);
     _balTimer = setTimeout(function() { _balTimer = null; _syncNow(); }, 120000);
+  }
+
+  // Fast sync after a win (15s debounce — quick enough to feel live)
+  function scheduleWinSync() {
+    if (_winTimer) clearTimeout(_winTimer);
+    _winTimer = setTimeout(function() { _winTimer = null; _syncNow(); }, 15000);
   }
 
   // ── Activity sync (throttled 5 min) ───────────────────────────────────────
@@ -140,6 +173,7 @@
     _syncNow();
   }
 
+  // ── Write user data to GitHub + Ably ──────────────────────────────────────
   async function _syncNow() {
     var s = getSession();
     if (!s || s.exp <= Date.now()) return;
@@ -147,13 +181,42 @@
     var filePath = 'auth/users/' + encodeURIComponent(u) + '.json';
     var res = await ghGet(filePath);
     if (!res) return;
-    var storedBal = localStorage.getItem(BAL);
+    var dispNow = _dispRaw();
     var updated = Object.assign({}, res.data, {
-      balance: storedBal === '∞' ? Infinity : (parseInt(storedBal || '1000', 10) || 1000),
+      balance:    Math.floor(dispNow),   // real number for leaderboard (never Infinity/null)
+      dispBal:    dispNow,               // full precision for cross-device restore
+      dispBalTs:  Date.now(),            // timestamp so offline growth can be applied on restore
       lastActive: Date.now(),
-      lastPage: location.pathname
+      lastPage:   location.pathname
     });
-    ghPut(filePath, updated, res.sha, 'sync: ' + u);
+    await ghPut(filePath, updated, res.sha, 'sync: ' + u);
+    _ablyPub('ryanssite-user-' + u, updated);   // instant push to all other tabs/devices
+  }
+
+  // ── Restore display balance from server on page load ──────────────────────
+  async function _initLoadFromServer() {
+    var s = getSession();
+    if (!s || s.exp <= Date.now()) return;
+    var u = s.u;
+    // Try Ably first (sub-second), fall back to GitHub
+    var data = await _ablyReadLatest('ryanssite-user-' + u);
+    if (!data) {
+      var res = await ghGet('auth/users/' + encodeURIComponent(u) + '.json');
+      data = res ? res.data : null;
+    }
+    if (!data) return;
+    // Compute server balance with offline growth since last sync
+    var serverBal = 0;
+    if (data.dispBal && data.dispBalTs) {
+      var secs = Math.min((Date.now() - data.dispBalTs) / 1000, 86400);
+      serverBal = data.dispBal * Math.pow(1 + DISP_GROWTH, secs);
+    } else if (data.balance) {
+      serverBal = data.balance;
+    }
+    // Only update local if server is ahead (prevents going backwards)
+    if (serverBal > _dispRaw()) {
+      _dispSave(serverBal);
+    }
   }
 
   // ── Hook toast utility ─────────────────────────────────────────────────────
@@ -249,6 +312,7 @@
       if (s === 5)  setTimeout(function(){ hookToast('🔥🔥 5-win streak! You\'re on fire!', '#f59e0b', '#111'); }, 800);
       if (s === 10) setTimeout(function(){ hookToast('🔥🔥🔥 10-WIN STREAK! Unstoppable!', '#ef4444', '#fff', 5000); }, 800);
       if (s > 10 && s % 5 === 0) setTimeout(function(){ hookToast('💀 ' + s + '-win streak. Legendary.', '#111', '#fff', 4000); }, 800);
+      scheduleWinSync();
     },
     trackLoss: function() {
       localStorage.setItem(STREAK_KEY, '0');
@@ -258,6 +322,7 @@
     },
     addWin: function(amount) {
       _dispSave(_dispRaw() + amount);
+      scheduleWinSync();
     },
     toast: hookToast,
     logout: function() {
@@ -399,10 +464,17 @@
     injectGamblingPrompt();
     checkDaily();
     startSocialProof();
-    startDispTicker();
     if (isLoggedIn()) {
       _lastActivity = Date.now();
-      _syncNow();
+      // Load saved balance from server first, then start ticker with correct value
+      _initLoadFromServer().then(function() {
+        startDispTicker();
+        _syncNow();
+      });
+      // Periodic sync every 5 minutes
+      setInterval(function() { if (isLoggedIn()) _syncNow(); }, 300000);
+    } else {
+      startDispTicker();
     }
   }
 
