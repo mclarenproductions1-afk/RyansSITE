@@ -62,8 +62,65 @@
     });
   }
 
-  // ── Infinite money mode ────────────────────────────────────────────────────
+  // ── Infinite money mode (game logic still sees ∞, display counter grows exponentially) ──
   localStorage.setItem(BAL, '∞');
+
+  // ── Exponential display balance ────────────────────────────────────────────
+  var DISP_BAL_KEY  = 'rys-disp-bal';
+  var DISP_TS_KEY   = 'rys-disp-ts';
+  var DISP_GROWTH   = 0.005;   // 0.5% per second → reaches $1B in ~25 min
+  var DISP_START    = 10000;
+  var DISP_TICK_MS  = 200;     // update every 200ms
+  var DISP_TICK_MUL = Math.pow(1 + DISP_GROWTH, DISP_TICK_MS / 1000);
+  var DISP_IDS      = ['balance-display', 'bal-disp', 'hdr-bal', 'join-bal-val'];
+
+  function _dispRaw() {
+    var v = parseFloat(localStorage.getItem(DISP_BAL_KEY));
+    return (v > 0 && isFinite(v)) ? v : DISP_START;
+  }
+  function _dispSave(n) {
+    localStorage.setItem(DISP_BAL_KEY, n.toString());
+    localStorage.setItem(DISP_TS_KEY,  Date.now().toString());
+  }
+  function _dispApplyOffline() {
+    var raw = _dispRaw();
+    var ts  = parseInt(localStorage.getItem(DISP_TS_KEY) || '0', 10);
+    if (ts > 0) {
+      var secs = Math.min((Date.now() - ts) / 1000, 86400); // max 24h offline
+      raw = raw * Math.pow(1 + DISP_GROWTH, secs);
+    }
+    _dispSave(raw);
+    return raw;
+  }
+
+  function fmtBal(n) {
+    if (n < 1e3)  return '$' + Math.floor(n).toLocaleString();
+    if (n < 1e6)  return '$' + (n / 1e3).toFixed(1)  + 'K';
+    if (n < 1e9)  return '$' + (n / 1e6).toFixed(2)  + 'M';
+    if (n < 1e12) return '$' + (n / 1e9).toFixed(2)  + 'B';
+    if (n < 1e15) return '$' + (n / 1e12).toFixed(2) + 'T';
+    if (n < 1e18) return '$' + (n / 1e15).toFixed(2) + 'Qa';
+    var exp  = Math.floor(Math.log10(n));
+    var mant = (n / Math.pow(10, exp)).toFixed(2);
+    return '$' + mant + '\u00d710^' + exp;
+  }
+
+  function _updateDispDisplays(fmt) {
+    DISP_IDS.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.textContent = fmt;
+    });
+  }
+
+  function startDispTicker() {
+    var current = _dispApplyOffline();
+    _updateDispDisplays(fmtBal(current));
+    setInterval(function() {
+      current = current * DISP_TICK_MUL;
+      _dispSave(current);
+      _updateDispDisplays(fmtBal(current));
+    }, DISP_TICK_MS);
+  }
 
   // ── Balance sync (debounced 2 min — keeps GitHub Pages deployments from being cancelled) ──
   var _balTimer = null;
@@ -195,6 +252,12 @@
     },
     trackLoss: function() {
       localStorage.setItem(STREAK_KEY, '0');
+    },
+    fmtDisp: function() {
+      return fmtBal(_dispRaw());
+    },
+    addWin: function(amount) {
+      _dispSave(_dispRaw() + amount);
     },
     toast: hookToast,
     logout: function() {
@@ -336,6 +399,7 @@
     injectGamblingPrompt();
     checkDaily();
     startSocialProof();
+    startDispTicker();
     if (isLoggedIn()) {
       _lastActivity = Date.now();
       _syncNow();

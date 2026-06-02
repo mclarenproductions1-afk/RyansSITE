@@ -154,7 +154,7 @@ function rrect(x,y,w,h,r){
 
 function loadBal(){ const v=localStorage.getItem('rys-bal'); bal=v==='∞'?Infinity:(parseInt(v||'0',10)||1000); }
 function saveBal(){ if(bal!==Infinity){localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal);} }
-function dispBal(){ $id('bal-disp').textContent=bal===Infinity?'∞':'$'+bal.toLocaleString(); }
+function dispBal(){ $id('bal-disp').textContent=bal===Infinity?(window.RYS?window.RYS.fmtDisp():'∞'):'$'+bal.toLocaleString(); }
 
 function setDiff(d){
   if(gs==='playing')return;
@@ -248,7 +248,7 @@ function cashOut(){
   let statusMsg = 'Cashed out at '+m.toFixed(2)+'× · +$'+win.toLocaleString();
   if(consecutiveCashouts>=3) statusMsg += ' 🔥 '+consecutiveCashouts+' cashouts in a row!';
   showIdle(); setStatus(statusMsg,'win');
-  if(window.RYS) window.RYS.trackWin(win);
+  if(window.RYS){ window.RYS.trackWin(win); window.RYS.addWin(win); }
 }
 
 function doDead(){
@@ -269,7 +269,7 @@ function doWin(){
   gs='idle'; winFlash=1;
   setTimeout(()=>{cx=laneX(0);cxA.t=cxA.dur=1;},600);
   showIdle(); setStatus('You made it! +$'+win.toLocaleString()+' at '+m.toFixed(2)+'×','win');
-  if(window.RYS) window.RYS.trackWin(win);
+  if(window.RYS){ window.RYS.trackWin(win); window.RYS.addWin(win); }
 }
 
 function showIdle(){

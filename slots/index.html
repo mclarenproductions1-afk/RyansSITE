@@ -434,7 +434,9 @@ function saveBalance() {
     localStorage.setItem('rys-bal', String(balance));
     if (window.RYS) window.RYS.setBal(balance);
   }
-  document.getElementById('balance-display').textContent = balance === Infinity ? '∞' : '$' + balance;
+  document.getElementById('balance-display').textContent = balance === Infinity
+    ? (window.RYS ? window.RYS.fmtDisp() : '∞')
+    : '$' + balance;
 }
 
 function pickSymbol() {
@@ -552,6 +554,7 @@ function showResult(win, betAmt) {
     updateSessionData(true, winAmt);
     if (window.RYS) {
       window.RYS.trackWin(winAmt);
+      window.RYS.addWin(winAmt);
       const streak = window.RYS.streak();
       if (streak > 1) setTimeout(() => showToast('🔥 ' + streak + '-win streak!'), 900);
     }
@@ -564,6 +567,7 @@ function showResult(win, betAmt) {
     updateSessionData(true, winAmt);
     if (window.RYS) {
       window.RYS.trackWin(winAmt);
+      window.RYS.addWin(winAmt);
       const streak = window.RYS.streak();
       if (streak > 1) setTimeout(() => showToast('🔥 ' + streak + '-win streak!'), 700);
     }

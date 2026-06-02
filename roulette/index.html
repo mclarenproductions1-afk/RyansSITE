@@ -294,7 +294,9 @@ function saveBal() {
   }
 }
 function dispBal() {
-  const s = bal === Infinity ? '∞' : '$' + bal.toLocaleString();
+  const s = bal === Infinity
+    ? (window.RYS ? window.RYS.fmtDisp() : '∞')
+    : '$' + bal.toLocaleString();
   document.getElementById('bal-disp').textContent = s;
   document.getElementById('hdr-bal').textContent = s;
 }
@@ -390,6 +392,7 @@ function spin() {
         setResult(null, `+$${win.toLocaleString()} · ${mult}× payout`, 'win');
         if (window.RYS) {
           window.RYS.trackWin(win);
+          window.RYS.addWin(win);
           const streak = window.RYS.streak();
           if (streak >= 3) setTimeout(() => { if (window.RYS && window.RYS.toast) window.RYS.toast('🔥 ' + streak + '-win streak!', '#f5c842', '#111'); }, 600);
         }
@@ -420,11 +423,10 @@ renderRR(); renderStreak(loadRR());
 </script>
 <script src="/admin/control.js?v=2"></script>
 <script>
-// Re-sync balance display after control.js loads
+// Re-sync balance display after control.js loads (ticker takes over from here)
 (function() {
   function refresh() {
-    const v = localStorage.getItem('rys-bal');
-    const s = v === '∞' ? '∞' : ('$' + (parseInt(v || '0', 10) || 0).toLocaleString());
+    const s = window.RYS ? window.RYS.fmtDisp() : '—';
     const d = document.getElementById('bal-disp');
     const h = document.getElementById('hdr-bal');
     if (d) d.textContent = s;
