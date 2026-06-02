@@ -1,13 +1,13 @@
 {
   "reload_at": 1780013297317,
   "banner": {
-    "enabled": false,
-    "text": "Added phsycis study page",
-    "type": "error"
+    "enabled": true,
+    "text": "𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸",
+    "type": "info"
   },
   "maintenance": {
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-05-31T23:42:38.082Z"
+  "updated_at": "2026-06-02T02:42:10.247Z"
 }
