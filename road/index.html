@@ -87,7 +87,10 @@ canvas { display:block; width:100%; height:100%; }
     </div>
   </div>
   <div class="sp"></div>
-  <div class="status" id="status">Place a bet and hit Start</div>
+  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+    <div class="status" id="status">Place a bet and hit Start</div>
+    <div id="session-best" style="font-size:10px;color:var(--muted);font-weight:500;letter-spacing:0.02em;"></div>
+  </div>
   <button class="btn btn-start" id="btn-start"  onclick="startGame()">Start Game</button>
   <button class="btn btn-hop"   id="btn-hop"    onclick="hop()"     style="display:none">HOP →</button>
   <button class="btn btn-co"    id="btn-co"     onclick="cashOut()" style="display:none" disabled>Cash Out</button>
@@ -96,10 +99,10 @@ canvas { display:block; width:100%; height:100%; }
 'use strict';
 
 const DIFF = {
-  easy:      { n:1, spd:0.38, mults:[1.10,1.22,1.36,1.52,1.70,1.91,2.14,2.40] },
-  medium:    { n:1, spd:0.65, mults:[1.25,1.56,1.95,2.44,3.05,3.81,4.76,5.95] },
-  hard:      { n:2, spd:1.00, mults:[1.50,2.25,3.38,5.06,7.59,11.4,17.1,25.6] },
-  daredevil: { n:2, spd:1.75, mults:[2.00,4.00,8.00,16.0,32.0,64.0,128.,256.] },
+  easy:      { n:2, spd:0.55, mults:[1.02,1.04,1.07,1.10,1.14,1.18,1.23,1.28] },
+  medium:    { n:3, spd:0.90, mults:[1.05,1.12,1.20,1.30,1.42,1.56,1.72,1.90] },
+  hard:      { n:4, spd:1.30, mults:[1.10,1.22,1.36,1.52,1.70,1.91,2.14,2.40] },
+  daredevil: { n:5, spd:2.00, mults:[1.25,1.56,1.95,2.44,3.05,3.81,4.76,5.95] },
 };
 
 const LANE_DEF = [
@@ -134,6 +137,7 @@ let cx, cyArc=0, landFlash=0;
 let cxA={from:0,to:0,t:1,dur:1};
 let deathTimer=0, deathAlpha=0, shakeT=0, winFlash=0;
 let lastTs=0;
+let consecutiveCashouts=0, sessionBest=0;
 
 function $id(id){ return document.getElementById(id); }
 function easeOut(t){ return 1-(1-t)*(1-t); }
@@ -148,9 +152,9 @@ function rrect(x,y,w,h,r){
   ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
 }
 
-function loadBal(){ bal=parseInt(localStorage.getItem('rys-bal')||'0',10); if(!bal||bal<1)bal=1000; }
-function saveBal(){ localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal); }
-function dispBal(){ $id('bal-disp').textContent='$'+bal.toLocaleString(); }
+function loadBal(){ const v=localStorage.getItem('rys-bal'); bal=v==='∞'?Infinity:(parseInt(v||'0',10)||1000); }
+function saveBal(){ if(bal!==Infinity){localStorage.setItem('rys-bal',String(bal)); if(window.RYS)window.RYS.setBal(bal);} }
+function dispBal(){ $id('bal-disp').textContent=bal===Infinity?'∞':'$'+bal.toLocaleString(); }
 
 function setDiff(d){
   if(gs==='playing')return;
@@ -212,9 +216,9 @@ function updateChicken(dt){
 
 function startGame(){
   const inp=parseInt($id('bet-inp').value,10)||10;
-  bet=Math.max(1,Math.min(bal,inp));
-  if(bal<1){setStatus('No balance!');return;}
-  bal-=bet; saveBal(); dispBal();
+  bet=Math.max(1, bal===Infinity ? inp : Math.min(bal,inp));
+  if(bal!==Infinity && bal<1){setStatus('No balance!');return;}
+  if(bal!==Infinity){ bal-=bet; saveBal(); dispBal(); }
   lane=0; deathTimer=0; deathAlpha=0; shakeT=0; winFlash=0; landFlash=0;
   buildCars();
   cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0;
@@ -235,27 +239,37 @@ function cashOut(){
   if(gs!=='playing'||lane===0||isAnimating())return;
   const m=DIFF[diff].mults[lane-1];
   const win=Math.floor(bet*m);
-  bal+=win; saveBal(); dispBal();
+  if(bal!==Infinity){ bal+=win; saveBal(); dispBal(); }
+  if(win>sessionBest){ sessionBest=win; }
+  consecutiveCashouts++;
   gs='idle';
   animHop(laneX(0),0.28);
   setTimeout(()=>{cx=laneX(0);cxA.t=cxA.dur=1;},380);
-  showIdle(); setStatus('Cashed out at '+m.toFixed(2)+'× · +$'+win.toLocaleString(),'win');
+  let statusMsg = 'Cashed out at '+m.toFixed(2)+'× · +$'+win.toLocaleString();
+  if(consecutiveCashouts>=3) statusMsg += ' 🔥 '+consecutiveCashouts+' cashouts in a row!';
+  showIdle(); setStatus(statusMsg,'win');
+  if(window.RYS) window.RYS.trackWin(win);
 }
 
 function doDead(){
   if(gs==='dead'||gs==='idle')return;
   gs='dead'; deathTimer=0.9; deathAlpha=1; shakeT=0.4;
-  cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0; // snap back to start immediately
+  cx=laneX(0); cxA.t=cxA.dur=1; cyArc=0;
+  consecutiveCashouts=0;
   showIdle(); setStatus('Splat! Lost $'+bet.toLocaleString(),'lose');
+  if(window.RYS) window.RYS.trackLoss();
 }
 
 function doWin(){
   const m=DIFF[diff].mults[NL-1];
   const win=Math.floor(bet*m);
-  bal+=win; saveBal(); dispBal();
+  if(bal!==Infinity){ bal+=win; saveBal(); dispBal(); }
+  if(win>sessionBest){ sessionBest=win; }
+  consecutiveCashouts++;
   gs='idle'; winFlash=1;
   setTimeout(()=>{cx=laneX(0);cxA.t=cxA.dur=1;},600);
   showIdle(); setStatus('You made it! +$'+win.toLocaleString()+' at '+m.toFixed(2)+'×','win');
+  if(window.RYS) window.RYS.trackWin(win);
 }
 
 function showIdle(){
@@ -281,7 +295,11 @@ function updMult(){
   $id('mult-sub').textContent='Cash out: $'+Math.floor(bet*m).toLocaleString();
   $id('btn-co').disabled=false;
 }
-function setStatus(txt,cls){ const el=$id('status'); el.textContent=txt; el.className='status'+(cls?' '+cls:''); }
+function setStatus(txt,cls){
+  const el=$id('status'); el.textContent=txt; el.className='status'+(cls?' '+cls:'');
+  const sb=$id('session-best');
+  if(sb && sessionBest>0) sb.textContent='Best: $'+sessionBest.toLocaleString();
+}
 function adjBet(f){ const i=$id('bet-inp'); i.value=Math.max(1,Math.min(bal,Math.floor((parseFloat(i.value)||10)*f))); }
 function maxBet(){ $id('bet-inp').value=bal; }
 

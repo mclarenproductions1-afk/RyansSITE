@@ -147,9 +147,51 @@ main {
   to   { opacity: 1; transform: none; }
 }
 .result-area .result-msg { animation: result-in 0.25s ease-out; }
-.result-area .win   { color: #111; }
+.result-area .win     { color: #111; }
 .result-area .jackpot { color: #111; }
-.result-area .lose  { color: var(--muted); font-weight: 400; }
+.result-area .lose    { color: var(--muted); font-weight: 400; }
+.result-area .near    { color: #f59e0b; font-weight: 700; }
+
+/* ── Near-miss reel highlight ────────────────────────────────────── */
+@keyframes near-pulse {
+  0%,100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(245,158,11,0.15); }
+}
+.reel.near-winner { animation: near-pulse 0.7s ease-in-out 3; border-color: #f59e0b; }
+
+/* ── Result history dots ─────────────────────────────────────────── */
+.slot-history {
+  display: flex; gap: 5px; justify-content: center;
+  min-height: 12px; margin-top: 10px; flex-wrap: wrap;
+}
+.hist-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  transition: transform 0.15s;
+}
+.hist-dot.jackpot { background: #f5c842; box-shadow: 0 0 4px #f5c84288; }
+.hist-dot.win  { background: #22c55e; }
+.hist-dot.near { background: #f59e0b; }
+.hist-dot.loss { background: #ddd; }
+@keyframes pop-in { from { transform: scale(0); } to { transform: scale(1); } }
+.hist-new { animation: pop-in 0.28s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── Session stats ───────────────────────────────────────────────── */
+.slot-session {
+  font-size: 11px; color: #bbb; text-align: center;
+  margin-top: 3px; letter-spacing: 0.01em;
+}
+
+/* ── Auto-spin button ────────────────────────────────────────────── */
+.spin-row { display: flex; gap: 8px; align-items: center; }
+.auto-btn {
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 14px 16px; font-size: 11px; font-weight: 700;
+  cursor: pointer; background: var(--bg); font-family: inherit;
+  color: var(--muted); letter-spacing: 0.06em; transition: all 0.12s;
+  white-space: nowrap;
+}
+.auto-btn:hover { border-color: #aaa; color: var(--text); }
+.auto-btn.active { background: #111; color: #fff; border-color: #111; }
 
 /* ── Floating win amount ─────────────────────────────────────────── */
 @keyframes float-up {
@@ -288,6 +330,8 @@ main {
       </div>
 
       <div class="result-area" id="result-area"></div>
+      <div class="slot-history" id="slot-history"></div>
+      <div class="slot-session" id="slot-session"></div>
     </div>
 
     <div class="controls">
@@ -297,11 +341,15 @@ main {
         <button class="bet-btn selected" data-bet="10">$10</button>
         <button class="bet-btn" data-bet="25">$25</button>
         <button class="bet-btn" data-bet="50">$50</button>
+        <button class="bet-btn" data-bet="100">$100</button>
       </div>
-      <button class="spin-btn" id="spin-btn">
-        Spin
-        <span class="spin-hint">Space</span>
-      </button>
+      <div class="spin-row">
+        <button class="spin-btn" id="spin-btn">
+          Spin
+          <span class="spin-hint">Space</span>
+        </button>
+        <button class="auto-btn" id="auto-btn">AUTO</button>
+      </div>
     </div>
   </div>
 
@@ -318,23 +366,18 @@ main {
     <div class="paytable-title">Paytable</div>
     <div class="paytable-row">
       <div class="pt-symbols" id="pt-jackpot">🐲 🐲 🐲</div>
-      <div class="pt-payout">×20</div>
+      <div class="pt-payout">×8</div>
       <div class="pt-desc">JACKPOT</div>
     </div>
     <div class="paytable-row">
       <div class="pt-symbols">Any 3 matching</div>
-      <div class="pt-payout">×8</div>
-      <div class="pt-desc">Big win</div>
+      <div class="pt-payout">×3</div>
+      <div class="pt-desc">Win</div>
     </div>
     <div class="paytable-row">
-      <div class="pt-symbols">Any 2 matching</div>
-      <div class="pt-payout">×2</div>
-      <div class="pt-desc">Small win</div>
-    </div>
-    <div class="paytable-row">
-      <div class="pt-symbols">No match</div>
+      <div class="pt-symbols">Anything else</div>
       <div class="pt-payout">×0</div>
-      <div class="pt-desc">Lose bet</div>
+      <div class="pt-desc">Lose</div>
     </div>
   </div>
 
@@ -348,22 +391,33 @@ main {
 // ── Config ─────────────────────────────────────────────────────────────────
 
 const SYMBOLS = [
-  { key: 'fox',    label: 'Fox',    emoji: '🦊', weight: 30 },
-  { key: 'wolf',   label: 'Wolf',   emoji: '🐺', weight: 25 },
-  { key: 'cat',    label: 'Cat',    emoji: '🐱', weight: 25 },
-  { key: 'bunny',  label: 'Bunny',  emoji: '🐰', weight: 20 },
-  { key: 'deer',   label: 'Deer',   emoji: '🦌', weight: 12 },
-  { key: 'dragon', label: 'Dragon', emoji: '🐲', weight: 5  },
+  { key: 'fox',    label: 'Fox',    emoji: '🦊', weight: 65 },
+  { key: 'wolf',   label: 'Wolf',   emoji: '🐺', weight: 55 },
+  { key: 'cat',    label: 'Cat',    emoji: '🐱', weight: 55 },
+  { key: 'bunny',  label: 'Bunny',  emoji: '🐰', weight: 40 },
+  { key: 'deer',   label: 'Deer',   emoji: '🦌', weight: 20 },
+  { key: 'dragon', label: 'Dragon', emoji: '🐲', weight: 1  },
 ];
 
 const TOTAL_WEIGHT = SYMBOLS.reduce((s, sym) => s + sym.weight, 0);
 
+const LOSS_TAUNTS = [
+  [5,  '🌡️ Machine is heating up...'],
+  [8,  '💀 You\'re due for a win soon...'],
+  [12, '😤 SO close every time, huh?'],
+  [16, '🎰 The jackpot HAS to drop soon...'],
+  [20, '😈 Still here? Absolute respect.'],
+  [25, '👀 This machine is RIGGED... or are you?'],
+];
+
 // ── State ──────────────────────────────────────────────────────────────────
 
-let balance     = parseInt(localStorage.getItem('rys-bal') || '0', 10); if (!balance || balance < 1) balance = 1000;
-let bet         = 10;
-let spinning    = false;
-let toastTimer  = null;
+let balance          = localStorage.getItem('rys-bal') === '∞' ? Infinity : (parseInt(localStorage.getItem('rys-bal') || '0', 10) || 1000);
+let bet              = 10;
+let spinning         = false;
+let toastTimer       = null;
+let consecutiveLosses = 0;
+let autoSpinActive   = false;
 
 // ── Utils ──────────────────────────────────────────────────────────────────
 
@@ -376,9 +430,11 @@ function showToast(msg) {
 }
 
 function saveBalance() {
-  localStorage.setItem('rys-bal', String(balance));
-  if (window.RYS) window.RYS.setBal(balance);
-  document.getElementById('balance-display').textContent = '$' + balance;
+  if (balance !== Infinity) {
+    localStorage.setItem('rys-bal', String(balance));
+    if (window.RYS) window.RYS.setBal(balance);
+  }
+  document.getElementById('balance-display').textContent = balance === Infinity ? '∞' : '$' + balance;
 }
 
 function pickSymbol() {
@@ -430,40 +486,126 @@ function checkWin(results) {
   return { type: 'none', keys: results };
 }
 
+// ── Session & history tracking ──────────────────────────────────────────────
+
+const HIST_KEY = 'rys-slot-history';
+const SESS_KEY = 'rys-slot-session';
+
+function loadHistory() {
+  try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch(_) { return []; }
+}
+function pushHistory(type) {
+  const hist = loadHistory();
+  hist.push(type);
+  if (hist.length > 14) hist.shift();
+  localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  renderHistory();
+}
+function renderHistory() {
+  const hist = loadHistory();
+  const el = document.getElementById('slot-history');
+  if (!el) return;
+  el.innerHTML = '';
+  hist.forEach((t, i) => {
+    const d = document.createElement('div');
+    d.className = 'hist-dot ' + (t==='j'?'jackpot': t==='w'?'win': t==='m'?'near': 'loss');
+    if (i === hist.length - 1) d.classList.add('hist-new');
+    d.title = t==='j'?'Jackpot!': t==='w'?'Win': t==='m'?'Near miss': 'Loss';
+    el.appendChild(d);
+  });
+}
+function getSessionData() {
+  try { return JSON.parse(localStorage.getItem(SESS_KEY) || '{}'); } catch(_) { return {}; }
+}
+function updateSessionData(isWin, amount) {
+  const s = getSessionData();
+  s.spins = (s.spins || 0) + 1;
+  if (isWin) {
+    s.wins = (s.wins || 0) + 1;
+    s.biggestWin = Math.max(s.biggestWin || 0, amount);
+  }
+  localStorage.setItem(SESS_KEY, JSON.stringify(s));
+  renderSessionStats();
+}
+function renderSessionStats() {
+  const s = getSessionData();
+  const el = document.getElementById('slot-session');
+  if (!el || !s.spins) return;
+  const parts = [s.spins + ' spins', (s.wins || 0) + ' wins'];
+  if (s.biggestWin > 0) parts.push('best: $' + s.biggestWin);
+  el.textContent = 'Session · ' + parts.join(' · ');
+}
+
+// ── Win/loss result display ─────────────────────────────────────────────────
+
 function showResult(win, betAmt) {
   const area = document.getElementById('result-area');
   let html = '';
   let winAmt = 0;
 
   if (win.type === 'jackpot') {
-    winAmt = betAmt * 20;
+    winAmt = betAmt * 8;
     html = `<span class="result-msg jackpot">🎉 JACKPOT! +$${winAmt}</span>`;
     spawnJackpotBurst();
+    consecutiveLosses = 0;
+    pushHistory('j');
+    updateSessionData(true, winAmt);
+    if (window.RYS) {
+      window.RYS.trackWin(winAmt);
+      const streak = window.RYS.streak();
+      if (streak > 1) setTimeout(() => showToast('🔥 ' + streak + '-win streak!'), 900);
+    }
   } else if (win.type === 'three') {
-    winAmt = betAmt * 8;
+    winAmt = betAmt * 3;
     html = `<span class="result-msg win">🎊 Three of a kind! +$${winAmt}</span>`;
     floatWin(winAmt);
+    consecutiveLosses = 0;
+    pushHistory('w');
+    updateSessionData(true, winAmt);
+    if (window.RYS) {
+      window.RYS.trackWin(winAmt);
+      const streak = window.RYS.streak();
+      if (streak > 1) setTimeout(() => showToast('🔥 ' + streak + '-win streak!'), 700);
+    }
   } else if (win.type === 'two') {
-    winAmt = betAmt * 2;
-    html = `<span class="result-msg win">Two matching! +$${winAmt}</span>`;
-    floatWin(winAmt);
+    // Near-miss — visually tantalizing, no payout
+    html = `<span class="result-msg near">😤 SO CLOSE!</span>`;
+    consecutiveLosses++;
+    pushHistory('m');
+    updateSessionData(false, 0);
+    if (window.RYS) window.RYS.trackLoss();
+    // Highlight the matching pair in orange
+    const [a, b, c] = win.keys;
+    [[0, a===b||a===c], [1, a===b||b===c], [2, b===c||a===c]].forEach(([i, match]) => {
+      if (match) {
+        const r = document.getElementById('reel-' + i);
+        r.classList.add('near-winner');
+        setTimeout(() => r.classList.remove('near-winner'), 2200);
+      }
+    });
   } else {
-    html = `<span class="result-msg lose">No match. -$${betAmt}</span>`;
+    html = `<span class="result-msg lose">No match.</span>`;
+    consecutiveLosses++;
+    pushHistory('n');
+    updateSessionData(false, 0);
+    if (window.RYS) window.RYS.trackLoss();
   }
 
   area.innerHTML = html;
-  balance += winAmt;
-  saveBalance();
+  if (balance !== Infinity && winAmt > 0) { balance += winAmt; saveBalance(); }
 
-  // Mark winning reels
-  if (win.type !== 'none') {
+  // Win glow on all reels
+  if (win.type === 'jackpot' || win.type === 'three') {
     for (let i = 0; i < 3; i++) {
-      const reel = document.getElementById('reel-' + i);
-      if (win.type === 'jackpot' || (win.type === 'three') ||
-          (win.type === 'two' && checkPairIncludes(win.keys, i))) {
-        reel.classList.add('winner');
-        setTimeout(() => reel.classList.remove('winner'), 2600);
-      }
+      document.getElementById('reel-' + i).classList.add('winner');
+      setTimeout(() => document.getElementById('reel-' + i).classList.remove('winner'), 2600);
+    }
+  }
+
+  // Loss streak taunts
+  if (win.type !== 'jackpot' && win.type !== 'three') {
+    for (const [threshold, msg] of LOSS_TAUNTS) {
+      if (consecutiveLosses === threshold) { setTimeout(() => showToast(msg), 400); break; }
     }
   }
 }
@@ -517,27 +659,28 @@ function spawnJackpotBurst() {
 
 async function doSpin() {
   if (spinning) return;
-  if (balance < bet) {
-    showToast("not enough balance!");
-    return;
-  }
 
   spinning = true;
   document.getElementById('spin-btn').disabled = true;
   document.getElementById('result-area').innerHTML = '';
 
-  // Deduct bet
-  balance -= bet;
-  saveBalance();
+  // Deduct bet (skip if infinite)
+  if (balance !== Infinity) { balance -= bet; saveBalance(); }
 
   // Clear labels & winner classes
   for (let i = 0; i < 3; i++) {
     document.getElementById('label-' + i).textContent = '…';
-    document.getElementById('reel-' + i).classList.remove('winner');
+    document.getElementById('reel-' + i).classList.remove('winner', 'near-winner');
   }
 
   // Pick results
-  const results = [pickSymbol().key, pickSymbol().key, pickSymbol().key];
+  let results = [pickSymbol().key, pickSymbol().key, pickSymbol().key];
+
+  // Near-miss rigging: 28% of no-match spins → force a visual 2-symbol match
+  if (checkWin(results).type === 'none' && Math.random() < 0.28) {
+    if (Math.random() < 0.5) results[1] = results[0]; // match left pair
+    else                      results[2] = results[1]; // match right pair
+  }
 
   // Spin reels sequentially
   await Promise.all([
@@ -553,14 +696,19 @@ async function doSpin() {
   spinning = false;
   document.getElementById('spin-btn').disabled = false;
 
-  // Check broke
-  if (balance < Math.min(...[5, 10, 25, 50])) {
+  // Check broke (never if infinite)
+  if (balance !== Infinity && balance < Math.min(...[5, 10, 25, 50])) {
     setTimeout(checkBroke, 600);
+  }
+
+  // Auto-spin continuation
+  if (autoSpinActive) {
+    setTimeout(() => { if (autoSpinActive) doSpin(); }, 750);
   }
 }
 
 function checkBroke() {
-  if (balance <= 0) {
+  if (balance !== Infinity && balance <= 0) {
     document.getElementById('machine').classList.remove('ready');
     document.getElementById('machine').style.display = 'none';
     document.getElementById('paytable').style.display = 'none';
@@ -583,10 +731,18 @@ document.querySelectorAll('.bet-btn').forEach(btn => {
 
 document.getElementById('spin-btn').addEventListener('click', doSpin);
 
+document.getElementById('auto-btn').addEventListener('click', () => {
+  autoSpinActive = !autoSpinActive;
+  const btn = document.getElementById('auto-btn');
+  btn.textContent = autoSpinActive ? 'STOP' : 'AUTO';
+  btn.classList.toggle('active', autoSpinActive);
+  if (autoSpinActive && !spinning) doSpin();
+});
+
 document.addEventListener('keydown', e => {
   if (e.code === 'Space' && !e.repeat) {
     e.preventDefault();
-    doSpin();
+    if (!autoSpinActive) doSpin();
   }
 });
 
@@ -618,7 +774,11 @@ document.getElementById('restart-btn').addEventListener('click', () => {
   document.getElementById('paytable').style.display = '';
 
   // Check if already broke from a previous session
-  if (balance <= 0) { checkBroke(); }
+  if (balance !== Infinity && balance <= 0) { checkBroke(); }
+
+  // Restore history and session
+  renderHistory();
+  renderSessionStats();
 })();
 
 })();

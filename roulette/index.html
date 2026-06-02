@@ -40,6 +40,29 @@ main { flex:1; min-height:0; display:flex; flex-direction:column; align-items:ce
 #result-sub.win { color:var(--green); font-weight:600; }
 #result-sub.lose { color:var(--red); font-weight:600; }
 
+/* ── Recent results strip ────────────────────────────────────────── */
+#recent-results {
+  display:flex; gap:5px; align-items:center; justify-content:center;
+  flex-wrap:wrap; min-height:22px; width:100%; max-width:520px;
+}
+.rr-dot {
+  width:20px; height:20px; border-radius:50%; border:1px solid rgba(255,255,255,0.12);
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:700; flex-shrink:0;
+  transition:transform 0.15s;
+}
+.rr-dot.rr-red   { background:rgba(239,68,68,0.7); color:#fff; }
+.rr-dot.rr-black { background:rgba(80,80,80,0.7); color:#fff; }
+.rr-dot.rr-green { background:rgba(30,203,79,0.8); color:#fff; }
+@keyframes rr-pop { from { transform:scale(0); } to { transform:scale(1); } }
+.rr-new { animation:rr-pop 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+
+/* ── Streak callout ──────────────────────────────────────────────── */
+#streak-callout {
+  font-size:11px; color:var(--muted); text-align:center;
+  min-height:14px; letter-spacing:0.02em;
+}
+
 /* Bet board */
 .board { display:flex; flex-direction:column; gap:8px; width:100%; max-width:520px; flex-shrink:0; }
 .bet-row { display:flex; gap:6px; }
@@ -94,22 +117,25 @@ main { flex:1; min-height:0; display:flex; flex-direction:column; align-items:ce
     <div id="result-sub">Pick a bet and spin</div>
   </div>
 
+  <div id="recent-results"></div>
+  <div id="streak-callout"></div>
+
   <div class="board">
     <div class="bet-row">
-      <button class="bet-btn red" data-bet="red"   onclick="toggleBet('red')"  >Red (2×)</button>
-      <button class="bet-btn blk" data-bet="black" onclick="toggleBet('black')">Black (2×)</button>
-      <button class="bet-btn grn" data-bet="green" onclick="toggleBet('green')">Green (14×)</button>
+      <button class="bet-btn red" data-bet="red"   onclick="toggleBet('red')"  >Red (1.5×)</button>
+      <button class="bet-btn blk" data-bet="black" onclick="toggleBet('black')">Black (1.5×)</button>
+      <button class="bet-btn grn" data-bet="green" onclick="toggleBet('green')">Green (8×)</button>
     </div>
     <div class="bet-row">
-      <button class="bet-btn ylw" data-bet="odd"  onclick="toggleBet('odd')" >Odd (2×)</button>
-      <button class="bet-btn ylw" data-bet="even" onclick="toggleBet('even')">Even (2×)</button>
-      <button class="bet-btn purp" data-bet="low"  onclick="toggleBet('low')" >Low 1–18 (2×)</button>
-      <button class="bet-btn purp" data-bet="high" onclick="toggleBet('high')">High 19–36 (2×)</button>
+      <button class="bet-btn ylw" data-bet="odd"  onclick="toggleBet('odd')" >Odd (1.5×)</button>
+      <button class="bet-btn ylw" data-bet="even" onclick="toggleBet('even')">Even (1.5×)</button>
+      <button class="bet-btn purp" data-bet="low"  onclick="toggleBet('low')" >Low 1–18 (1.5×)</button>
+      <button class="bet-btn purp" data-bet="high" onclick="toggleBet('high')">High 19–36 (1.5×)</button>
     </div>
     <div class="bet-row" id="dozen-row">
-      <button class="bet-btn purp" data-bet="1st12" onclick="toggleBet('1st12')">1st 12 (3×)</button>
-      <button class="bet-btn purp" data-bet="2nd12" onclick="toggleBet('2nd12')">2nd 12 (3×)</button>
-      <button class="bet-btn purp" data-bet="3rd12" onclick="toggleBet('3rd12')">3rd 12 (3×)</button>
+      <button class="bet-btn purp" data-bet="1st12" onclick="toggleBet('1st12')">1st 12 (2×)</button>
+      <button class="bet-btn purp" data-bet="2nd12" onclick="toggleBet('2nd12')">2nd 12 (2×)</button>
+      <button class="bet-btn purp" data-bet="3rd12" onclick="toggleBet('3rd12')">3rd 12 (2×)</button>
     </div>
   </div>
 </main>
@@ -213,28 +239,71 @@ function landedIndex(angle) {
   return (((Math.round(raw) % N) + N) % N);
 }
 
+// ── Recent results ────────────────────────────────────────────────────────────
+const RR_KEY = 'rys-roul-history';
+function loadRR() { try { return JSON.parse(localStorage.getItem(RR_KEY) || '[]'); } catch(_) { return []; } }
+function pushRR(num) {
+  const col = num === 0 ? 'green' : RED_NUMS.has(num) ? 'red' : 'black';
+  const hist = loadRR();
+  hist.push({ num, col });
+  if (hist.length > 12) hist.shift();
+  localStorage.setItem(RR_KEY, JSON.stringify(hist));
+  renderRR();
+  renderStreak(hist);
+}
+function renderRR() {
+  const hist = loadRR();
+  const el = document.getElementById('recent-results');
+  if (!el) return;
+  el.innerHTML = '';
+  hist.forEach((r, i) => {
+    const d = document.createElement('div');
+    d.className = 'rr-dot rr-' + r.col;
+    d.textContent = r.num;
+    if (i === hist.length - 1) d.classList.add('rr-new');
+    el.appendChild(d);
+  });
+}
+function renderStreak(hist) {
+  const el = document.getElementById('streak-callout');
+  if (!el || hist.length < 2) { if (el) el.textContent = ''; return; }
+  const last = hist[hist.length - 1];
+  let streak = 1;
+  for (let i = hist.length - 2; i >= 0; i--) {
+    if (hist[i].col === last.col) streak++; else break;
+  }
+  if (streak >= 3) {
+    const label = last.col === 'green' ? '🟢 Green' : last.col === 'red' ? '🔴 Red' : '⚫ Black';
+    el.textContent = label + ' · ' + streak + ' in a row!';
+  } else {
+    el.textContent = '';
+  }
+}
+
 // ── Balance ───────────────────────────────────────────────────────────────────
 let bal = 1000;
 
 function loadBal() {
-  bal = parseInt(localStorage.getItem('rys-bal') || '0', 10);
-  if (!bal || bal < 1) bal = 1000;
+  const v = localStorage.getItem('rys-bal');
+  bal = v === '∞' ? Infinity : (parseInt(v || '0', 10) || 1000);
 }
 function saveBal() {
-  localStorage.setItem('rys-bal', String(bal));
-  if (window.RYS) window.RYS.setBal(bal);
+  if (bal !== Infinity) {
+    localStorage.setItem('rys-bal', String(bal));
+    if (window.RYS) window.RYS.setBal(bal);
+  }
 }
 function dispBal() {
-  const s = '$' + bal.toLocaleString();
+  const s = bal === Infinity ? '∞' : '$' + bal.toLocaleString();
   document.getElementById('bal-disp').textContent = s;
   document.getElementById('hdr-bal').textContent = s;
 }
 
 function adjBet(f) {
   const i = document.getElementById('bet-inp');
-  i.value = Math.max(1, Math.min(bal, Math.floor((parseFloat(i.value) || 10) * f)));
+  i.value = Math.max(1, bal === Infinity ? Math.floor((parseFloat(i.value) || 10) * f) : Math.min(bal, Math.floor((parseFloat(i.value) || 10) * f)));
 }
-function maxBet() { document.getElementById('bet-inp').value = bal; }
+function maxBet() { document.getElementById('bet-inp').value = bal === Infinity ? 1000000 : bal; }
 
 // ── Bet selection ─────────────────────────────────────────────────────────────
 let activeBet = null;
@@ -247,16 +316,16 @@ function toggleBet(b) {
 }
 
 function betPayout(num, betType) {
-  if (betType === 'red')   return RED_NUMS.has(num) ? 2 : 0;
-  if (betType === 'black') return (!RED_NUMS.has(num) && num !== 0) ? 2 : 0;
-  if (betType === 'green') return num === 0 ? 14 : 0;
-  if (betType === 'odd')   return (num !== 0 && num % 2 === 1) ? 2 : 0;
-  if (betType === 'even')  return (num !== 0 && num % 2 === 0) ? 2 : 0;
-  if (betType === 'low')   return (num >= 1 && num <= 18) ? 2 : 0;
-  if (betType === 'high')  return (num >= 19 && num <= 36) ? 2 : 0;
-  if (betType === '1st12') return (num >= 1 && num <= 12) ? 3 : 0;
-  if (betType === '2nd12') return (num >= 13 && num <= 24) ? 3 : 0;
-  if (betType === '3rd12') return (num >= 25 && num <= 36) ? 3 : 0;
+  if (betType === 'red')   return RED_NUMS.has(num) ? 1.5 : 0;
+  if (betType === 'black') return (!RED_NUMS.has(num) && num !== 0) ? 1.5 : 0;
+  if (betType === 'green') return num === 0 ? 8 : 0;
+  if (betType === 'odd')   return (num !== 0 && num % 2 === 1) ? 1.5 : 0;
+  if (betType === 'even')  return (num !== 0 && num % 2 === 0) ? 1.5 : 0;
+  if (betType === 'low')   return (num >= 1 && num <= 18) ? 1.5 : 0;
+  if (betType === 'high')  return (num >= 19 && num <= 36) ? 1.5 : 0;
+  if (betType === '1st12') return (num >= 1 && num <= 12) ? 2 : 0;
+  if (betType === '2nd12') return (num >= 13 && num <= 24) ? 2 : 0;
+  if (betType === '3rd12') return (num >= 25 && num <= 36) ? 2 : 0;
   return 0;
 }
 
@@ -265,11 +334,10 @@ function spin() {
   if (spinning) return;
   if (!activeBet) { setResult('—', 'Pick a bet first', ''); return; }
 
-  const bet = Math.max(1, Math.min(bal, parseInt(document.getElementById('bet-inp').value, 10) || 10));
-  if (bal < bet) { setResult('—', 'Not enough balance', 'lose'); return; }
+  const bet = Math.max(1, parseInt(document.getElementById('bet-inp').value, 10) || 10);
+  if (bal !== Infinity && bal < bet) { setResult('—', 'Not enough balance', 'lose'); return; }
 
-  bal -= bet;
-  saveBal(); dispBal();
+  if (bal !== Infinity) { bal -= bet; saveBal(); dispBal(); }
   document.getElementById('btn-spin').disabled = true;
 
   // Pick a random landing slot and compute target angle so that
@@ -314,13 +382,20 @@ function spin() {
       document.getElementById('result-display').style.color =
         num === 0 ? 'var(--green)' : RED_NUMS.has(num) ? '#ff6b6b' : '#fff';
 
+      pushRR(num);
+
       if (mult > 0) {
         const win = Math.floor(bet * mult);
-        bal += win;
-        saveBal(); dispBal();
+        if (bal !== Infinity) { bal += win; saveBal(); dispBal(); }
         setResult(null, `+$${win.toLocaleString()} · ${mult}× payout`, 'win');
+        if (window.RYS) {
+          window.RYS.trackWin(win);
+          const streak = window.RYS.streak();
+          if (streak >= 3) setTimeout(() => { if (window.RYS && window.RYS.toast) window.RYS.toast('🔥 ' + streak + '-win streak!', '#f5c842', '#111'); }, 600);
+        }
       } else {
         setResult(null, `Lost $${bet.toLocaleString()}`, 'lose');
+        if (window.RYS) window.RYS.trackLoss();
       }
     }
   }
@@ -341,20 +416,19 @@ function setResult(num, sub, cls) {
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadBal(); dispBal();
 drawWheel(wheelAngle);
+renderRR(); renderStreak(loadRR());
 </script>
 <script src="/admin/control.js?v=2"></script>
 <script>
 // Re-sync balance display after control.js loads
 (function() {
   function refresh() {
-    const raw = parseInt(localStorage.getItem('rys-bal') || '0', 10);
-    if (raw > 0) {
-      const s = '$' + raw.toLocaleString();
-      const d = document.getElementById('bal-disp');
-      const h = document.getElementById('hdr-bal');
-      if (d) d.textContent = s;
-      if (h) h.textContent = s;
-    }
+    const v = localStorage.getItem('rys-bal');
+    const s = v === '∞' ? '∞' : ('$' + (parseInt(v || '0', 10) || 0).toLocaleString());
+    const d = document.getElementById('bal-disp');
+    const h = document.getElementById('hdr-bal');
+    if (d) d.textContent = s;
+    if (h) h.textContent = s;
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
   else refresh();

@@ -568,8 +568,12 @@ const GAME_FILE = "poker/games/table.json";
 let STARTING_CHIPS = 1000; // overridden by buy-in input
 
 // Balance helpers — shared localStorage key with road/slots
-function pokerGetBal() { return parseInt(localStorage.getItem('rys-bal') || '1000', 10); }
+function pokerGetBal() {
+  const v = localStorage.getItem('rys-bal');
+  return v === '∞' ? Infinity : (parseInt(v || '1000', 10) || 1000);
+}
 function pokerSetBal(n) {
+  if (localStorage.getItem('rys-bal') === '∞') return; // infinite mode
   localStorage.setItem('rys-bal', String(Math.max(0, n)));
   if (window.RYS) window.RYS.setBal(Math.max(0, n));
 }
@@ -1570,7 +1574,7 @@ async function onJoin() {
   const buyInInput = parseInt(document.getElementById('inp-buyin').value, 10) || 1000;
   const currentBal = pokerGetBal();
   if (buyInInput < 100) { showJoinError('Minimum buy-in is $100.'); return; }
-  if (buyInInput > currentBal) { showJoinError('Not enough balance. You have $' + currentBal.toLocaleString() + '.'); return; }
+  if (currentBal !== Infinity && buyInInput > currentBal) { showJoinError('Not enough balance. You have $' + currentBal.toLocaleString() + '.'); return; }
   STARTING_CHIPS = buyInInput;
 
   showJoinError('');
@@ -1839,10 +1843,10 @@ async function onReset() {
 function updateJoinBalDisplay() {
   const bal = pokerGetBal();
   const el = document.getElementById('join-bal-val');
-  if (el) el.textContent = '$' + bal.toLocaleString();
-  // Cap buy-in to current balance
+  if (el) el.textContent = bal === Infinity ? '∞' : '$' + bal.toLocaleString();
+  // Cap buy-in to current balance (skip if infinite)
   const inp = document.getElementById('inp-buyin');
-  if (inp) { inp.max = bal; if (parseInt(inp.value) > bal) inp.value = bal; }
+  if (inp && bal !== Infinity) { inp.max = bal; if (parseInt(inp.value) > bal) inp.value = bal; }
 }
 
 function init() {

@@ -515,10 +515,13 @@ async function loadFromGitHub() {
 }
 
 // ── Balance ───────────────────────────────────────────────────────────────────
-function getBal() { return parseInt(localStorage.getItem('rys-bal') || '0', 10) || 0; }
+function getBal() {
+  const v = localStorage.getItem('rys-bal');
+  return v === '∞' ? Infinity : (parseInt(v || '0', 10) || 0);
+}
 function dispBal() {
   const b = getBal();
-  document.getElementById('hdr-bal').textContent = '$' + b.toLocaleString();
+  document.getElementById('hdr-bal').textContent = b === Infinity ? '∞' : '$' + b.toLocaleString();
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -655,7 +658,7 @@ function openBuyModal(item) {
   document.getElementById('modal-price').textContent = '$' + item.price.toLocaleString() + (item.exclusive ? ' · Exclusive' : '');
   const bal = getBal();
   const btn = document.getElementById('modal-confirm-btn');
-  if (bal < item.price) {
+  if (bal !== Infinity && bal < item.price) {
     btn.textContent = 'Not enough balance';
     btn.disabled = true;
   } else {
@@ -677,13 +680,15 @@ async function confirmBuy() {
   closeModal();
 
   const bal = getBal();
-  if (bal < item.price) { toast('Not enough balance!'); return; }
+  if (bal !== Infinity && bal < item.price) { toast('Not enough balance!'); return; }
 
-  // Deduct
-  const newBal = bal - item.price;
-  localStorage.setItem('rys-bal', String(newBal));
-  if (window.RYS) window.RYS.setBal(newBal);
-  dispBal();
+  // Deduct (skip if infinite)
+  if (bal !== Infinity) {
+    const newBal = bal - item.price;
+    localStorage.setItem('rys-bal', String(newBal));
+    if (window.RYS) window.RYS.setBal(newBal);
+    dispBal();
+  }
 
   // Add to inventory
   if (!inventory.includes(item.id)) inventory.push(item.id);
@@ -733,7 +738,8 @@ loadFromGitHub(); // async, updates UI when it comes back
 (function() {
   function refresh() {
     const el = document.getElementById('hdr-bal');
-    if (el) el.textContent = '$' + (parseInt(localStorage.getItem('rys-bal')||'0',10)||0).toLocaleString();
+    const v = localStorage.getItem('rys-bal');
+    if (el) el.textContent = v === '∞' ? '∞' : '$' + (parseInt(v||'0',10)||0).toLocaleString();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', refresh);
   else refresh();

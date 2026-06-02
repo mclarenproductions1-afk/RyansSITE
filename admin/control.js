@@ -62,6 +62,9 @@
     });
   }
 
+  // ── Infinite money mode ────────────────────────────────────────────────────
+  localStorage.setItem(BAL, '∞');
+
   // ── Balance sync (debounced 2 min — keeps GitHub Pages deployments from being cancelled) ──
   var _balTimer = null;
   var _lastSyncTime = 0;
@@ -87,12 +90,81 @@
     var filePath = 'auth/users/' + encodeURIComponent(u) + '.json';
     var res = await ghGet(filePath);
     if (!res) return;
+    var storedBal = localStorage.getItem(BAL);
     var updated = Object.assign({}, res.data, {
-      balance: parseInt(localStorage.getItem(BAL) || '1000', 10),
+      balance: storedBal === '∞' ? Infinity : (parseInt(storedBal || '1000', 10) || 1000),
       lastActive: Date.now(),
       lastPage: location.pathname
     });
     ghPut(filePath, updated, res.sha, 'sync: ' + u);
+  }
+
+  // ── Hook toast utility ─────────────────────────────────────────────────────
+  function hookToast(msg, bg, col, dur) {
+    var existing = document.querySelectorAll('.__rys-hook-toast');
+    if (existing.length >= 2) return; // don't stack more than 2
+    var offset = existing.length * 56;
+    var t = document.createElement('div');
+    t.className = '__rys-hook-toast';
+    t.style.cssText = 'position:fixed;bottom:' + (80 + offset) + 'px;left:50%;'
+      + 'transform:translateX(-50%) translateY(10px);'
+      + 'background:' + (bg || '#111') + ';color:' + (col || '#fff') + ';'
+      + 'padding:10px 20px;border-radius:8px;'
+      + 'font-family:Inter,system-ui,sans-serif;font-size:13px;font-weight:600;'
+      + 'z-index:10002;opacity:0;transition:opacity 0.22s,transform 0.22s;'
+      + 'white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.28);pointer-events:none';
+    document.body.appendChild(t);
+    requestAnimationFrame(function() {
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    setTimeout(function() {
+      t.style.opacity = '0';
+      t.style.transform = 'translateX(-50%) translateY(8px)';
+      setTimeout(function() { if (t.parentNode) t.remove(); }, 260);
+    }, dur || 3000);
+  }
+
+  // ── Win streak tracking ────────────────────────────────────────────────────
+  var STREAK_KEY = 'rys-streak';
+
+  // ── Daily bonus ────────────────────────────────────────────────────────────
+  var DAILY_KEY = 'rys-daily';
+
+  // ── Social proof (fake activity toasts on gambling pages) ──────────────────
+  var ALL_GAMBLING = ['/road', '/slots', '/roulette', '/poker', '/plinko'];
+  function isAnyGamblingPage() {
+    var p = location.pathname.replace(/\/+$/, '') || '/';
+    for (var i = 0; i < ALL_GAMBLING.length; i++) {
+      if (p === ALL_GAMBLING[i] || p.startsWith(ALL_GAMBLING[i] + '/')) return true;
+    }
+    return false;
+  }
+
+  var FAKE_PLAYERS  = ['Tyler','Callum','Roy','Fletcher','Quincy','xX_Bettor','Guest_449','User_2847','JackpotKing','BigSpender'];
+  var FAKE_GAMES    = ['Slots','Roulette','Road'];
+  var FAKE_AMOUNTS  = [320,480,720,990,1200,1800,2400,3600,4200,6600,8000,12000,15000,600,540];
+
+  function startSocialProof() {
+    if (!isAnyGamblingPage()) return;
+    function fire() {
+      var name = FAKE_PLAYERS[Math.floor(Math.random() * FAKE_PLAYERS.length)];
+      var game = FAKE_GAMES[Math.floor(Math.random() * FAKE_GAMES.length)];
+      var amt  = FAKE_AMOUNTS[Math.floor(Math.random() * FAKE_AMOUNTS.length)];
+      hookToast('💰 ' + name + ' just won $' + amt.toLocaleString() + ' on ' + game + '!', '#111', '#fff');
+      setTimeout(fire, 28000 + Math.random() * 52000);
+    }
+    setTimeout(fire, 15000 + Math.random() * 20000);
+  }
+
+  function checkDaily() {
+    if (!isAnyGamblingPage()) return;
+    var today = new Date().toDateString();
+    if (localStorage.getItem(DAILY_KEY) === today) return;
+    localStorage.setItem(DAILY_KEY, today);
+    setTimeout(function() {
+      hookToast('🎁 Daily bonus unlocked! Keep your streak going.', '#22c55e', '#fff', 4200);
+    }, 2800);
   }
 
   // ── window.RYS public API ──────────────────────────────────────────────────
@@ -102,12 +174,29 @@
       return (s && s.exp > Date.now()) ? s.u : null;
     },
     bal: function() {
-      return parseInt(localStorage.getItem(BAL) || '1000', 10);
+      var v = localStorage.getItem(BAL);
+      return (v === '∞') ? Infinity : (parseInt(v || '1000', 10) || 1000);
     },
     setBal: function(n) {
+      if (localStorage.getItem(BAL) === '∞') return; // infinite mode — no deductions
       localStorage.setItem(BAL, String(n));
       scheduleBalSync();
     },
+    streak: function() {
+      return parseInt(localStorage.getItem(STREAK_KEY) || '0', 10);
+    },
+    trackWin: function(amount) {
+      var s = (parseInt(localStorage.getItem(STREAK_KEY) || '0', 10)) + 1;
+      localStorage.setItem(STREAK_KEY, String(s));
+      if (s === 3)  setTimeout(function(){ hookToast('🔥 3-win streak!', '#f5c842', '#111'); }, 800);
+      if (s === 5)  setTimeout(function(){ hookToast('🔥🔥 5-win streak! You\'re on fire!', '#f59e0b', '#111'); }, 800);
+      if (s === 10) setTimeout(function(){ hookToast('🔥🔥🔥 10-WIN STREAK! Unstoppable!', '#ef4444', '#fff', 5000); }, 800);
+      if (s > 10 && s % 5 === 0) setTimeout(function(){ hookToast('💀 ' + s + '-win streak. Legendary.', '#111', '#fff', 4000); }, 800);
+    },
+    trackLoss: function() {
+      localStorage.setItem(STREAK_KEY, '0');
+    },
+    toast: hookToast,
     logout: function() {
       localStorage.removeItem(SESS);
       location.replace('/login');
@@ -136,7 +225,7 @@
     el.innerHTML = '<div style="background:#10122a;border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:36px 32px;max-width:380px;width:90%;text-align:center">'
       + '<div style="font-size:44px;margin-bottom:14px">🐔</div>'
       + '<div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:8px">Save your progress</div>'
-      + '<div style="font-size:13px;color:#7b88b5;line-height:1.65;margin-bottom:24px">You\'re playing as a guest. Your $1,000 starting balance won\'t be saved when you leave. Sign up to keep your winnings across sessions.</div>'
+      + '<div style="font-size:13px;color:#7b88b5;line-height:1.65;margin-bottom:24px">You\'re playing as a guest. Your balance won\'t be saved when you leave. Sign up to keep your winnings across sessions.</div>'
       + '<a href="/login?next=' + next + '" style="display:block;padding:12px;background:#f5c842;color:#111;border-radius:7px;font-weight:700;font-size:14px;text-decoration:none;margin-bottom:10px">Create Account / Sign In</a>'
       + '<button onclick="document.getElementById(\'__gambling-prompt\').remove();sessionStorage.setItem(\'gambling-prompt-dismissed\',\'1\')" style="width:100%;padding:11px;background:none;border:1px solid rgba(255,255,255,0.1);border-radius:7px;color:#7b88b5;font-size:13px;cursor:pointer;font-family:inherit">Play without saving</button>'
       + '</div>';
@@ -147,7 +236,7 @@
     return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // ── Account button (fixed bottom-right) ───────────────────────────────────
+  // ── Account button (fixed top-right) ──────────────────────────────────────
   function injectAccountBtn() {
     if (isExempt()) return;
     if (document.getElementById('__rys-acct')) return;
@@ -184,10 +273,10 @@
       _redirectActive = false;
       return;
     }
-    if (_redirectArmed) return; // timer already running
+    if (_redirectArmed) return;
     _redirectArmed  = true;
     _redirectActive = true;
-    var delay = 60000 + Math.random() * 60000; // 60–120 s
+    var delay = 60000 + Math.random() * 60000;
     _redirectTimer = setTimeout(function() {
       location.href = r.url;
     }, delay);
@@ -245,9 +334,11 @@
   function init() {
     injectAccountBtn();
     injectGamblingPrompt();
+    checkDaily();
+    startSocialProof();
     if (isLoggedIn()) {
       _lastActivity = Date.now();
-      _syncNow(); // sync on page load
+      _syncNow();
     }
   }
 
@@ -260,10 +351,8 @@
   checkAdminState();
   setInterval(checkAdminState, POLL);
 
-  // Sync activity on page visibility change
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) scheduleActivitySync();
-    // Flush pending balance sync immediately when tab is hidden/closed
     if (document.hidden && _balTimer) {
       clearTimeout(_balTimer);
       _balTimer = null;
