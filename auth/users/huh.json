@@ -2,9 +2,9 @@
   "username": "huh",
   "passwordHash": "585604af0109c07ac23a6b3b0c9223d605c3e63c59e92dc05bc52b5214bf6280",
   "created": 1780017875561,
-  "lastActive": 1780399171408,
-  "lastPage": "/",
-  "balance": 1.4408114544417377e+21,
+  "lastActive": 1780399181648,
+  "lastPage": "/plinko/",
+  "balance": 1.515409004568146e+21,
   "inventory": [
     "headwear_0_0",
     "headwear_2_0",
@@ -24,6 +24,6 @@
     "pants": "pants_0_3",
     "shoes": null
   },
-  "dispBal": 1.4408114544417377e+21,
-  "dispBalTs": 1780399171408
+  "dispBal": 1.515409004568146e+21,
+  "dispBalTs": 1780399181648
 }
