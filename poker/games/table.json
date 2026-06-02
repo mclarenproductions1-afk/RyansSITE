@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Check",
       "joinedAt": "2026-06-02T02:38:30.218Z"
     },
     {
@@ -94,10 +94,16 @@
   "sidePots": [],
   "currentBet": 0,
   "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-06-02T02:39:30.836Z",
+  "currentTurn": 1,
+  "turnStartedAt": "2026-06-02T02:39:40.610Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-06-02T02:39:30.836Z"
+  "actions": [
+    {
+      "slot": 0,
+      "action": "check",
+      "amount": 0
+    }
+  ],
+  "updatedAt": "2026-06-02T02:39:40.610Z"
 }
