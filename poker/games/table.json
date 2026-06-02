@@ -1,17 +1,7 @@
 {
   "status": "waiting",
   "players": [
-    {
-      "name": "erika_levings",
-      "chips": 1000,
-      "bet": 0,
-      "hand": [],
-      "folded": false,
-      "allIn": false,
-      "inHand": false,
-      "lastAction": "",
-      "joinedAt": "2026-06-02T02:37:52.911Z"
-    },
+    null,
     null,
     null,
     null,
@@ -33,5 +23,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-06-02T02:37:52.916Z"
+  "updatedAt": "2026-06-02T02:38:14.726Z"
 }
