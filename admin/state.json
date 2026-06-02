@@ -9,5 +9,9 @@
     "enabled": false,
     "message": ""
   },
-  "updated_at": "2026-06-02T02:46:46.113Z"
+  "updated_at": "2026-06-02T02:48:06.126Z",
+  "redirect": {
+    "enabled": false,
+    "url": ""
+  }
 }
