@@ -4,7 +4,7 @@
     {
       "name": "erika_levings",
       "chips": 9e+33,
-      "bet": 10,
+      "bet": 0,
       "hand": [
         "Js",
         "6h"
@@ -12,14 +12,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "SB",
-      "joinedAt": "2026-06-02T02:38:30.218Z",
-      "isSB": true
+      "lastAction": "",
+      "joinedAt": "2026-06-02T02:38:30.218Z"
     },
     {
       "name": "sh00taface",
       "chips": 9999980,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "2s",
         "Kd"
@@ -27,10 +26,8 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
-      "joinedAt": "2026-06-02T02:39:07.286Z",
-      "isDealer": true,
-      "isBB": true
+      "lastAction": "",
+      "joinedAt": "2026-06-02T02:39:07.286Z"
     },
     null,
     null,
@@ -40,7 +37,7 @@
   "queue": [],
   "handNum": 1,
   "dealer": 1,
-  "phase": "preflop",
+  "phase": "flop",
   "deck": [
     "8d",
     "8h",
@@ -86,20 +83,21 @@
     "Qh",
     "8s",
     "7h",
-    "6c",
-    "7d",
-    "2d",
-    "6d"
+    "6c"
   ],
-  "communityCards": [],
-  "pot": 30,
+  "communityCards": [
+    "6d",
+    "2d",
+    "7d"
+  ],
+  "pot": 40,
   "sidePots": [],
-  "currentBet": 20,
+  "currentBet": 0,
   "minRaise": 20,
   "currentTurn": 0,
-  "turnStartedAt": "2026-06-02T02:39:13.246Z",
-  "lastAggressor": 1,
+  "turnStartedAt": "2026-06-02T02:39:20.253Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 1,
   "actions": [],
-  "updatedAt": "2026-06-02T02:39:13.246Z"
+  "updatedAt": "2026-06-02T02:39:20.253Z"
 }
