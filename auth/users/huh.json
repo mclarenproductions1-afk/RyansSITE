@@ -2,7 +2,7 @@
   "username": "huh",
   "passwordHash": "585604af0109c07ac23a6b3b0c9223d605c3e63c59e92dc05bc52b5214bf6280",
   "created": 1780017875561,
-  "lastActive": 1780360456167,
+  "lastActive": 1780360462711,
   "lastPage": "/gf/shop",
   "balance": 559250481493061340000,
   "inventory": [
@@ -11,11 +11,12 @@
     "headwear_2_1",
     "headwear_2_2",
     "headwear_2_3",
-    "headwear_3_0"
+    "headwear_3_0",
+    "glasses_0_0"
   ],
   "equipped": {
     "headwear": "headwear_3_0",
-    "glasses": null,
+    "glasses": "glasses_0_0",
     "shirts": null,
     "pants": null,
     "shoes": null
