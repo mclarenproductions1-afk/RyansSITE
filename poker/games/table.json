@@ -12,7 +12,17 @@
       "lastAction": "",
       "joinedAt": "2026-06-02T02:38:30.218Z"
     },
-    null,
+    {
+      "name": "sh00taface",
+      "chips": 10000000,
+      "bet": 0,
+      "hand": [],
+      "folded": false,
+      "allIn": false,
+      "inHand": false,
+      "lastAction": "",
+      "joinedAt": "2026-06-02T02:39:07.286Z"
+    },
     null,
     null,
     null,
@@ -33,5 +43,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-06-02T02:38:30.218Z"
+  "updatedAt": "2026-06-02T02:39:07.292Z"
 }
