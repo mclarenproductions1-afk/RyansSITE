@@ -1,13 +1,7 @@
 {
-  "reload_at": 1780013297317,
-  "banner": {
+  "redirect": {
     "enabled": true,
-    "text": "𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸 𓀓𓂸",
-    "type": "info"
+    "url": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ2km1BRfq4EAoFeEtfD6ke_cGgXNT9uBRaGQ&s"
   },
-  "maintenance": {
-    "enabled": false,
-    "message": ""
-  },
-  "updated_at": "2026-06-02T02:42:10.247Z"
+  "updated_at": "2026-06-02T02:44:34.353Z"
 }
