@@ -3,8 +3,8 @@
   "players": [
     {
       "name": "erika_levings",
-      "chips": 9e+33,
-      "bet": 0,
+      "chips": 8.991e+33,
+      "bet": 9e+30,
       "hand": [
         "Js",
         "6h"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Check",
+      "lastAction": "Raise 9e+30",
       "joinedAt": "2026-06-02T02:38:30.218Z"
     },
     {
@@ -90,13 +90,13 @@
     "7d",
     "6c"
   ],
-  "pot": 120,
+  "pot": 9e+30,
   "sidePots": [],
-  "currentBet": 80,
-  "minRaise": 80,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-06-02T02:40:00.118Z",
-  "lastAggressor": 1,
+  "currentBet": 9e+30,
+  "minRaise": 9e+30,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-06-02T02:40:12.552Z",
+  "lastAggressor": 0,
   "roundStartPlayer": 1,
   "actions": [
     {
@@ -108,7 +108,12 @@
       "slot": 1,
       "action": "raise",
       "amount": 80
+    },
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 9e+30
     }
   ],
-  "updatedAt": "2026-06-02T02:40:00.118Z"
+  "updatedAt": "2026-06-02T02:40:12.552Z"
 }
