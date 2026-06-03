@@ -18,7 +18,7 @@
     {
       "name": "dih",
       "chips": 1e+46,
-      "bet": 0,
+      "bet": 67,
       "hand": [
         "8h",
         "2d"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Raise 67",
       "joinedAt": "2026-06-03T01:47:39.247Z"
     },
     null,
@@ -90,16 +90,22 @@
     "Js",
     "5h"
   ],
-  "pot": 40,
+  "pot": 107,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-06-03T01:49:25.768Z",
+  "currentBet": 67,
+  "minRaise": 67,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-06-03T01:49:42.820Z",
   "lastAggressor": 1,
   "roundStartPlayer": 0,
-  "actions": [],
-  "updatedAt": "2026-06-03T01:49:25.768Z",
+  "actions": [
+    {
+      "slot": 1,
+      "action": "raise",
+      "amount": 67
+    }
+  ],
+  "updatedAt": "2026-06-03T01:49:42.820Z",
   "lastWinners": [
     {
       "slot": 0,
