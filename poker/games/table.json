@@ -4,7 +4,7 @@
     {
       "name": "ihategraphs",
       "chips": 1e+60,
-      "bet": 0,
+      "bet": 100000000,
       "hand": [
         "9c",
         "10d"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Raise 100000000",
       "joinedAt": "2026-06-03T01:47:29.542Z"
     },
     {
@@ -90,14 +90,20 @@
     "Qd",
     "2s"
   ],
-  "pot": 40,
+  "pot": 100000040,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-06-03T01:47:48.058Z",
+  "currentBet": 100000000,
+  "minRaise": 100000000,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-06-03T01:48:02.781Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-06-03T01:47:48.058Z"
+  "actions": [
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 100000000
+    }
+  ],
+  "updatedAt": "2026-06-03T01:48:02.781Z"
 }
