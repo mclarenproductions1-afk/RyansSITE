@@ -4,7 +4,7 @@
     {
       "name": "ihategraphs",
       "chips": 1e+60,
-      "bet": 0,
+      "bet": 2e+27,
       "hand": [
         "7c",
         "7d"
@@ -12,7 +12,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "",
+      "lastAction": "Raise 2e+27",
       "joinedAt": "2026-06-03T01:47:29.542Z"
     },
     {
@@ -90,16 +90,22 @@
     "5c",
     "8c"
   ],
-  "pot": 1200000000000000,
+  "pot": 2.0000000000012001e+27,
   "sidePots": [],
-  "currentBet": 0,
-  "minRaise": 20,
-  "currentTurn": 0,
-  "turnStartedAt": "2026-06-03T01:50:14.423Z",
+  "currentBet": 2e+27,
+  "minRaise": 2e+27,
+  "currentTurn": 1,
+  "turnStartedAt": "2026-06-03T01:50:22.998Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [],
-  "updatedAt": "2026-06-03T01:50:14.423Z",
+  "actions": [
+    {
+      "slot": 0,
+      "action": "raise",
+      "amount": 2e+27
+    }
+  ],
+  "updatedAt": "2026-06-03T01:50:22.998Z",
   "lastWinners": [
     {
       "slot": 0,
