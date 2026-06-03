@@ -16,22 +16,7 @@
       "joinedAt": "2026-06-03T01:45:06.000Z",
       "isSB": true
     },
-    {
-      "name": "dih",
-      "chips": 980,
-      "bet": 20,
-      "hand": [
-        "9h",
-        "Qd"
-      ],
-      "folded": false,
-      "allIn": false,
-      "inHand": true,
-      "lastAction": "BB",
-      "joinedAt": "2026-06-03T01:45:20.125Z",
-      "isDealer": true,
-      "isBB": true
-    },
+    null,
     null,
     null,
     null,
@@ -101,5 +86,5 @@
   "lastAggressor": 1,
   "roundStartPlayer": 1,
   "actions": [],
-  "updatedAt": "2026-06-03T01:45:24.247Z"
+  "updatedAt": "2026-06-03T01:45:32.663Z"
 }
