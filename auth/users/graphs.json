@@ -2,7 +2,9 @@
   "username": "graphs",
   "passwordHash": "3297a75d63926992c153fd00efe9bf7eee425d3c251aa245749635b0da397f91",
   "created": 1780453170180,
-  "lastActive": 1780453170180,
+  "lastActive": 1780453173699,
   "lastPage": "/",
-  "balance": null
+  "balance": 895836438537,
+  "dispBal": 895836438537.4689,
+  "dispBalTs": 1780453173699
 }
