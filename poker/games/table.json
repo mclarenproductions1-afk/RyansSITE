@@ -4,7 +4,7 @@
     {
       "name": "ihategraphs",
       "chips": 1e+60,
-      "bet": 600000000000000,
+      "bet": 0,
       "hand": [
         "7c",
         "7d"
@@ -12,13 +12,13 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 600000000000000",
+      "lastAction": "",
       "joinedAt": "2026-06-03T01:47:29.542Z"
     },
     {
       "name": "dih",
       "chips": 1e+46,
-      "bet": 20,
+      "bet": 0,
       "hand": [
         "2c",
         "Jc"
@@ -26,7 +26,7 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "BB",
+      "lastAction": "",
       "joinedAt": "2026-06-03T01:47:39.247Z"
     },
     null,
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 3,
   "dealer": 1,
-  "phase": "preflop",
+  "phase": "flop",
   "deck": [
     "2d",
     "3c",
@@ -83,28 +83,23 @@
     "4s",
     "2s",
     "6d",
-    "10h",
-    "8c",
-    "5c",
-    "5h"
+    "10h"
   ],
-  "communityCards": [],
-  "pot": 600000000000020,
+  "communityCards": [
+    "5h",
+    "5c",
+    "8c"
+  ],
+  "pot": 1200000000000000,
   "sidePots": [],
-  "currentBet": 600000000000000,
-  "minRaise": 599999999999980,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-06-03T01:50:12.129Z",
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-06-03T01:50:14.423Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [
-    {
-      "slot": 0,
-      "action": "raise",
-      "amount": 600000000000000
-    }
-  ],
-  "updatedAt": "2026-06-03T01:50:12.129Z",
+  "actions": [],
+  "updatedAt": "2026-06-03T01:50:14.423Z",
   "lastWinners": [
     {
       "slot": 0,
