@@ -148,9 +148,8 @@
   }
 
   // ── Balance sync ───────────────────────────────────────────────────────────
-  var _balTimer  = null;
-  var _winTimer  = null;
-  var _lastSyncTime = 0;
+  var _balTimer = null;
+  var _winTimer = null;
 
   // Debounced 2-min sync (for non-win activity)
   function scheduleBalSync() {
@@ -464,9 +463,11 @@
     injectGamblingPrompt();
     checkDaily();
     startSocialProof();
+    // Show cached local value immediately so balance never blinks blank
+    _updateDispDisplays(fmtBal(_dispApplyOffline()));
     if (isLoggedIn()) {
       _lastActivity = Date.now();
-      // Load saved balance from server first, then start ticker with correct value
+      // Restore from server, then start ticker at correct (possibly higher) value
       _initLoadFromServer().then(function() {
         startDispTicker();
         _syncNow();
@@ -489,10 +490,11 @@
 
   document.addEventListener('visibilitychange', function() {
     if (!document.hidden) scheduleActivitySync();
-    if (document.hidden && _balTimer) {
-      clearTimeout(_balTimer);
-      _balTimer = null;
-      _syncNow();
+    if (document.hidden) {
+      // Flush any pending sync timers immediately so wins aren't lost on tab close
+      if (_balTimer) { clearTimeout(_balTimer); _balTimer = null; }
+      if (_winTimer) { clearTimeout(_winTimer); _winTimer = null; }
+      if (isLoggedIn()) _syncNow();
     }
   });
 
