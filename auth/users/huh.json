@@ -2,9 +2,9 @@
   "username": "huh",
   "passwordHash": "585604af0109c07ac23a6b3b0c9223d605c3e63c59e92dc05bc52b5214bf6280",
   "created": 1780017875561,
-  "lastActive": 1780474528503,
+  "lastActive": 1780474544025,
   "lastPage": "/",
-  "balance": 1.0196270978658692e+164,
+  "balance": 1.1014463310380633e+164,
   "inventory": [
     "headwear_0_0",
     "headwear_2_0",
@@ -24,6 +24,6 @@
     "pants": "pants_0_3",
     "shoes": null
   },
-  "dispBal": 1.0196270978658692e+164,
-  "dispBalTs": 1780474528503
+  "dispBal": 1.1014463310380633e+164,
+  "dispBalTs": 1780474544025
 }
