@@ -2,7 +2,9 @@
   "username": "dih",
   "passwordHash": "a41708bd89e847f1ea007099c0bd483f0fa48a38fcf99adf63b77cb3451d8d6c",
   "created": 1780291807533,
-  "lastActive": 1780385692421,
+  "lastActive": 1780450875839,
   "lastPage": "/",
-  "balance": 999999999999999900000
+  "balance": 1.002002005488227e+21,
+  "dispBal": 1.002002005488227e+21,
+  "dispBalTs": 1780450875839
 }
