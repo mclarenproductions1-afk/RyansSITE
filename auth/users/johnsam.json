@@ -2,7 +2,9 @@
   "username": "johnsam",
   "passwordHash": "2f5e312465f76c6b924658e83c788d011b450040055346ca6a072a5a029cba50",
   "created": 1780028204695,
-  "lastActive": 1780297685728,
-  "lastPage": "/random/",
-  "balance": 990
+  "lastActive": 1780446697438,
+  "lastPage": "/",
+  "balance": 10039,
+  "dispBal": 10039.98003989035,
+  "dispBalTs": 1780446697438
 }
