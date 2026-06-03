@@ -2,15 +2,15 @@
   "status": "waiting",
   "players": [
     {
-      "name": "dih",
-      "chips": 1e+46,
+      "name": "ihategraphs",
+      "chips": 1e+60,
       "bet": 0,
       "hand": [],
       "folded": false,
       "allIn": false,
       "inHand": false,
       "lastAction": "",
-      "joinedAt": "2026-06-03T01:47:28.121Z"
+      "joinedAt": "2026-06-03T01:47:29.542Z"
     },
     null,
     null,
@@ -33,5 +33,5 @@
   "lastAggressor": -1,
   "roundStartPlayer": -1,
   "actions": [],
-  "updatedAt": "2026-06-03T01:47:28.121Z"
+  "updatedAt": "2026-06-03T01:47:38.581Z"
 }
