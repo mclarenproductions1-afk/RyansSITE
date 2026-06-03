@@ -4,7 +4,7 @@
     {
       "name": "ihategraphs",
       "chips": 1e+60,
-      "bet": 2e+32,
+      "bet": 0,
       "hand": [
         "9c",
         "10d"
@@ -12,12 +12,12 @@
       "folded": false,
       "allIn": false,
       "inHand": true,
-      "lastAction": "Raise 2e+32",
+      "lastAction": "",
       "joinedAt": "2026-06-03T01:47:29.542Z"
     },
     {
       "name": "dih",
-      "chips": 1e+46,
+      "chips": 9.9999999999998e+45,
       "bet": 0,
       "hand": [
         "9h",
@@ -37,7 +37,7 @@
   "queue": [],
   "handNum": 1,
   "dealer": 1,
-  "phase": "turn",
+  "phase": "river",
   "deck": [
     "4d",
     "9d",
@@ -81,29 +81,23 @@
     "Qs",
     "Ac",
     "As",
-    "Jd",
-    "7d"
+    "Jd"
   ],
   "communityCards": [
     "6c",
     "Qd",
     "2s",
-    "Jc"
+    "Jc",
+    "7d"
   ],
-  "pot": 2e+32,
+  "pot": 4e+32,
   "sidePots": [],
-  "currentBet": 2e+32,
-  "minRaise": 2e+32,
-  "currentTurn": 1,
-  "turnStartedAt": "2026-06-03T01:48:28.572Z",
+  "currentBet": 0,
+  "minRaise": 20,
+  "currentTurn": 0,
+  "turnStartedAt": "2026-06-03T01:48:31.899Z",
   "lastAggressor": 0,
   "roundStartPlayer": 1,
-  "actions": [
-    {
-      "slot": 0,
-      "action": "raise",
-      "amount": 2e+32
-    }
-  ],
-  "updatedAt": "2026-06-03T01:48:28.572Z"
+  "actions": [],
+  "updatedAt": "2026-06-03T01:48:31.899Z"
 }
