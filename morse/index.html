@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morse Chat — Study Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.ably.com/lib/ably.min-1.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fff;
+    --text: #111;
+    --muted: #888;
+    --border: #e5e5e5;
+  }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .back { font-size: 13px; color: var(--muted); text-decoration: none; }
+  .back:hover { color: var(--text); }
+
+  .logo { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: #ccc; transition: background 0.4s; flex-shrink: 0;
+  }
+  .status-dot.live { background: #111; }
+
+  .status-text { font-size: 12px; color: var(--muted); }
+
+  .header-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .username-display { font-size: 12px; color: var(--muted); }
+
+  .btn-text {
+    font-size: 12px; color: var(--muted); background: none; border: none;
+    cursor: pointer; padding: 0; text-decoration: underline; font-family: inherit;
+  }
+  .btn-text:hover { color: var(--text); }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(255,255,255,0.94);
+    display: flex; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-overlay.hidden { display: none; }
+
+  .modal {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px;
+    padding: 28px 24px; width: 320px;
+  }
+  .modal h2 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 16px; line-height: 1.5; }
+  .modal input {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;
+  }
+  .modal input:focus { border-color: var(--text); }
+  .modal button {
+    width: 100%; padding: 10px; background: #111; color: #fff; border: none;
+    border-radius: 4px; font-size: 14px; font-family: inherit; font-weight: 500; cursor: pointer;
+  }
+  .modal button:hover { background: #333; }
+
+  /* Messages */
+  #messages-wrap { flex: 1; overflow-y: auto; padding: 16px 24px; }
+
+  .day-label {
+    text-align: center; font-size: 11px; color: var(--muted);
+    margin: 16px 0 10px; position: relative;
+  }
+  .day-label::before, .day-label::after {
+    content: ''; position: absolute; top: 50%;
+    width: calc(50% - 44px); height: 1px; background: var(--border);
+  }
+  .day-label::before { left: 0; }
+  .day-label::after { right: 0; }
+
+  .msg { display: flex; gap: 10px; margin-bottom: 14px; max-width: 680px; }
+
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: #111; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0; margin-top: 1px;
+  }
+
+  .msg-body { flex: 1; min-width: 0; }
+
+  .msg-header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 3px; }
+  .msg-name { font-size: 13px; font-weight: 600; }
+  .msg-name.me { color: #555; }
+  .msg-time { font-size: 11px; color: var(--muted); }
+
+  .msg-morse {
+    font-size: 15px; line-height: 1.55; word-break: break-all;
+    font-family: monospace; letter-spacing: 1px;
+    color: #111;
+  }
+
+  .msg-decoded {
+    font-size: 12px; color: var(--muted); margin-top: 3px;
+    font-style: italic; word-break: break-word;
+  }
+
+  /* Live typing previews */
+  #live-area { padding: 0 24px 4px; flex-shrink: 0; }
+
+  .live-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    opacity: 0.45; margin-bottom: 6px;
+  }
+  .live-row .msg-avatar { background: #bbb; }
+  .live-row .msg-name { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .live-row .msg-morse { font-size: 13px; color: var(--muted); }
+  .live-row .msg-decoded { font-size: 11px; }
+
+  /* Typing bar */
+  #typing-bar {
+    padding: 2px 24px 6px; min-height: 20px;
+    font-size: 12px; color: var(--muted); flex-shrink: 0;
+  }
+
+  .dots {
+    display: inline-flex; gap: 3px; vertical-align: middle; margin-left: 4px;
+  }
+  .dots span {
+    width: 4px; height: 4px; border-radius: 50%; background: var(--muted);
+    animation: bop 1.2s ease-in-out infinite;
+  }
+  .dots span:nth-child(2) { animation-delay: .2s; }
+  .dots span:nth-child(3) { animation-delay: .4s; }
+
+  @keyframes bop {
+    0%,80%,100% { transform: translateY(0); opacity: .35; }
+    40% { transform: translateY(-4px); opacity: 1; }
+  }
+
+  /* Input */
+  #input-area {
+    padding: 10px 24px 18px; border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+
+  /* Morse pad */
+  .morse-pad {
+    display: flex; gap: 6px; margin-bottom: 8px;
+  }
+
+  .morse-btn {
+    padding: 8px 18px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 18px; font-family: monospace; cursor: pointer; background: #fff;
+    color: #111; user-select: none; line-height: 1;
+    transition: background 0.1s;
+  }
+  .morse-btn:hover { background: #f5f5f5; }
+  .morse-btn:active { background: #e8e8e8; }
+  .morse-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .morse-preview {
+    flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 14px; font-family: monospace; color: #111; background: #fafafa;
+    min-height: 42px; word-break: break-all; line-height: 1.5;
+  }
+
+  .morse-preview.empty { color: var(--muted); font-style: italic; font-family: inherit; font-size: 13px; }
+
+  .decoded-preview {
+    font-size: 12px; color: var(--muted); margin-bottom: 8px; min-height: 16px;
+    font-style: italic;
+  }
+
+  .input-row { display: flex; gap: 8px; }
+  #msg-input {
+    flex: 1; padding: 10px 14px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 14px; font-family: inherit; outline: none; height: 42px;
+  }
+  #msg-input:focus { border-color: var(--text); }
+  #msg-input:disabled { background: #fafafa; color: var(--muted); }
+  #send-btn {
+    padding: 10px 18px; background: #111; color: #fff; border: none; border-radius: 4px;
+    font-size: 13px; font-weight: 500; font-family: inherit; cursor: pointer; height: 42px;
+  }
+  #send-btn:hover { background: #333; }
+  #send-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+  .input-controls { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .mode-label { font-size: 12px; color: var(--muted); }
+
+  .hint { font-size: 11px; color: var(--muted); margin-top: 6px; }
+
+  #clear-btn {
+    font-size: 11px; color: var(--muted); background: none; border: none;
+    cursor: pointer; padding: 0; text-decoration: underline; font-family: inherit;
+  }
+  #clear-btn:hover { color: var(--text); }
+
+  .space-btn {
+    padding: 8px 14px; border: 1px solid var(--border); border-radius: 4px;
+    font-size: 12px; font-family: inherit; cursor: pointer; background: #fff;
+    color: #555; user-select: none;
+  }
+  .space-btn:hover { background: #f5f5f5; }
+  .space-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  @media (max-width: 600px) {
+    header, #messages-wrap, #input-area, #live-area, #typing-bar { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<script>
+  const ABLY_API_KEY = '1Y-saA.bKy7Vw:VO_jvb0TFzxiKVyfUUwo0WLGr1Zq1Y17UDQFKy8pQwM';
+</script>
+
+<div class="modal-overlay hidden" id="name-modal">
+  <div class="modal">
+    <h2>Join Morse Chat</h2>
+    <p>Pick a display name. You can change it later.</p>
+    <input type="text" id="name-input" placeholder="Your name" maxlength="24" autocomplete="off">
+    <button id="name-btn">Join</button>
+  </div>
+</div>
+
+<header>
+  <a class="back" href="/">← Study Hub</a>
+  <span class="logo">Morse Chat</span>
+  <span class="status-dot" id="status-dot"></span>
+  <span class="status-text" id="status-text">connecting…</span>
+  <div class="header-right">
+    <span class="username-display" id="username-display"></span>
+    <button class="btn-text" id="btn-rename">change name</button>
+  </div>
+</header>
+
+<div id="messages-wrap"><div id="messages-list"></div></div>
+
+<div id="live-area"></div>
+<div id="typing-bar"></div>
+
+<div id="input-area">
+  <div class="morse-pad">
+    <button class="morse-btn" id="dot-btn" disabled>·</button>
+    <button class="morse-btn" id="dash-btn" disabled>−</button>
+    <button class="space-btn" id="letter-sep-btn" disabled>space</button>
+    <button class="space-btn" id="word-sep-btn" disabled>/</button>
+    <div style="flex:1"></div>
+    <button id="clear-btn">clear</button>
+  </div>
+  <div class="morse-preview empty" id="morse-preview">type · and − to build morse…</div>
+  <div class="decoded-preview" id="decoded-preview"></div>
+  <div class="input-row">
+    <input type="text" id="msg-input" placeholder="…or just type text here" maxlength="200" autocomplete="off" disabled>
+    <button id="send-btn" disabled>Send</button>
+  </div>
+  <div class="hint">Enter to send · Use the buttons or type text directly</div>
+</div>
+
+<script src="/admin/control.js?v=2"></script>
+<script>
+(function() {
+
+  // ── Morse code table ─────────────────────────────────────────────────────────
+  const MORSE = {
+    'A':'.-','B':'-...','C':'-.-.','D':'-..','E':'.','F':'..-.','G':'--.','H':'....','I':'..','J':'.---',
+    'K':'-.-','L':'.-..','M':'--','N':'-.','O':'---','P':'.--.','Q':'--.-','R':'.-.','S':'...','T':'-',
+    'U':'..-','V':'...-','W':'.--','X':'-..-','Y':'-.--','Z':'--..',
+    '0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+    '.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--','-':'-....-','(':'-.--.',')':`-.--.-`,' ': '/'
+  };
+
+  const MORSE_REV = {};
+  Object.entries(MORSE).forEach(([k, v]) => { MORSE_REV[v] = k; });
+
+  function textToMorse(text) {
+    return text.toUpperCase().split('').map(c => MORSE[c] || '').filter(Boolean).join(' ');
+  }
+
+  function morseToText(morse) {
+    return morse.trim().split(' / ').map(word =>
+      word.split(' ').map(code => MORSE_REV[code] || '?').join('')
+    ).join(' ');
+  }
+
+  // ── Identity ─────────────────────────────────────────────────────────────────
+  const _rysUser = window.RYS ? window.RYS.user() : null;
+  let username = _rysUser || localStorage.getItem('chat-name') || '';
+  let userId   = localStorage.getItem('chat-uid');
+  if (!userId) {
+    userId = 'u' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('chat-uid', userId);
+  }
+
+  function setUsername(name) {
+    username = (name || '').trim().slice(0, 24) || 'Anonymous';
+    if (!_rysUser) localStorage.setItem('chat-name', username);
+    document.getElementById('username-display').textContent = username;
+    if (channel) channel.presence.update({ user: username, uid: userId, typing: '' });
+  }
+
+  // ── Name modal ────────────────────────────────────────────────────────────────
+  const modal     = document.getElementById('name-modal');
+  const nameInput = document.getElementById('name-input');
+
+  function showModal() {
+    modal.classList.remove('hidden');
+    nameInput.value = username;
+    setTimeout(() => nameInput.focus(), 50);
+  }
+
+  function submitName() {
+    const val = nameInput.value.trim();
+    if (!val) return;
+    setUsername(val);
+    modal.classList.add('hidden');
+  }
+
+  document.getElementById('name-btn').addEventListener('click', submitName);
+  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') submitName(); });
+  document.getElementById('btn-rename').addEventListener('click', showModal);
+
+  if (_rysUser) {
+    document.getElementById('username-display').textContent = _rysUser;
+    document.getElementById('btn-rename').style.display = 'none';
+  } else if (!username) {
+    showModal();
+  } else {
+    document.getElementById('username-display').textContent = username;
+  }
+
+  // ── Ably setup ────────────────────────────────────────────────────────────────
+  const ably    = new Ably.Realtime({ key: ABLY_API_KEY, clientId: userId });
+  const channel = ably.channels.get('ryanssite-morse-v1');
+
+  const dot      = document.getElementById('status-dot');
+  const statusTx = document.getElementById('status-text');
+
+  function enableInputs(on) {
+    document.getElementById('dot-btn').disabled  = !on;
+    document.getElementById('dash-btn').disabled = !on;
+    document.getElementById('letter-sep-btn').disabled = !on;
+    document.getElementById('word-sep-btn').disabled   = !on;
+    document.getElementById('msg-input').disabled = !on;
+    document.getElementById('send-btn').disabled  = !on;
+  }
+
+  ably.connection.on('connected', () => {
+    dot.classList.add('live');
+    statusTx.textContent = 'live';
+    enableInputs(true);
+    loadHistory();
+    enterPresence();
+  });
+
+  ably.connection.on('disconnected', () => {
+    dot.classList.remove('live');
+    statusTx.textContent = 'reconnecting…';
+  });
+
+  ably.connection.on('failed', () => {
+    statusTx.textContent = 'connection failed';
+  });
+
+  // ── Message history ───────────────────────────────────────────────────────────
+  const rendered = new Set();
+  const msgsList = document.getElementById('messages-list');
+  const wrap     = document.getElementById('messages-wrap');
+  let   atBottom = true;
+
+  wrap.addEventListener('scroll', () => {
+    atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 80;
+  });
+
+  async function loadHistory() {
+    try {
+      const page = await channel.history({ limit: 100, direction: 'backwards' });
+      page.items.reverse().forEach(msg => {
+        if (msg.name === 'msg') renderMessage(msg.data, msg.id, true);
+      });
+      scrollToBottom(true);
+    } catch(e) { console.warn('History fetch failed:', e); }
+  }
+
+  channel.subscribe('msg', msg => {
+    renderMessage(msg.data, msg.id, false);
+    if (atBottom) scrollToBottom(true);
+  });
+
+  // ── Rendering ─────────────────────────────────────────────────────────────────
+  let lastDay = '';
+
+  function renderMessage(data, id, historical) {
+    if (!data || !data.morse || rendered.has(id)) return;
+    rendered.add(id);
+
+    const day = formatDay(data.time || Date.now());
+    if (day !== lastDay) {
+      lastDay = day;
+      const lbl = document.createElement('div');
+      lbl.className = 'day-label';
+      lbl.textContent = day;
+      msgsList.appendChild(lbl);
+    }
+
+    const isMe = data.uid === userId;
+    const el   = document.createElement('div');
+    el.className = 'msg';
+    el.innerHTML = `
+      <div class="msg-avatar">${initials(data.user)}</div>
+      <div class="msg-body">
+        <div class="msg-header">
+          <span class="msg-name${isMe ? ' me' : ''}">${esc(data.user || 'Anonymous')}</span>
+          <span class="msg-time">${formatTime(data.time)}</span>
+        </div>
+        <div class="msg-morse">${esc(data.morse)}</div>
+        <div class="msg-decoded">${esc(data.text)}</div>
+      </div>`;
+    msgsList.appendChild(el);
+  }
+
+  function scrollToBottom(force) {
+    if (force || atBottom) wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  // ── Morse pad ─────────────────────────────────────────────────────────────────
+  let morseBuffer = ''; // e.g. "... --- ..."
+
+  const morsePreview  = document.getElementById('morse-preview');
+  const decodedPreview = document.getElementById('decoded-preview');
+
+  function appendMorse(char) {
+    // char is '.' or '-'
+    // If buffer ends with a space+slash+space or is empty, start new letter
+    // Otherwise append to current letter
+    if (!morseBuffer || morseBuffer.endsWith(' ')) {
+      morseBuffer += char;
+    } else {
+      // Check last segment
+      const parts = morseBuffer.split(' ');
+      const last = parts[parts.length - 1];
+      if (last === '/') {
+        morseBuffer += char;
+      } else {
+        morseBuffer += char;
+      }
+    }
+    updateMorseDisplay();
+    updateTyping(morseBuffer);
+  }
+
+  function letterSep() {
+    if (!morseBuffer || morseBuffer.endsWith(' ')) return;
+    morseBuffer += ' ';
+    updateMorseDisplay();
+    updateTyping(morseBuffer);
+  }
+
+  function wordSep() {
+    // Remove trailing spaces first
+    morseBuffer = morseBuffer.trimEnd();
+    if (!morseBuffer) return;
+    morseBuffer += ' / ';
+    updateMorseDisplay();
+    updateTyping(morseBuffer);
+  }
+
+  document.getElementById('dot-btn').addEventListener('click', () => appendMorse('.'));
+  document.getElementById('dash-btn').addEventListener('click', () => appendMorse('-'));
+  document.getElementById('letter-sep-btn').addEventListener('click', letterSep);
+  document.getElementById('word-sep-btn').addEventListener('click', wordSep);
+
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    morseBuffer = '';
+    document.getElementById('msg-input').value = '';
+    updateMorseDisplay();
+    updateTyping('');
+  });
+
+  function updateMorseDisplay() {
+    if (!morseBuffer) {
+      morsePreview.textContent = 'type · and − to build morse…';
+      morsePreview.classList.add('empty');
+      decodedPreview.textContent = '';
+    } else {
+      morsePreview.textContent = morseBuffer;
+      morsePreview.classList.remove('empty');
+      try {
+        decodedPreview.textContent = '→ ' + morseToText(morseBuffer.trimEnd());
+      } catch(e) { decodedPreview.textContent = ''; }
+    }
+  }
+
+  // ── Text input (convert to morse on send) ────────────────────────────────────
+  const inputEl = document.getElementById('msg-input');
+
+  inputEl.addEventListener('input', () => {
+    if (inputEl.value) {
+      morseBuffer = '';
+      updateMorseDisplay();
+    }
+    updateTyping(inputEl.value ? textToMorse(inputEl.value) : '');
+  });
+
+  // ── Send ──────────────────────────────────────────────────────────────────────
+  function sendMessage() {
+    let morse = '', text = '';
+
+    if (inputEl.value.trim()) {
+      text  = inputEl.value.trim();
+      morse = textToMorse(text);
+    } else if (morseBuffer.trim() && morseBuffer.trim() !== '/') {
+      morse = morseBuffer.trim();
+      text  = morseToText(morse);
+    }
+
+    if (!morse || !username) return;
+
+    channel.publish('msg', { user: username, uid: userId, morse, text, time: Date.now() });
+    inputEl.value = '';
+    morseBuffer   = '';
+    updateMorseDisplay();
+    updateTyping('');
+  }
+
+  document.getElementById('send-btn').addEventListener('click', sendMessage);
+  inputEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  });
+
+  // ── Typing via Presence ───────────────────────────────────────────────────────
+  let typingTimer = null;
+
+  function enterPresence() {
+    channel.presence.enter({ user: username, uid: userId, typing: '' });
+  }
+
+  function updateTyping(morse) {
+    channel.presence.update({ user: username, uid: userId, typing: morse });
+    clearTimeout(typingTimer);
+    if (morse) typingTimer = setTimeout(() => updateTyping(''), 4000);
+  }
+
+  const othersPresence = new Map();
+
+  channel.presence.subscribe(presenceMsg => {
+    const d = presenceMsg.data;
+    if (!d || !d.uid || d.uid === userId) return;
+    if (presenceMsg.action === 'leave' || presenceMsg.action === 'absent') {
+      othersPresence.delete(d.uid);
+    } else {
+      othersPresence.set(d.uid, d);
+    }
+    renderTyping();
+  });
+
+  channel.presence.get((err, members) => {
+    if (err || !members) return;
+    members.forEach(m => {
+      if (m.data && m.data.uid && m.data.uid !== userId)
+        othersPresence.set(m.data.uid, m.data);
+    });
+    renderTyping();
+  });
+
+  function renderTyping() {
+    const active    = [...othersPresence.values()].filter(d => d.typing && d.typing.trim());
+    const liveArea  = document.getElementById('live-area');
+    const typingBar = document.getElementById('typing-bar');
+
+    liveArea.innerHTML = '';
+    active.forEach(d => {
+      let decoded = '';
+      try { decoded = morseToText(d.typing.trimEnd()); } catch(e) {}
+      const el = document.createElement('div');
+      el.className = 'live-row';
+      el.innerHTML = `
+        <div class="msg-avatar">${initials(d.user)}</div>
+        <div class="msg-body">
+          <div class="msg-header"><span class="msg-name">${esc(d.user || 'Someone')}</span></div>
+          <div class="msg-morse">${esc(d.typing)}</div>
+          ${decoded ? `<div class="msg-decoded">→ ${esc(decoded)}</div>` : ''}
+        </div>`;
+      liveArea.appendChild(el);
+    });
+
+    if (!active.length) { typingBar.innerHTML = ''; return; }
+    const names = active.map(d => esc(d.user || 'Someone'));
+    const label = names.length === 1
+      ? `${names[0]} is typing`
+      : names.length === 2
+        ? `${names[0]} and ${names[1]} are typing`
+        : `${names[0]} and ${names.length - 1} others are typing`;
+    typingBar.innerHTML = `${label}<span class="dots"><span></span><span></span><span></span></span>`;
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────────
+  function initials(name) {
+    return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  function formatTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts);
+    return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+  }
+
+  function formatDay(ts) {
+    const d = new Date(ts);
+    const today = new Date();
+    const yesterday = new Date(); yesterday.setDate(today.getDate() - 1);
+    if (d.toDateString() === today.toDateString()) return 'Today';
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+      .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  window.addEventListener('beforeunload', () => channel.presence.leave());
+
+})();
+</script>
+</body>
+</html>
